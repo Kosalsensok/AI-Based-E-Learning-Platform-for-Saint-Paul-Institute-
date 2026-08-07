@@ -1,15 +1,7 @@
-# Stage 1: Build frontend assets
-FROM node:20-alpine AS node_builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --legacy-peer-deps
-COPY . .
-RUN npm run build
-
-# Stage 2: PHP & Nginx Runtime
+# Production Dockerfile for Laravel with Pre-built Assets
 FROM php:8.3-fpm-alpine
 
-# Install system dependencies & PHP extensions
+# Install system dependencies & PHP extensions required for Laravel
 RUN apk add --no-cache \
     nginx \
     supervisor \
@@ -28,11 +20,8 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Copy application code
+# Copy application code (including pre-built assets in public/build)
 COPY . .
-
-# Copy built assets from node_builder
-COPY --from=node_builder /app/public/build ./public/build
 
 # Install composer dependencies (production)
 RUN composer install --no-dev --optimize-autoloader --no-interaction
