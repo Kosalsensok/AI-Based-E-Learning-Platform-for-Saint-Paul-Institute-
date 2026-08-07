@@ -1,12 +1,17 @@
 #!/bin/sh
 set -e
 
-# Run database migrations, seeding, and storage link automatically on container startup
+# Clear stale cached files on startup
+php artisan config:clear || true
+php artisan route:clear || true
+php artisan view:clear || true
+
+# Run database migrations, seeding, and storage link
 php artisan migrate --force || true
 php artisan db:seed --force || true
 php artisan storage:link || true
 
-# Cache configuration, routes, and views in production
+# Cache fresh config and routes with active environment variables
 php artisan config:cache || true
 php artisan route:cache || true
 php artisan view:cache || true
