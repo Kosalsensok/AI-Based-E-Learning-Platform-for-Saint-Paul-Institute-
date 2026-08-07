@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'telegram' => [
+        'bot_token' => env('TELEGRAM_BOT_TOKEN'),
+        'chat_id' => env('TELEGRAM_CHAT_ID'),
+    ],
+
+    'cloudconvert' => [
+        'api_key' => env('CLOUDCONVERT_API_KEY'),
+    ],
+
 ];

@@ -336,7 +336,7 @@ class ContentController extends Controller
                 @exec($cmd, $output, $returnVar);
 
                 // 3. CloudConvert API Integration fallback
-                $apiKey = env('CLOUDCONVERT_API_KEY');
+                $apiKey = config('services.cloudconvert.api_key') ?? env('CLOUDCONVERT_API_KEY');
                 if (!file_exists($convertedPdfPath) && $apiKey) {
                     try {
                         $response = \Illuminate\Support\Facades\Http::withHeaders([
