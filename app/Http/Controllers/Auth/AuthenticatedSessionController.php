@@ -164,28 +164,38 @@ class AuthenticatedSessionController extends Controller
         ]);
 
         // Telegram Notification for Login
-        $telegramService->sendMessage(
-            "<b>🔓 USER LOGIN SUCCESSFUL</b>\n" .
-            "----------------------------------------\n" .
-            "👤 <b>Name:</b> {$user->name}\n" .
-            "📧 <b>Email:</b> {$user->email}\n" .
-            "🎓 <b>Role:</b> " . strtoupper($user->role) . "\n" .
-            "🌐 <b>IP Address:</b> {$ip}\n" .
-            "📱 <b>Device:</b> {$device} ({$browser})\n" .
-            "⏰ <b>Time:</b> " . now()->format('Y-m-d H:i:s') . "\n"
-        );
+        try {
+            $telegramService->sendMessage(
+                "<b>🔓 USER LOGIN SUCCESSFUL</b>\n" .
+                "----------------------------------------\n" .
+                "👤 <b>Name:</b> {$user->name}\n" .
+                "📧 <b>Email:</b> {$user->email}\n" .
+                "🎓 <b>Role:</b> " . strtoupper($user->role) . "\n" .
+                "🌐 <b>IP Address:</b> {$ip}\n" .
+                "📱 <b>Device:</b> {$device} ({$browser})\n" .
+                "⏰ <b>Time:</b> " . now()->format('Y-m-d H:i:s') . "\n"
+            );
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Telegram login notify failed: ' . $e->getMessage());
+        }
 
-        // Generate JWT Token
-        $token = \Tymon\JWTAuth\Facades\JWTAuth::fromUser($user);
-        $payload = \Tymon\JWTAuth\Facades\JWTAuth::setToken($token)->getPayload();
-        
-        \App\Models\JwtSession::create([
-            'user_id' => $user->id,
-            'token' => $token,
-            'expires_at' => \Carbon\Carbon::createFromTimestamp($payload->get('exp')),
-            'ip_address' => $ip,
-            'user_agent' => $userAgent,
-        ]);
+        // Generate JWT Token safely
+        try {
+            if (config('jwt.secret')) {
+                $token = \Tymon\JWTAuth\Facades\JWTAuth::fromUser($user);
+                $payload = \Tymon\JWTAuth\Facades\JWTAuth::setToken($token)->getPayload();
+                
+                \App\Models\JwtSession::create([
+                    'user_id' => $user->id,
+                    'token' => $token,
+                    'expires_at' => \Carbon\Carbon::createFromTimestamp($payload->get('exp')),
+                    'ip_address' => $ip,
+                    'user_agent' => $userAgent,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('JWT token creation exception: ' . $e->getMessage());
+        }
 
         $request->session()->regenerate();
 

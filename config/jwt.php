@@ -25,7 +25,7 @@ return [
     |
     */
 
-    'secret' => env('JWT_SECRET'),
+    'secret' => env('JWT_SECRET', 'elms_jwt_secret_key_2026_st_paul_institute_secure_token'),
 
     /*
     |--------------------------------------------------------------------------
