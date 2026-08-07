@@ -1,0 +1,47 @@
+export const adminMenu = [
+  { label: 'Dashboard', icon: 'i-lucide-layout-dashboard', href: '/admin/dashboard' },
+  { label: 'Authentication Module', icon: 'i-lucide-shield-check', href: '/admin/auth-logs' },
+  { label: 'User Management', icon: 'i-lucide-users', href: '/admin/users' },
+  { label: 'Faculties', icon: 'i-lucide-building', href: '/admin/faculties' },
+  { label: 'Departments', icon: 'i-lucide-layers', href: '/admin/departments' },
+  { label: 'Majors', icon: 'i-lucide-graduation-cap', href: '/admin/majors' },
+  { label: 'Enrollment & Course', icon: 'i-lucide-book-open', href: '/admin/courses' },
+  { label: 'Content Delivery Module', icon: 'i-lucide-folder-open', href: '/admin/content' },
+  { label: 'Quiz & Assessment Module', icon: 'i-lucide-clipboard-check', href: '/admin/quizzes' },
+  { label: 'Payment & ABA Module', icon: 'i-lucide-credit-card', href: '/admin/payments' },
+  { label: 'Progress Tracking Module', icon: 'i-lucide-trending-up', href: '/admin/progress' },
+  { label: 'Analytics & Reporting', icon: 'i-lucide-bar-chart-3', href: '/admin/reports' },
+  { label: 'AI Recommendation Module', icon: 'i-lucide-brain', href: '/admin/ai-rules' },
+  { label: 'Certificate Module', icon: 'i-lucide-award', href: '/admin/certificates' },
+  { label: 'Notification Module', icon: 'i-lucide-bell', href: '/admin/notifications' },
+  { label: 'Calendar & Schedule', icon: 'i-lucide-calendar', href: '/admin/calendar' },
+  { label: 'Settings', icon: 'i-lucide-settings', href: '/admin/settings' },
+]
+
+export const teacherMenu = [
+  { label: 'Dashboard', icon: 'i-lucide-layout-dashboard', href: '/teacher/dashboard' },
+  { label: 'My Courses', icon: 'i-lucide-book-open', href: '/teacher/courses' },
+  { label: 'Content Delivery', icon: 'i-lucide-video', href: '/teacher/content' },
+  { label: 'Quiz & Assessment', icon: 'i-lucide-clipboard-check', href: '/teacher/quizzes' },
+  { label: 'Students', icon: 'i-lucide-users', href: '/teacher/students' },
+  { label: 'Progress Tracking', icon: 'i-lucide-trending-up', href: '/teacher/progress' },
+  { label: 'Reports', icon: 'i-lucide-bar-chart-3', href: '/teacher/reports' },
+  { label: 'Discussion & Announcements', icon: 'i-lucide-message-square', href: '/teacher/discussions' },
+  { label: 'Calendar', icon: 'i-lucide-calendar', href: '/teacher/calendar' },
+  { label: 'Profile', icon: 'i-lucide-user', href: '/teacher/profile' },
+  { label: 'Earnings & Revenue', icon: 'i-lucide-dollar-sign', href: '/teacher/earnings' },
+]
+
+export const studentMenu = [
+  { label: 'Dashboard', icon: 'i-lucide-layout-dashboard', href: '/student/dashboard' },
+  { label: 'My Courses', icon: 'i-lucide-book-open', href: '/student/courses' },
+  { label: 'Learning Content', icon: 'i-lucide-play-circle', href: '/student/learning' },
+  { label: 'Quiz & Assessment', icon: 'i-lucide-clipboard-check', href: '/student/quizzes' },
+  { label: 'AI Learning Path', icon: 'i-lucide-brain', href: '/student/ai-path' },
+  { label: 'Progress Tracking', icon: 'i-lucide-trending-up', href: '/student/progress' },
+  { label: 'Payments (ABA)', icon: 'i-lucide-credit-card', href: '/student/payments' },
+  { label: 'Certificates', icon: 'i-lucide-award', href: '/student/certificates' },
+  { label: 'Notifications', icon: 'i-lucide-bell', href: '/student/notifications' },
+  { label: 'Calendar', icon: 'i-lucide-calendar', href: '/student/calendar' },
+  { label: 'Profile', icon: 'i-lucide-user', href: '/student/profile' },
+]

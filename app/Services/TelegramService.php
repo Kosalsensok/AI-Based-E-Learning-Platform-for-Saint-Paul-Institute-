@@ -1,0 +1,126 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\User;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+
+class TelegramService
+{
+    protected ?string $botToken;
+    protected ?string $chatId;
+
+    public function __construct()
+    {
+        $this->botToken = config('services.telegram.bot_token') ?? env('TELEGRAM_BOT_TOKEN');
+        $this->chatId = config('services.telegram.chat_id') ?? env('TELEGRAM_CHAT_ID');
+    }
+
+    /**
+     * Send a general text/HTML message to Telegram channel/group
+     */
+    public function sendMessage(string $text, string $parseMode = 'HTML'): bool
+    {
+        if (empty($this->botToken) || empty($this->chatId)) {
+            Log::info("Telegram Notification (Simulated/Token missing):\n" . strip_tags($text));
+            return false;
+        }
+
+        try {
+            $url = "https://api.telegram.org/bot{$this->botToken}/sendMessage";
+            $response = Http::timeout(5)->post($url, [
+                'chat_id'    => $this->chatId,
+                'text'       => $text,
+                'parse_mode' => $parseMode,
+                'disable_web_page_preview' => true,
+            ]);
+
+            if ($response->failed()) {
+                Log::error("Telegram API Error: " . $response->body());
+                return false;
+            }
+
+            return true;
+        } catch (\Throwable $e) {
+            Log::error("Telegram Notification Exception: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Send structured Telegram alert for new Student registration
+     */
+    public function notifyNewStudentRegistration(User $user, array $paymentDetails = []): bool
+    {
+        $majorName = $user->major ? $user->major->name : 'N/A';
+        $departmentName = $user->major && $user->major->department ? $user->major->department->name : 'N/A';
+        $facultyName = $user->major && $user->major->department && $user->major->department->faculty ? $user->major->department->faculty->name : 'N/A';
+
+        $studyTypeLabel = ($user->study_type === 'online') ? '🌐 Online / Distance Learning' : '🏫 On-Campus / Face-to-Face';
+        $paymentMethod = $paymentDetails['method'] ?? 'N/A';
+        $amount = isset($paymentDetails['amount']) ? '$' . number_format($paymentDetails['amount'], 2) : '$360.00';
+        $hasReceipt = !empty($paymentDetails['receipt']) ? '✅ Uploaded' : '❌ Not Uploaded';
+
+        $msg = "<b>🎓 NEW STUDENT REGISTRATION — E.LMS</b>\n";
+        $msg .= "----------------------------------------\n";
+        $msg .= "🆔 <b>Student ID:</b> <code>{$user->student_code}</code>\n";
+        $msg .= "👤 <b>Full Name (EN):</b> {$user->name}\n";
+        if (!empty($user->name_kh)) {
+            $msg .= "👤 <b>Full Name (KH):</b> {$user->name_kh}\n";
+        }
+        $msg .= "📧 <b>Email:</b> {$user->email}\n";
+        $msg .= "📱 <b>Phone:</b> {$user->phone}\n";
+        $msg .= "📚 <b>Major:</b> {$majorName}\n";
+        $msg .= "🏢 <b>Department:</b> {$departmentName}\n";
+        $msg .= "🏫 <b>Faculty:</b> {$facultyName}\n";
+        $msg .= "🎓 <b>Study Type:</b> {$studyTypeLabel}\n";
+        $msg .= "----------------------------------------\n";
+        $msg .= "💳 <b>Payment Method:</b> {$paymentMethod}\n";
+        $msg .= "💰 <b>Amount:</b> {$amount}\n";
+        $msg .= "📄 <b>Receipt Uploaded:</b> {$hasReceipt}\n";
+        $msg .= "⚙️ <b>Account Status:</b> <code>{$user->status}</code>\n";
+        $msg .= "⏰ <b>Time:</b> " . now()->format('Y-m-d H:i:s') . "\n";
+
+        return $this->sendMessage($msg);
+    }
+
+    /**
+     * Send notification when Admin creates a Teacher Account
+     */
+    public function notifyTeacherCreated(User $teacher, string $tempPassword): bool
+    {
+        $majorName = $teacher->major ? $teacher->major->name : 'N/A';
+        $departmentName = $teacher->major && $teacher->major->department ? $teacher->major->department->name : 'N/A';
+
+        $msg = "<b>👨‍🏫 NEW TEACHER ACCOUNT CREATED</b>\n";
+        $msg .= "----------------------------------------\n";
+        $msg .= "👤 <b>Name:</b> {$teacher->name}\n";
+        $msg .= "📧 <b>Email:</b> {$teacher->email}\n";
+        $msg .= "📱 <b>Phone:</b> {$teacher->phone}\n";
+        $msg .= "📚 <b>Assigned Major:</b> {$majorName}\n";
+        $msg .= "🏢 <b>Department:</b> {$departmentName}\n";
+        $msg .= "🎓 <b>Qualification:</b> " . ($teacher->qualification ?? 'N/A') . "\n";
+        $msg .= "💡 <b>Expertise:</b> " . ($teacher->expertise ?? 'N/A') . "\n";
+        $msg .= "🔑 <b>Temp Password:</b> <code>{$tempPassword}</code>\n";
+        $msg .= "⏰ <b>Created At:</b> " . now()->format('Y-m-d H:i:s') . "\n";
+
+        return $this->sendMessage($msg);
+    }
+
+    /**
+     * Send security login alert
+     */
+    public function notifyLoginAlert(User $user, string $ipAddress, string $userAgent): bool
+    {
+        $msg = "<b>🔐 LOGIN NOTIFICATION</b>\n";
+        $msg .= "----------------------------------------\n";
+        $msg .= "👤 <b>User:</b> {$user->name} ({$user->email})\n";
+        $msg .= "🔰 <b>Role:</b> " . strtoupper($user->role) . "\n";
+        $msg .= "🌐 <b>IP Address:</b> {$ipAddress}\n";
+        $msg .= "💻 <b>User Agent:</b> " . substr($userAgent, 0, 100) . "\n";
+        $msg .= "⏰ <b>Time:</b> " . now()->format('Y-m-d H:i:s') . "\n";
+
+        return $this->sendMessage($msg);
+    }
+}

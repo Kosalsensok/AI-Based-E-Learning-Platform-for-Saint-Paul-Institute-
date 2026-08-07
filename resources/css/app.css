@@ -1,0 +1,114 @@
+@import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:ital,wght@0,300..700;1,300..700&family=Noto+Sans+Khmer:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Kantumruy Pro', 'Noto Sans Khmer', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-inter: 'Inter', sans-serif;
+  --font-khmer: 'Kantumruy Pro', 'Noto Sans Khmer', sans-serif;
+}
+
+@variant dark (&:where(.dark, .dark *));
+
+html,
+body {
+  font-family: 'Kantumruy Pro', 'Noto Sans Khmer', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+}
+
+/* Standard cursor pointer for interactive controls */
+button,
+a,
+select,
+summary,
+[role="button"],
+input[type="submit"],
+input[type="button"],
+input[type="reset"],
+input[type="checkbox"],
+input[type="radio"],
+.cursor-pointer,
+label.cursor-pointer {
+  cursor: pointer !important;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="number"],
+textarea {
+  cursor: text !important;
+}
+
+input,
+select,
+textarea {
+  font-family: 'Kantumruy Pro', 'Noto Sans Khmer', 'Inter', system-ui, -apple-system, sans-serif !important;
+  line-height: 1.6 !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  font-family: 'Kantumruy Pro', 'Noto Sans Khmer', 'Inter', system-ui, -apple-system, sans-serif !important;
+  opacity: 0.65;
+}
+
+/* Fix browser autofill background & text color in Light Mode & Dark Mode */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: #0f172a !important;
+  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+  font-family: 'Kantumruy Pro', 'Inter', system-ui, sans-serif !important;
+}
+
+html.dark input:-webkit-autofill,
+html.dark input:-webkit-autofill:hover,
+html.dark input:-webkit-autofill:focus,
+html.dark input:-webkit-autofill:active,
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
+.dark input:-webkit-autofill:active {
+  -webkit-text-fill-color: #f8fafc !important;
+  -webkit-box-shadow: 0 0 0px 1000px #1e293b inset !important;
+  font-family: 'Kantumruy Pro', 'Inter', system-ui, sans-serif !important;
+}
+
+.pi {
+  font-family: 'primeicons' !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle !important;
+  line-height: 1 !important;
+}
+
+a {
+  text-decoration: none !important;
+}
+
+.font-sans,
+.font-khmer {
+  font-family: 'Kantumruy Pro', 'Noto Sans Khmer', 'Inter', system-ui, sans-serif !important;
+  line-height: 1.6 !important;
+}
+
+/* Ultra-Clean Khmer Typography Utilities */
+.khmer-text-clean {
+  font-family: 'Kantumruy Pro', 'Noto Sans Khmer', sans-serif !important;
+  font-weight: 500 !important;
+  line-height: 1.7 !important;
+  letter-spacing: 0.025em !important;
+}
+
+.khmer-title-clean {
+  font-family: 'Kantumruy Pro', 'Noto Sans Khmer', sans-serif !important;
+  font-weight: 600 !important;
+  line-height: 1.6 !important;
+  letter-spacing: 0.02em !important;
+}

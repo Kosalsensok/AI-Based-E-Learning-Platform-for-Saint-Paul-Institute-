@@ -1,0 +1,86 @@
+<?php
+
+namespace App\Http\Controllers\Student;
+
+use App\Http\Controllers\Controller;
+use App\Models\Course;
+use App\Models\Enrollment;
+use App\Models\Payment;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+
+class PaymentController extends Controller
+{
+    public function index(Request $request)
+    {
+        $tab = $request->query('tab', 'my-payments');
+        $payments = Payment::where('student_id', $request->user()->id)
+            ->with(['course', 'teacher'])
+            ->latest()
+            ->get();
+
+        return Inertia::render('Student/Payments/Index', [
+            'activeTab' => $tab,
+            'payments'  => $payments,
+        ]);
+    }
+
+    public function myPayments(Request $request)
+    {
+        return Inertia::render('Student/Payments/MyPayments');
+    }
+
+    public function pending(Request $request)
+    {
+        return Inertia::render('Student/Payments/PendingPayments');
+    }
+
+    public function history(Request $request)
+    {
+        return Inertia::render('Student/Payments/PaymentHistory');
+    }
+
+    public function receipts(Request $request)
+    {
+        return Inertia::render('Student/Payments/ReceiptsInvoices');
+    }
+
+    public function create(Course $course)
+    {
+        return Inertia::render('Student/Payments/Upload', [
+            'course' => $course
+        ]);
+    }
+
+    public function store(Request $request, Course $course)
+    {
+        abort_unless($course->status === 'published' && $course->is_paid, 400);
+
+        // R8: ការពារបង់ស្ទួន
+        abort_if(Payment::where('student_id', $request->user()->id)
+            ->where('course_id', $course->id)
+            ->whereIn('status', ['pending', 'verifying', 'paid'])->exists(), 409, 'អ្នកបានបង់ ឬកំពុងរង់ចាំផ្ទៀងផ្ទាត់រួចហើយ');
+
+        $data = $request->validate([
+            'payment_slip' => 'required|image|max:4096',
+            'aba_transaction_id' => 'nullable|string|max:100|unique:payments',
+        ]);
+
+        $payment = Payment::create([
+            'student_id' => $request->user()->id,
+            'course_id'  => $course->id,
+            'teacher_id' => $course->teacher_id,
+            'amount'     => $course->price,
+            'payment_slip' => $request->file('payment_slip')->store('slips', 'public'),
+            'aba_transaction_id' => $data['aba_transaction_id'] ?? null,
+            'status'     => 'verifying',
+        ]);
+
+        Enrollment::firstOrCreate(
+            ['student_id' => $request->user()->id, 'course_id' => $course->id],
+            ['status' => 'pending_payment']
+        );
+
+        return back()->with('success', 'បានបញ្ជូនការបង់ប្រាក់ — រង់ចាំ Admin ផ្ទៀងផ្ទាត់');
+    }
+}
