@@ -9,7 +9,7 @@ const actionBtnIcon = '/images/actions/action-button.svg'
 const props = defineProps<{ title?: string }>()
 
 const page = usePage<any>()
-const user = page.props.auth.user
+const user = computed(() => page.props.auth?.user || {})
 
 const sidebarOpen = ref(false)
 const expandedModules = ref<Record<string, boolean>>({

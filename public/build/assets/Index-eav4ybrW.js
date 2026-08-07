@@ -1,1 +1,0 @@
-import{P as e,_ as t,c as n}from"./runtime-core.esm-bundler-BHiBOJt4.js";import{t as r}from"./Index-DXj-mZhu2.js";var i=t({__name:`Index`,props:{enrollments:{},activeTab:{}},setup(t){return(i,a)=>(e(),n(r,{enrollments:t.enrollments,activeTab:t.activeTab},null,8,[`enrollments`,`activeTab`]))}});export{i as default};
