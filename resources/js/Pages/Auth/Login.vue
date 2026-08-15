@@ -258,9 +258,9 @@ const isTelegramConfigured = computed(() => {
 
 const getTelegramOAuthUrl = () => {
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://spilms.tech'
-  const returnTo = `${origin}/auth/telegram/callback`
+  const callbackUrl = `${origin}/auth/telegram/callback`
   const botId = telegramBotId.value
-  return `https://oauth.telegram.org/auth?bot_id=${botId}&origin=${encodeURIComponent(origin)}&return_to=${encodeURIComponent(returnTo)}&request_access=write`
+  return `https://oauth.telegram.org/auth?bot_id=${botId}&origin=${encodeURIComponent(origin)}&response_type=code&redirect_uri=${encodeURIComponent(callbackUrl)}&return_to=${encodeURIComponent(callbackUrl)}`
 }
 
 const redirectToTelegramOAuth = () => {
