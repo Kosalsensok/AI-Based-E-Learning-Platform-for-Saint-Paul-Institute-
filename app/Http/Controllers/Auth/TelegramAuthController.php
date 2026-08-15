@@ -30,9 +30,8 @@ class TelegramAuthController extends Controller
                     'message' => 'ទិន្នន័យ Telegram មិនត្រឹមត្រូវ (Missing Telegram User ID)',
                 ], 422);
             }
-            return redirect()->route('login')->withErrors([
-                'email' => 'ទិន្នន័យផ្ទៀងផ្ទាត់ Telegram មិនត្រឹមត្រូវ។',
-            ]);
+            // When Telegram returns with URL fragment (#tgAuthResult=...), render callback processor
+            return response()->view('auth.telegram-callback');
         }
 
         $ip = $request->ip();

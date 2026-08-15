@@ -260,7 +260,7 @@ const getTelegramOAuthUrl = () => {
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://spilms.tech'
   const returnTo = `${origin}/auth/telegram/callback`
   const botId = telegramBotId.value
-  return `https://oauth.telegram.org/auth?bot_id=${botId}&origin=${encodeURIComponent(origin)}&return_to=${encodeURIComponent(returnTo)}`
+  return `https://oauth.telegram.org/auth?bot_id=${botId}&origin=${encodeURIComponent(origin)}&return_to=${encodeURIComponent(returnTo)}&request_access=write`
 }
 
 const redirectToTelegramOAuth = () => {
