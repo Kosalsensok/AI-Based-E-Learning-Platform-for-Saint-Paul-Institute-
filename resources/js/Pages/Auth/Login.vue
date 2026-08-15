@@ -564,6 +564,39 @@ const handleSocialLogin = (provider: string) => {
     socialNotice.value = null
   }, 4000)
 }
+
+const oauthNotice = ref<{
+  type: 'warning' | 'error' | 'success'
+  message: string
+} | null>(null)
+
+onMounted(() => {
+  if (typeof window !== 'undefined') {
+    const urlParams = new URLSearchParams(window.location.search)
+    const err = urlParams.get('error')
+    if (err === 'cancelled' || err === 'declined' || err === 'telegram_cancelled') {
+      oauthNotice.value = {
+        type: 'warning',
+        message: currentLang.value === 'km'
+          ? 'ការចូលប្រើប្រាស់ត្រូវបានបដិសេធ! សូមចុច Accept ដើម្បីបន្តចូលប្រើប្រាស់។'
+          : 'Login was cancelled. Please accept Telegram permissions to access your account.'
+      }
+      try {
+        window.history.replaceState({}, document.title, window.location.pathname)
+      } catch (_) {}
+    } else if (err === 'unauthorized' || err === 'failed') {
+      oauthNotice.value = {
+        type: 'error',
+        message: currentLang.value === 'km'
+          ? 'ការផ្ទៀងផ្ទាត់ Telegram មិនត្រឹមត្រូវទេ។ សូមព្យាយាមម្តងទៀត!'
+          : 'Telegram authentication failed. Please try again!'
+      }
+      try {
+        window.history.replaceState({}, document.title, window.location.pathname)
+      } catch (_) {}
+    }
+  }
+})
 </script>
 
 <template>
@@ -683,7 +716,45 @@ const handleSocialLogin = (provider: string) => {
 
           <div class="space-y-3.5">
           
-            <!-- Global Error Alert -->
+            <!-- OAuth Notification Banner (e.g., Decline / Cancel / Error) -->
+            <Transition
+              enter-active-class="transition duration-300 ease-out"
+              enter-from-class="opacity-0 -translate-y-2"
+              enter-to-class="opacity-100 translate-y-0"
+              leave-active-class="transition duration-200 ease-in"
+              leave-from-class="opacity-100 translate-y-0"
+              leave-to-class="opacity-0 -translate-y-2"
+            >
+              <div
+                v-if="oauthNotice"
+                :class="[
+                  'rounded-2xl p-3.5 text-xs flex items-start justify-between gap-3 shadow-md transition-all border',
+                  oauthNotice.type === 'warning'
+                    ? 'bg-amber-500/15 border-amber-500/30 text-amber-300'
+                    : 'bg-rose-500/15 border-rose-500/30 text-rose-300'
+                ]"
+              >
+                <div class="flex items-start gap-2.5">
+                  <i
+                    :class="[
+                      'shrink-0 text-sm mt-0.5',
+                      oauthNotice.type === 'warning' ? 'pi pi-exclamation-triangle text-amber-400' : 'pi pi-times-circle text-rose-400'
+                    ]"
+                  ></i>
+                  <span class="font-medium text-[11px] leading-relaxed">{{ oauthNotice.message }}</span>
+                </div>
+                <button
+                  type="button"
+                  @click="oauthNotice = null"
+                  class="text-slate-400 hover:text-white p-0.5 rounded-full hover:bg-white/10 transition-colors shrink-0 cursor-pointer"
+                  title="Close"
+                >
+                  <i class="pi pi-times text-[10px]"></i>
+                </button>
+              </div>
+            </Transition>
+
+            <!-- Error Banner -->
             <div v-if="form.errors.email" class="bg-rose-500/10 border border-rose-500/30 rounded-xl p-2.5 text-rose-600 dark:text-rose-300 text-xs flex items-start gap-2 shadow-sm animate-shake">
               <i class="pi pi-exclamation-circle text-sm text-rose-500 shrink-0 mt-0.5"></i>
               <span class="leading-tight font-medium">{{ form.errors.email }}</span>

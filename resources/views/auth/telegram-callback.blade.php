@@ -48,8 +48,8 @@
             }
 
             if (!tgUser || !tgUser.id) {
-                document.getElementById('status-text').innerText = 'រកមិនឃើញទិន្នន័យពី Telegram... កំពុងត្រឡប់ទៅ Login';
-                setTimeout(() => { window.location.href = '/login'; }, 1500);
+                document.getElementById('status-text').innerText = 'ការចូលប្រើត្រូវបានបោះបង់... កំពុងត្រឡប់ទៅ Login';
+                setTimeout(() => { window.location.href = '/login?error=cancelled'; }, 800);
                 return;
             }
 
@@ -69,12 +69,11 @@
             if (res.ok && data.success) {
                 window.location.href = data.redirect || '/student/dashboard';
             } else {
-                alert(data.message || 'ការផ្ទៀងផ្ទាត់ Telegram មិនត្រឹមត្រូវ');
-                window.location.href = '/login';
+                window.location.href = '/login?error=unauthorized';
             }
         } catch (e) {
             console.error(e);
-            window.location.href = '/login';
+            window.location.href = '/login?error=unauthorized';
         }
     })();
     </script>
