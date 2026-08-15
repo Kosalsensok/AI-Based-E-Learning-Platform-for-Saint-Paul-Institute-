@@ -8,6 +8,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/images/logo.png?v=2">
     <link rel="apple-touch-icon" href="/images/logo.png?v=2">
     <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title inertia>E-LMS</title>
 
     <!-- Google Fonts Preconnect & Stylesheets (Kantumruy Pro, Inter, Battambang) -->
@@ -39,5 +40,7 @@
     @vite('resources/js/app.ts')
     @inertiaHead
 </head>
-<body class="font-sans antialiased">@inertia</body>
+<body class="font-sans antialiased bg-slate-900 text-slate-100 min-h-screen">
+    @inertia
+</body>
 </html>
