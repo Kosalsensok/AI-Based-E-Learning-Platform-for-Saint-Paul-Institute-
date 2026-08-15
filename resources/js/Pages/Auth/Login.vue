@@ -248,9 +248,26 @@ const telegramBotUsername = computed(() => {
   return (page.props as any).telegram?.bot_username || 'spi_elms_auth_bot'
 })
 
+const telegramBotId = computed(() => {
+  return (page.props as any).telegram?.bot_id || '78291045'
+})
+
 const isTelegramConfigured = computed(() => {
   return Boolean((page.props as any).telegram?.is_configured)
 })
+
+const getTelegramOAuthUrl = () => {
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://spilms.tech'
+  const returnTo = `${origin}/auth/telegram/callback`
+  const botId = telegramBotId.value
+  return `https://oauth.telegram.org/auth?bot_id=${botId}&origin=${encodeURIComponent(origin)}&return_to=${encodeURIComponent(returnTo)}`
+}
+
+const redirectToTelegramOAuth = () => {
+  if (typeof window !== 'undefined') {
+    window.location.href = getTelegramOAuthUrl()
+  }
+}
 
 const clerkPublishableKey = computed(() => {
   return (page.props as any).clerk?.publishable_key || 'pk_test_Y2xlcmsuYXBwXzNIdXFzcnd5VUlCWUR2OTBhS2dPaXdmc0treC5sY2xzdGFnZS5kZXYk'
@@ -273,12 +290,7 @@ const loadTelegramWidget = () => {
 }
 
 const openTelegramLogin = () => {
-  showTelegramModal.value = true
-  telegramErrorMessage.value = null
-  isTelegramVerifying.value = false
-  setTimeout(() => {
-    loadTelegramWidget()
-  }, 120)
+  redirectToTelegramOAuth()
 }
 
 const closeTelegramModal = () => {
@@ -536,7 +548,7 @@ const confirmGoogleOAuthConsent = () => {
 
 const handleSocialLogin = (provider: string) => {
   if (provider === 'Telegram') {
-    openTelegramLogin()
+    redirectToTelegramOAuth()
     return
   }
 
@@ -1046,11 +1058,11 @@ const handleSocialLogin = (provider: string) => {
               </div>
             </div>
 
-            <!-- Official Telegram Widget Embed Container (Center of Attention) -->
-            <div class="p-5 sm:p-6 rounded-2xl bg-[#1e1f20]/80 dark:bg-slate-900/90 border border-[#3c4043]/70 dark:border-slate-800 flex flex-col items-center justify-center min-h-[115px] relative overflow-hidden shadow-inner">
+            <!-- Direct Telegram OAuth Action Container -->
+            <div class="p-4 sm:p-5 rounded-2xl bg-[#1e1f20]/80 dark:bg-slate-900/90 border border-[#3c4043]/70 dark:border-slate-800 flex flex-col items-center justify-center space-y-3 relative overflow-hidden shadow-inner">
               
               <!-- Verifying Loading State -->
-              <div v-if="isTelegramVerifying" class="flex flex-col items-center justify-center gap-2 py-3">
+              <div v-if="isTelegramVerifying" class="flex flex-col items-center justify-center gap-2 py-2">
                 <div class="relative w-9 h-9 flex items-center justify-center">
                   <div class="absolute inset-0 rounded-full border-2 border-sky-400/30 border-t-sky-500 animate-spin"></div>
                   <i class="pi pi-telegram text-sky-400 text-base"></i>
@@ -1060,9 +1072,18 @@ const handleSocialLogin = (provider: string) => {
                 </p>
               </div>
 
-              <!-- Official Widget Injection Point -->
-              <div v-else class="flex flex-col items-center justify-center gap-2">
-                <div ref="telegramWidgetContainer" class="flex items-center justify-center transform scale-105"></div>
+              <!-- Full Redirect Action Button -->
+              <div v-else class="w-full space-y-2">
+                <a
+                  :href="getTelegramOAuthUrl()"
+                  class="w-full inline-flex items-center justify-center gap-3 bg-[#24A1DE] hover:bg-[#1E8BC0] text-white font-semibold py-3.5 px-6 rounded-2xl transition-all duration-200 shadow-lg shadow-sky-500/20 active:scale-[0.98] text-sm cursor-pointer select-none"
+                >
+                  <!-- Telegram SVG Icon -->
+                  <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                    <path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.56 8.16l-1.92 9.07c-.14.65-.53.81-1.07.51l-2.97-2.19-1.43 1.38c-.16.16-.29.29-.6.29l.21-3.03 5.51-4.98c.24-.21-.05-.33-.37-.12l-6.81 4.29-2.94-.92c-.64-.2-.65-.64.13-.95l11.49-4.43c.53-.2 1 .13.77 1.07z"/>
+                  </svg>
+                  <span>{{ t('telegram_continue_btn', 'Continue with Telegram') }}</span>
+                </a>
               </div>
             </div>
 

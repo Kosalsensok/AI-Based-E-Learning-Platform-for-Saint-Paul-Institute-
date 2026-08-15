@@ -35,6 +35,9 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $botToken = config('services.telegram.bot_token') ?? env('TELEGRAM_BOT_TOKEN');
+        $botId = config('services.telegram.bot_id') ?? env('TELEGRAM_BOT_ID') ?? (!empty($botToken) && str_contains((string) $botToken, ':') ? explode(':', (string) $botToken)[0] : null);
+
         return [
             ...parent::share($request),
             'auth' => [
@@ -42,7 +45,8 @@ class HandleInertiaRequests extends Middleware
             ],
             'telegram' => [
                 'bot_username' => config('services.telegram.bot_username') ?? env('TELEGRAM_BOT_USERNAME', 'spi_elms_auth_bot'),
-                'is_configured' => !empty(config('services.telegram.bot_token') ?? env('TELEGRAM_BOT_TOKEN')),
+                'bot_id' => $botId,
+                'is_configured' => !empty($botToken),
             ],
             'clerk' => [
                 'publishable_key' => config('services.clerk.publishable_key') ?? env('VITE_CLERK_PUBLISHABLE_KEY'),
