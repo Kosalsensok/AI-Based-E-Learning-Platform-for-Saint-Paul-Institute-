@@ -243,7 +243,6 @@ const showTelegramModal = ref(false)
 const isTelegramVerifying = ref(false)
 const telegramErrorMessage = ref<string | null>(null)
 const telegramWidgetContainer = ref<HTMLDivElement | null>(null)
-const showDomainHelp = ref(false)
 
 const telegramBotUsername = computed(() => {
   return (page.props as any).telegram?.bot_username || 'spi_elms_auth_bot'
@@ -328,19 +327,6 @@ const handleTelegramAuthSuccess = async (tgUser: any) => {
   }
 }
 
-const handleDevTelegramLogin = () => {
-  const mockUser = {
-    id: '78291045',
-    first_name: 'Sokha',
-    last_name: 'Student',
-    username: 'sokha_spi',
-    photo_url: 'https://api.dicebear.com/7.x/bottts/svg?seed=sokha',
-    auth_date: Math.floor(Date.now() / 1000),
-    hash: 'dev_mock_hash_for_testing',
-  }
-  handleTelegramAuthSuccess(mockUser)
-}
-
 const handleGoogleAuthSuccess = async (googleUser: any) => {
   isGoogleVerifying.value = true
   googleErrorMessage.value = null
@@ -380,18 +366,6 @@ const handleGoogleAuthSuccess = async (googleUser: any) => {
     isGoogleVerifying.value = false
     googleErrorMessage.value = t('google_login_error', 'មានបញ្ហាក្នុងការតភ្ជាប់ទៅកាន់ម៉ាស៊ីនបម្រើ។ សូមព្យាយាមម្តងទៀត!')
   }
-}
-
-const handleDevGoogleLogin = () => {
-  const mockGoogleUser = {
-    id: 'clerk_user_3HuqsrwyUIBYDv90aKgOiwfsKkx',
-    google_id: 'google_1092837465192837465',
-    email: 'student.spi@gmail.com',
-    first_name: 'Dara',
-    last_name: 'Sok',
-    imageUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=dara_google',
-  }
-  handleGoogleAuthSuccess(mockGoogleUser)
 }
 
 let clerkLoadingPromise: Promise<any> | null = null
@@ -1008,7 +982,7 @@ const handleSocialLogin = (provider: string) => {
         </div>
       </Transition>
 
-      <!-- Telegram OAuth Login Widget Modal -->
+      <!-- Official Telegram Sign-In Modal (Clean, Modern, Official Institution Branded) -->
       <Transition
         enter-active-class="transition duration-300 ease-out"
         enter-from-class="opacity-0 scale-95 translate-y-3"
@@ -1017,31 +991,23 @@ const handleSocialLogin = (provider: string) => {
         leave-from-class="opacity-100 scale-100 translate-y-0"
         leave-to-class="opacity-0 scale-95 translate-y-3"
       >
-        <div v-if="showTelegramModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md select-none overflow-y-auto">
-          <div class="max-w-md w-full bg-white dark:bg-[#0E172E] rounded-3xl p-6 sm:p-7 shadow-2xl border border-sky-500/30 dark:border-sky-500/30 text-slate-900 dark:text-white relative transform transition-all space-y-5">
+        <div v-if="showTelegramModal" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md select-none overflow-y-auto font-sans">
+          <div class="max-w-[440px] w-full bg-[#131314] dark:bg-[#0E172E] rounded-[28px] border border-[#2d3135] dark:border-slate-800 text-white p-6 sm:p-7 shadow-2xl shadow-black/80 relative space-y-5">
             
-            <!-- Modal Header -->
-            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3.5">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-sky-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-sky-500/25 ring-2 ring-sky-400/20 shrink-0">
-                  <i class="pi pi-telegram text-xl"></i>
+            <!-- Top Header & Close Button -->
+            <div class="flex items-center justify-between border-b border-[#2d3135] dark:border-slate-800/80 pb-3">
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-full bg-sky-500/20 flex items-center justify-center text-sky-400">
+                  <i class="pi pi-telegram text-xs"></i>
                 </div>
-                <div>
-                  <h3 class="text-base font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-                    <span>{{ t('telegram_login_title', 'Telegram Login Widget') }}</span>
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">OAuth</span>
-                  </h3>
-                  <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                    {{ t('telegram_login_subtitle', 'ចូលប្រើប្រព័ន្ធដោយស្វ័យប្រវត្តិតាម Telegram') }}
-                  </p>
-                </div>
+                <span class="text-xs font-semibold text-slate-300">{{ t('telegram_login_title', 'ចូលប្រើប្រាស់តាម Telegram') }}</span>
               </div>
 
               <button
                 type="button"
                 @click="closeTelegramModal"
                 :disabled="isTelegramVerifying"
-                class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white flex items-center justify-center transition-all cursor-pointer disabled:opacity-40"
+                class="w-7 h-7 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition-all cursor-pointer disabled:opacity-40"
                 title="Close"
               >
                 <i class="pi pi-times text-xs"></i>
@@ -1049,99 +1015,66 @@ const handleSocialLogin = (provider: string) => {
             </div>
 
             <!-- Error Banner -->
-            <div v-if="telegramErrorMessage" class="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-300 text-xs flex items-start gap-2.5 shadow-xs animate-shake">
-              <i class="pi pi-exclamation-triangle text-rose-500 shrink-0 mt-0.5 text-sm"></i>
+            <div v-if="telegramErrorMessage" class="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-2.5 shadow-xs">
+              <i class="pi pi-exclamation-triangle text-rose-400 shrink-0 mt-0.5 text-sm"></i>
               <div class="leading-relaxed font-medium">
                 {{ telegramErrorMessage }}
               </div>
             </div>
 
-            <!-- 3-Step Process Guide Cards -->
-            <div class="grid grid-cols-3 gap-2 text-center text-[10px] font-semibold">
-              <div class="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 flex flex-col items-center gap-1.5 shadow-2xs">
-                <div class="w-6 h-6 rounded-full bg-blue-500/10 dark:bg-sky-500/20 text-blue-600 dark:text-sky-400 font-bold flex items-center justify-center text-xs">1</div>
-                <span class="text-slate-700 dark:text-slate-300 leading-tight">{{ t('tg_step_1', 'ចុចប៊ូតុងខាងក្រោម') }}</span>
+            <!-- Official Institution Branding & Title -->
+            <div class="text-center space-y-2.5 pt-1">
+              <div class="inline-flex items-center justify-center p-2 rounded-2xl bg-blue-600/15 border border-blue-500/30 shadow-lg shadow-blue-500/10">
+                <img :src="logoUrl" alt="SPI LMS Logo" class="w-10 h-10 object-contain" />
               </div>
-              <div class="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 flex flex-col items-center gap-1.5 shadow-2xs">
-                <div class="w-6 h-6 rounded-full bg-blue-500/10 dark:bg-sky-500/20 text-blue-600 dark:text-sky-400 font-bold flex items-center justify-center text-xs">2</div>
-                <span class="text-slate-700 dark:text-slate-300 leading-tight">{{ t('tg_step_2', 'Confirm ក្នុង App') }}</span>
+
+              <div class="space-y-1">
+                <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-white">
+                  {{ t('telegram_official_title', 'Sign In to SPI LMS') }}
+                </h2>
+                <p class="text-xs text-slate-400">
+                  {{ t('telegram_official_subtitle', 'Use your Telegram account to continue') }}
+                </p>
               </div>
-              <div class="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 flex flex-col items-center gap-1.5 shadow-2xs">
-                <div class="w-6 h-6 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold flex items-center justify-center text-xs">3</div>
-                <span class="text-slate-700 dark:text-slate-300 leading-tight">{{ t('tg_step_3', 'Login ស្វ័យប្រវត្តិ') }}</span>
+
+              <!-- Domain Security Badge -->
+              <div class="flex items-center justify-center pt-0.5">
+                <span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[11px] font-medium tracking-wide">
+                  <i class="pi pi-shield text-[10px]"></i>
+                  <span>SPI Identity Gateway</span>
+                </span>
               </div>
             </div>
 
-            <!-- Official Telegram Widget Embed Container -->
-            <div class="p-4 rounded-2xl bg-slate-100/80 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center min-h-[110px] relative overflow-hidden">
+            <!-- Official Telegram Widget Embed Container (Center of Attention) -->
+            <div class="p-5 sm:p-6 rounded-2xl bg-[#1e1f20]/80 dark:bg-slate-900/90 border border-[#3c4043]/70 dark:border-slate-800 flex flex-col items-center justify-center min-h-[115px] relative overflow-hidden shadow-inner">
               
               <!-- Verifying Loading State -->
-              <div v-if="isTelegramVerifying" class="flex flex-col items-center justify-center gap-2.5 py-3">
-                <div class="relative w-10 h-10 flex items-center justify-center">
+              <div v-if="isTelegramVerifying" class="flex flex-col items-center justify-center gap-2 py-3">
+                <div class="relative w-9 h-9 flex items-center justify-center">
                   <div class="absolute inset-0 rounded-full border-2 border-sky-400/30 border-t-sky-500 animate-spin"></div>
-                  <i class="pi pi-telegram text-sky-500 text-base animate-pulse"></i>
+                  <i class="pi pi-telegram text-sky-400 text-base"></i>
                 </div>
-                <p class="text-xs font-bold text-sky-600 dark:text-sky-400 animate-pulse">
-                  {{ t('telegram_verifying', 'កំពុងផ្ទៀងផ្ទាត់ហត្ថលេខាពី Telegram...') }}
+                <p class="text-xs font-bold text-sky-400 animate-pulse">
+                  {{ t('telegram_verifying', 'កំពុងផ្ទៀងផ្ទាត់គណនី Telegram...') }}
                 </p>
               </div>
 
               <!-- Official Widget Injection Point -->
               <div v-else class="flex flex-col items-center justify-center gap-2">
-                <div ref="telegramWidgetContainer" class="flex items-center justify-center"></div>
-                <p class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                  Bot: <span class="font-bold text-slate-700 dark:text-slate-300">@{{ telegramBotUsername }}</span>
-                </p>
+                <div ref="telegramWidgetContainer" class="flex items-center justify-center transform scale-105"></div>
               </div>
             </div>
 
-            <!-- Developer / Domain Help Drawer -->
-            <div class="space-y-2">
-              <button
-                type="button"
-                @click="showDomainHelp = !showDomainHelp"
-                class="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[11px] font-semibold text-slate-600 dark:text-slate-400 transition-colors cursor-pointer"
-              >
-                <span class="flex items-center gap-1.5">
-                  <i class="pi pi-question-circle text-sky-500"></i>
-                  <span>{{ t('tg_help_btn', 'របៀបតភ្ជាប់ Bot ជាមួយ Domain (@BotFather)') }}</span>
-                </span>
-                <i :class="['pi pi-chevron-down text-[10px] transition-transform duration-200', showDomainHelp ? 'rotate-180' : '']"></i>
-              </button>
-
-              <Transition
-                enter-active-class="transition duration-200 ease-out"
-                enter-from-class="opacity-0 -translate-y-1 max-h-0"
-                enter-to-class="opacity-100 translate-y-0 max-h-96"
-                leave-active-class="transition duration-150 ease-in"
-                leave-from-class="opacity-100 translate-y-0 max-h-96"
-                leave-to-class="opacity-0 -translate-y-1 max-h-0"
-              >
-                <div v-if="showDomainHelp" class="p-3 rounded-xl bg-sky-50/50 dark:bg-sky-950/20 border border-sky-200/60 dark:border-sky-800/40 text-[11px] text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
-                  <p class="font-bold text-sky-700 dark:text-sky-300">
-                    {{ t('tg_setup_guide_title', 'ជំហានភ្ជាប់ Telegram OAuth ជាមួយ Domain:') }}
-                  </p>
-                  <ol class="list-decimal list-inside space-y-1 text-[10px]">
-                    <li>បើក Telegram ហើយផ្ញើសារទៅ <a href="https://t.me/BotFather" target="_blank" class="text-sky-600 underline font-bold">@BotFather</a></li>
-                    <li>ផ្ញើពាក្យបញ្ជា <code class="bg-white/80 dark:bg-slate-800 px-1 py-0.5 rounded font-mono text-sky-600">/setdomain</code></li>
-                    <li>ជ្រើសរើស Bot របស់អ្នក (ឧ. <code class="bg-white/80 dark:bg-slate-800 px-1 py-0.5 rounded font-mono">@{{ telegramBotUsername }}</code>)</li>
-                    <li>បញ្ចូល Domain វេបសាយ (ឧ. <code class="bg-white/80 dark:bg-slate-800 px-1 py-0.5 rounded font-mono">https://yourdomain.com</code>)</li>
-                  </ol>
-                </div>
-              </Transition>
-            </div>
-
-            <!-- Instant Demo/Test Sandbox Button (For Quick Local Verification) -->
-            <div class="pt-1 flex items-center gap-2">
-              <button
-                type="button"
-                @click="handleDevTelegramLogin"
-                :disabled="isTelegramVerifying"
-                class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 active:scale-[0.98] text-white text-xs font-bold transition-all shadow-md shadow-sky-500/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-              >
-                <i class="pi pi-bolt text-amber-300 text-sm"></i>
-                <span>{{ t('tg_dev_test_btn', 'សាកល្បង Login គំរូ (Sandbox Demo Login)') }}</span>
-              </button>
+            <!-- Security Trust & Terms Footer -->
+            <div class="pt-2 text-center space-y-1.5 border-t border-[#2d3135] dark:border-slate-800/80">
+              <p class="text-[11px] text-slate-400 leading-relaxed">
+                {{ t('telegram_terms_notice', 'By signing in, you agree to our Terms of Use & Privacy Policy') }}
+              </p>
+              <div class="flex items-center justify-center gap-1.5 text-[10px] text-slate-500 font-medium">
+                <i class="pi pi-lock text-[9px]"></i>
+                <span>Protected by SPI Security</span>
+              </div>
             </div>
 
           </div>
