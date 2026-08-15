@@ -590,7 +590,10 @@ onMounted(() => {
         window.history.replaceState({}, document.title, window.location.pathname)
       } catch (_) {}
     } else if (urlParams.get('id') && urlParams.get('hash')) {
-      const tgUser = Object.fromEntries(urlParams.entries())
+      const tgUser: Record<string, string> = {}
+      urlParams.forEach((val, key) => {
+        tgUser[key] = val
+      })
       try {
         window.history.replaceState({}, document.title, window.location.pathname)
       } catch (_) {}
