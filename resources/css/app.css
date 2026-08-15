@@ -112,3 +112,72 @@ a {
   line-height: 1.6 !important;
   letter-spacing: 0.02em !important;
 }
+
+/* Universal Slim & Sleek Custom Scrollbar */
+.custom-scrollbar,
+.custom-scrollbar-slim {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+html.dark .custom-scrollbar,
+html.dark .custom-scrollbar-slim,
+.dark .custom-scrollbar,
+.dark .custom-scrollbar-slim {
+  scrollbar-color: #334155 transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar,
+.custom-scrollbar-slim::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track,
+.custom-scrollbar-slim::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb,
+.custom-scrollbar-slim::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+  transition: background-color 0.2s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover,
+.custom-scrollbar-slim::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+html.dark .custom-scrollbar::-webkit-scrollbar-thumb,
+html.dark .custom-scrollbar-slim::-webkit-scrollbar-thumb,
+.dark .custom-scrollbar::-webkit-scrollbar-thumb,
+.dark .custom-scrollbar-slim::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+html.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover,
+html.dark .custom-scrollbar-slim::-webkit-scrollbar-thumb:hover,
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover,
+.dark .custom-scrollbar-slim::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Waving Hand Micro-Interaction */
+@keyframes wave {
+  0% { transform: rotate(0deg); }
+  10% { transform: rotate(14deg); }
+  20% { transform: rotate(-8deg); }
+  30% { transform: rotate(14deg); }
+  40% { transform: rotate(-4deg); }
+  50% { transform: rotate(10deg); }
+  60% { transform: rotate(0deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.animate-waving-hand {
+  display: inline-block;
+  transform-origin: 70% 70%;
+  animation: wave 2.2s infinite ease-in-out;
+}

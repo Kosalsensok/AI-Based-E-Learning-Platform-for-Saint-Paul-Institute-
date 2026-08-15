@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, defineAsyncComponent } from 'vue'
 import { router } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import Toast from 'primevue/toast'
@@ -8,18 +8,20 @@ import { useToast } from 'primevue/usetoast'
 // Sub-components inside PaymentABAModule
 import PaymentDashboard from './PaymentDashboard.vue'
 import CoursePricing from './CoursePricing.vue'
-import PricingModal from './PricingModal.vue'
-import DiscountCodeModal from './DiscountCodeModal.vue'
 import AbaTransactions from './AbaTransactions.vue'
 import TransactionDrawer from './TransactionDrawer.vue'
 import ReceiptVerification from './ReceiptVerification.vue'
-import ReceiptVerificationModal from './ReceiptVerificationModal.vue'
 import PaymentHistory from './PaymentHistory.vue'
-import InvoiceModal from './InvoiceModal.vue'
 import Refunds from './Refunds.vue'
-import RefundModal from './RefundModal.vue'
 import RevenueReports from './RevenueReports.vue'
-import TeacherPayoutModal from './TeacherPayoutModal.vue'
+
+// Lazy-Loaded Modals
+const PricingModal = defineAsyncComponent(() => import('./PricingModal.vue'))
+const DiscountCodeModal = defineAsyncComponent(() => import('./DiscountCodeModal.vue'))
+const ReceiptVerificationModal = defineAsyncComponent(() => import('./ReceiptVerificationModal.vue'))
+const InvoiceModal = defineAsyncComponent(() => import('./InvoiceModal.vue'))
+const RefundModal = defineAsyncComponent(() => import('./RefundModal.vue'))
+const TeacherPayoutModal = defineAsyncComponent(() => import('./TeacherPayoutModal.vue'))
 
 const props = defineProps<{
   tab?: string

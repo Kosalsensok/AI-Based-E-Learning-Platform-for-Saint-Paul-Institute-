@@ -1,283 +1,383 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useForm } from '@inertiajs/vue3'
+import { ref, computed } from 'vue'
+import { router, useForm } from '@inertiajs/vue3'
 
 const props = defineProps<{
   courses: Array<any>
-  pdfs: Array<any>
+  courseMaterials?: Array<any>
+  pdfs?: Array<any>
+  selectedCourseId?: number | null
 }>()
 
 const searchQuery = ref('')
-const selectedCourse = ref('')
+const selectedCourseFilter = ref<number | 'all'>('all')
+const isDragging = ref(false)
 
-const samplePdfs = ref([
-  {
-    id: 1,
-    name: 'C_Programming_Complete_Notes.pdf',
-    title_kh: 'កំណត់ចំណាំមេរៀន C Programming',
-    title_en: 'C Programming Lecture Notes',
-    course: 'C Programming Basics',
-    module: 'Module 1: Introduction',
-    chapter: 'Chapter 1.1: History of C',
-    pages: 45,
-    size: '2.4MB',
-    status: 'Ready',
-    watermark: true,
-    downloadable: false,
-  },
-  {
-    id: 2,
-    name: 'Variables_CheatSheet.pdf',
-    title_kh: 'តារាងសង្ខេបអថេរ',
-    title_en: 'Variables CheatSheet',
-    course: 'C Programming Basics',
-    module: 'Module 2: Variables',
-    chapter: 'Chapter 2.1: Data Types',
-    pages: 5,
-    size: '800KB',
-    status: 'Ready',
-    watermark: true,
-    downloadable: true,
-  },
-  {
-    id: 3,
-    name: 'Assignment_1_Instructions.pdf',
-    title_kh: 'សេចក្តីណែនាំកិច្ចការផ្ទះ ១',
-    title_en: 'Assignment 1 Instructions',
-    course: 'Web Development',
-    module: 'Module 1: HTML & CSS',
-    chapter: 'Chapter 1.2: HTML Basics',
-    pages: 2,
-    size: '180KB',
-    status: 'Ready',
-    watermark: false,
-    downloadable: true,
-  }
-])
+// Combined PDFs list from models & legacy
+const allPdfs = computed(() => {
+  const modelList = (props.courseMaterials || [])
+    .filter(m => m.type === 'pdf')
+    .map(m => ({
+      id: m.id,
+      title: m.title,
+      file_name: m.file_name || m.title,
+      course_id: m.course_id,
+      course_title: m.course?.title || 'General Course',
+      file_size: m.file_size || '2.4 MB',
+      download_count: m.download_count || 0,
+      file_url: m.file_url || '/storage/pdfs/sample.pdf',
+      created_at: m.created_at ? new Date(m.created_at).toLocaleDateString() : 'Today',
+    }))
 
-// Upload PDF Modal State
-const showUploadModal = ref(false)
-const uploadForm = useForm({
-  course_id: null,
-  module_id: null,
-  chapter_id: null,
-  title_kh: '',
-  title_en: '',
-  doc_type: 'Lecture Note',
-  allow_online_preview: true,
-  add_watermark: true,
-  allow_download: false,
-  attach_chapter: true,
+  return modelList
 })
 
-const submitUpload = () => {
-  alert('PDF Document uploaded successfully!')
-  showUploadModal.value = false
-  uploadForm.reset()
+const filteredPdfs = computed(() => {
+  return allPdfs.value.filter(p => {
+    const matchSearch = p.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+                        p.file_name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+                        p.course_title.toLowerCase().includes(searchQuery.value.toLowerCase())
+    const matchCourse = selectedCourseFilter.value === 'all' || p.course_id == selectedCourseFilter.value
+    return matchSearch && matchCourse
+  })
+})
+
+// Upload PDF Form & Modal
+const showUploadModal = ref(false)
+const isUploading = ref(false)
+
+const uploadForm = useForm({
+  course_id: props.selectedCourseId || (props.courses?.[0]?.id ?? null),
+  title: '',
+  pdf: null as File | null,
+  file_url: '',
+})
+
+// Replace PDF Modal
+const showReplaceModal = ref(false)
+const selectedPdfForReplace = ref<any>(null)
+const replaceForm = useForm({
+  pdf: null as File | null,
+})
+
+const handleFileSelect = (e: Event) => {
+  const target = e.target as HTMLInputElement
+  if (target.files && target.files[0]) {
+    const file = target.files[0]
+    uploadForm.pdf = file
+    if (!uploadForm.title) {
+      uploadForm.title = file.name
+    }
+  }
 }
 
-// PDF Online Preview Modal
-const showPreviewModal = ref(false)
-const previewPdf = ref<any>(null)
-const zoomLevel = ref(100)
+const handleDrop = (e: DragEvent) => {
+  isDragging.value = false
+  if (e.dataTransfer && e.dataTransfer.files.length > 0) {
+    const file = e.dataTransfer.files[0]
+    if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+      uploadForm.pdf = file
+      uploadForm.title = file.name
+      showUploadModal.value = true
+    } else {
+      alert('Please drop a PDF file.')
+    }
+  }
+}
 
-const openPreview = (pdf: any) => {
-  previewPdf.value = pdf
-  showPreviewModal.value = true
+const submitUpload = () => {
+  if (!uploadForm.course_id || !uploadForm.title) return
+  isUploading.value = true
+
+  uploadForm.post(`/teacher/courses/${uploadForm.course_id}/pdfs`, {
+    preserveScroll: true,
+    forceFormData: true,
+    onSuccess: () => {
+      isUploading.value = false
+      showUploadModal.value = false
+      uploadForm.reset()
+    },
+    onError: () => {
+      isUploading.value = false
+    }
+  })
+}
+
+const openReplace = (pdf: any) => {
+  selectedPdfForReplace.value = pdf
+  showReplaceModal.value = true
+}
+
+const submitReplace = () => {
+  if (!selectedPdfForReplace.value || !replaceForm.pdf) return
+  const courseId = selectedPdfForReplace.value.course_id
+  replaceForm.post(`/teacher/courses/${courseId}/pdfs`, {
+    preserveScroll: true,
+    forceFormData: true,
+    onSuccess: () => {
+      showReplaceModal.value = false
+      replaceForm.reset()
+    }
+  })
+}
+
+const deletePdf = (pdf: any) => {
+  if (!confirm(`Delete PDF "${pdf.title}"?`)) return
+  router.delete(`/teacher/courses/materials/${pdf.id}`, {
+    preserveScroll: true
+  })
 }
 </script>
 
 <template>
-  <div class="space-y-5">
-    <!-- Top Toolbar -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-gray-800 p-4 rounded-2xl border border-slate-200/80 dark:border-gray-700 shadow-sm">
-      <div class="flex flex-wrap items-center gap-3">
-        <select v-model="selectedCourse" class="p-2.5 rounded-xl border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-700 text-xs font-semibold">
-          <option value="">All Courses ▼</option>
+  <div class="space-y-6">
+    <!-- UPLOAD DROPZONE BANNER (PDF only) -->
+    <div
+      @dragover.prevent="isDragging = true"
+      @dragleave.prevent="isDragging = false"
+      @drop.prevent="handleDrop"
+      :class="[
+        'rounded-3xl border-2 border-dashed p-6 md:p-8 text-center transition-all cursor-pointer relative overflow-hidden',
+        isDragging
+          ? 'border-rose-500 bg-rose-500/10 scale-[1.01]'
+          : 'border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-gray-850 hover:bg-slate-100 dark:hover:bg-gray-800'
+      ]"
+      @click="showUploadModal = true"
+    >
+      <div class="max-w-md mx-auto space-y-3 pointer-events-none">
+        <div class="w-16 h-16 mx-auto rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center text-3xl shadow-inner border border-rose-500/20">
+          📄
+        </div>
+        <div>
+          <h3 class="font-extrabold text-base text-slate-900 dark:text-white">
+            Upload PDF Reading Material & Handouts
+          </h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Drag & drop PDF files here, or <span class="text-rose-500 font-bold underline">click to browse</span>
+          </p>
+        </div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-200/70 dark:bg-gray-700 text-[10px] font-bold text-slate-600 dark:text-slate-300">
+          <span>Format: PDF Only</span>
+          <span>•</span>
+          <span>Handouts, Worksheets & Reading Guides</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTROLS & FILTER BAR -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-slate-200 dark:border-gray-700 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="flex items-center gap-3 flex-wrap">
+        <select
+          v-model="selectedCourseFilter"
+          class="px-3 py-2 bg-slate-50 dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xl text-xs text-slate-900 dark:text-white font-semibold"
+        >
+          <option value="all">All Courses</option>
           <option v-for="c in courses" :key="c.id" :value="c.id">{{ c.title }}</option>
         </select>
+      </div>
 
-        <div class="relative">
-          <i class="pi pi-search absolute left-3 top-3 text-slate-400 text-xs"></i>
+      <div class="flex items-center gap-3">
+        <div class="relative w-full md:w-64">
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Search PDF..."
-            class="pl-8 pr-3 py-2 rounded-xl border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-700 text-xs focus:ring-2 focus:ring-blue-500 w-56"
+            placeholder="Search PDF handouts..."
+            class="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:outline-none"
           />
+          <span class="absolute left-3 top-2.5 text-slate-400 text-xs">🔍</span>
         </div>
-      </div>
 
-      <button
-        @click="showUploadModal = true"
-        class="px-4 py-2 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white rounded-xl text-xs font-bold shadow-md shadow-red-500/20 transition flex items-center gap-2"
-      >
-        <i class="pi pi-file-pdf"></i>
-        <span>+ Upload PDF</span>
-      </button>
+        <button
+          @click="showUploadModal = true"
+          type="button"
+          class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl shadow-md transition whitespace-nowrap cursor-pointer flex items-center gap-1.5"
+        >
+          <span>+</span>
+          <span>Upload PDF</span>
+        </button>
+      </div>
     </div>
 
-    <!-- PDF Library Table -->
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-gray-700 overflow-hidden">
-      <table class="w-full text-left border-collapse text-xs">
-        <thead>
-          <tr class="bg-slate-50 dark:bg-gray-700/50 text-slate-500 uppercase tracking-wider border-b border-slate-200/80 dark:border-gray-700">
-            <th class="p-3.5">PDF Document Name</th>
-            <th class="p-3.5">Course</th>
-            <th class="p-3.5">Pages</th>
-            <th class="p-3.5">Size</th>
-            <th class="p-3.5">Watermark</th>
-            <th class="p-3.5">Status</th>
-            <th class="p-3.5 text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-100 dark:divide-gray-700">
-          <tr v-for="pdf in samplePdfs" :key="pdf.id" class="hover:bg-slate-50/50 dark:hover:bg-gray-700/30 transition">
-            <td class="p-3.5">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-lg bg-rose-50 text-rose-600 font-bold flex items-center justify-center text-lg shadow-sm border border-rose-200/60">
-                  📄
-                </div>
-                <div>
-                  <p class="font-bold text-slate-800 dark:text-white">{{ pdf.name }}</p>
-                  <p class="text-[11px] text-rose-600 dark:text-rose-400 font-medium">{{ pdf.title_kh }}</p>
-                </div>
+    <!-- PDF ITEMS LIST -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-slate-200 dark:border-gray-700 shadow-sm overflow-hidden">
+      <div class="p-4 border-b border-slate-200 dark:border-gray-700 flex items-center justify-between">
+        <h3 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+          <span>📄 Course PDFs Repository</span>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950 text-rose-600 font-extrabold">{{ filteredPdfs.length }}</span>
+        </h3>
+        <span class="text-xs text-slate-400">Available to enrolled students for offline reading</span>
+      </div>
+
+      <div v-if="filteredPdfs.length === 0" class="p-12 text-center text-slate-400 text-xs">
+        <div class="text-4xl mb-2">📑</div>
+        <p class="font-bold text-slate-700 dark:text-slate-200">No PDF documents found.</p>
+        <p class="text-slate-400 mt-1">Upload PDF handouts and reading material using the dropzone above.</p>
+      </div>
+
+      <div v-else class="divide-y divide-slate-100 dark:divide-gray-700">
+        <div
+          v-for="pdf in filteredPdfs"
+          :key="pdf.id"
+          class="p-4 hover:bg-slate-50 dark:hover:bg-gray-700/40 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4"
+        >
+          <div class="flex items-start gap-3.5">
+            <div class="w-11 h-11 rounded-xl bg-rose-500/10 text-rose-500 border border-rose-500/20 flex items-center justify-center text-xl shrink-0 font-bold">
+              📄
+            </div>
+
+            <div class="space-y-1">
+              <h4 class="font-bold text-sm text-slate-900 dark:text-white">{{ pdf.title }}</h4>
+              <div class="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 flex-wrap">
+                <span>📚 {{ pdf.course_title }}</span>
+                <span>•</span>
+                <span>📦 {{ pdf.file_size }}</span>
+                <span>•</span>
+                <span>📥 {{ pdf.download_count }} downloads</span>
+                <span>•</span>
+                <span>Uploaded: {{ pdf.created_at }}</span>
               </div>
-            </td>
-            <td class="p-3.5 font-medium text-slate-600 dark:text-slate-300">{{ pdf.course }}</td>
-            <td class="p-3.5 font-bold text-slate-700 dark:text-slate-200">{{ pdf.pages }} Pages</td>
-            <td class="p-3.5 text-slate-500">{{ pdf.size }}</td>
-            <td class="p-3.5">
-              <span class="px-2 py-0.5 font-bold rounded text-[10px]" :class="pdf.watermark ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'">
-                {{ pdf.watermark ? '☑️ Enabled' : '☐ Disabled' }}
-              </span>
-            </td>
-            <td class="p-3.5">
-              <span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 font-bold rounded-full text-[10px]">
-                🟢 Ready
-              </span>
-            </td>
-            <td class="p-3.5 text-right space-x-1.5">
-              <button @click="openPreview(pdf)" class="px-2.5 py-1 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg font-bold">👁 View Online</button>
-              <button class="px-2.5 py-1 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-semibold">✏ Edit</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- 📄 UPLOAD PDF MODAL -->
-    <div v-if="showUploadModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-xl w-full p-6 space-y-4 shadow-2xl overflow-y-auto max-h-[90vh]">
-        <div class="flex items-center justify-between border-b border-slate-100 dark:border-gray-700 pb-3">
-          <h3 class="text-base font-bold text-slate-800 dark:text-white">📄 Upload PDF Document</h3>
-          <button @click="showUploadModal = false" class="text-slate-400 hover:text-slate-600"><i class="pi pi-times"></i></button>
-        </div>
-
-        <div class="border-2 border-dashed border-rose-400 dark:border-rose-500/50 bg-rose-50/50 dark:bg-rose-900/10 rounded-2xl p-6 text-center space-y-2 cursor-pointer">
-          <i class="pi pi-file-pdf text-3xl text-rose-600"></i>
-          <p class="text-xs font-bold text-slate-700 dark:text-slate-200">Drag & Drop PDF document here</p>
-          <p class="text-[11px] text-slate-400">Support: PDF, DOCX auto-convert to PDF</p>
-          <button class="px-4 py-1.5 bg-rose-600 text-white rounded-xl text-xs font-bold shadow">Browse File</button>
-        </div>
-
-        <div class="space-y-3 text-xs">
-          <div class="grid grid-cols-3 gap-3">
-            <div>
-              <label class="block font-semibold mb-1">Course</label>
-              <select v-model="uploadForm.course_id" class="w-full p-2.5 rounded-xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-700">
-                <option :value="null">C Programming ▼</option>
-              </select>
-            </div>
-            <div>
-              <label class="block font-semibold mb-1">Module</label>
-              <select v-model="uploadForm.module_id" class="w-full p-2.5 rounded-xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-700">
-                <option :value="null">Module 2: Variables ▼</option>
-              </select>
-            </div>
-            <div>
-              <label class="block font-semibold mb-1">Chapter</label>
-              <select v-model="uploadForm.chapter_id" class="w-full p-2.5 rounded-xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-700">
-                <option :value="null">Chapter 2.1: Data Types ▼</option>
-              </select>
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block font-semibold mb-1">Title KH</label>
-              <input v-model="uploadForm.title_kh" type="text" placeholder="កំណត់ចំណាំអំពីអថេរ" class="w-full p-2.5 rounded-xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-700" />
-            </div>
-            <div>
-              <label class="block font-semibold mb-1">Title EN</label>
-              <input v-model="uploadForm.title_en" type="text" placeholder="Variable Notes" class="w-full p-2.5 rounded-xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-700" />
-            </div>
-          </div>
+          <!-- ACTIONS: Download, Replace, Delete -->
+          <div class="flex items-center gap-2 self-end md:self-center">
+            <a
+              :href="pdf.file_url"
+              target="_blank"
+              download
+              class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-gray-700 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-bold text-xs transition flex items-center gap-1.5"
+            >
+              <span>📥</span>
+              <span>Download</span>
+            </a>
 
-          <div class="p-3 bg-slate-50 dark:bg-gray-700/50 rounded-xl space-y-2">
-            <p class="font-bold text-[11px] text-slate-500 uppercase">PDF Security Options</p>
-            <div class="grid grid-cols-2 gap-2">
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input v-model="uploadForm.allow_online_preview" type="checkbox" class="rounded text-rose-600" />
-                <span>☑️ Allow online preview</span>
-              </label>
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input v-model="uploadForm.add_watermark" type="checkbox" class="rounded text-rose-600" />
-                <span>☑️ Add watermark with student name</span>
-              </label>
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input v-model="uploadForm.allow_download" type="checkbox" class="rounded text-rose-600" />
-                <span>☐ Allow download</span>
-              </label>
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input v-model="uploadForm.attach_chapter" type="checkbox" class="rounded text-rose-600" />
-                <span>☑️ Attach to selected chapter</span>
-              </label>
-            </div>
-          </div>
-        </div>
+            <button
+              @click="openReplace(pdf)"
+              type="button"
+              class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-gray-700 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer"
+            >
+              <span>🔄</span>
+              <span>Replace</span>
+            </button>
 
-        <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-gray-700">
-          <button @click="showUploadModal = false" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold">❌ Cancel</button>
-          <button @click="submitUpload" class="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow">📄 Upload PDF</button>
+            <button
+              @click="deletePdf(pdf)"
+              type="button"
+              class="p-2 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition cursor-pointer"
+              title="Delete PDF"
+            >
+              🗑️
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- 👁 PDF PREVIEW MODAL -->
-    <div v-if="showPreviewModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full p-6 space-y-4 shadow-2xl">
+    <!-- UPLOAD MODAL -->
+    <div
+      v-if="showUploadModal"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+    >
+      <div class="bg-white dark:bg-gray-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-gray-700 space-y-4">
         <div class="flex items-center justify-between border-b border-slate-100 dark:border-gray-700 pb-3">
-          <h3 class="text-base font-bold text-slate-800 dark:text-white">📄 PDF Viewer: {{ previewPdf?.name }}</h3>
-          <div class="flex items-center gap-2 text-xs">
-            <button @click="zoomLevel += 10" class="px-2.5 py-1 bg-slate-100 rounded font-bold">Zoom +</button>
-            <button @click="zoomLevel -= 10" class="px-2.5 py-1 bg-slate-100 rounded font-bold">Zoom -</button>
-            <button @click="showPreviewModal = false" class="text-slate-400 hover:text-slate-700 ml-2"><i class="pi pi-times text-lg"></i></button>
-          </div>
+          <h3 class="font-extrabold text-base text-slate-900 dark:text-white flex items-center gap-2">
+            <span>📄 Upload PDF Handout</span>
+          </h3>
+          <button @click="showUploadModal = false" class="text-slate-400 hover:text-slate-600">✕</button>
         </div>
 
-        <!-- Simulated PDF Document Canvas with Watermark Overlay -->
-        <div class="h-96 bg-slate-100 dark:bg-gray-900 rounded-2xl border border-slate-200 dark:border-gray-700 p-8 relative overflow-y-auto flex flex-col items-center shadow-inner">
-          <div class="w-full max-w-2xl bg-white dark:bg-gray-800 min-h-[500px] p-8 shadow-md rounded border border-slate-200 relative">
-            <h2 class="text-lg font-bold border-b pb-2 text-slate-800 dark:text-white">{{ previewPdf?.title_en }}</h2>
-            <p class="text-xs text-slate-500 mt-4 leading-relaxed">
-              Lorem ipsum dolor sit amet, consectetur adipiscing interim C programming variables, memory allocation, pointers, and array indices.
-            </p>
-
-            <!-- Student Watermark Overlay -->
-            <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20 transform -rotate-45 font-black text-2xl text-slate-400 tracking-widest uppercase">
-              Watermark: Chan Dara - STU241001
-            </div>
+        <form @submit.prevent="submitUpload" class="space-y-4 text-xs">
+          <div class="space-y-1">
+            <label class="font-bold text-slate-700 dark:text-slate-300">Course</label>
+            <select
+              v-model="uploadForm.course_id"
+              class="w-full px-3 py-2 bg-slate-50 dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xl text-slate-900 dark:text-white font-medium"
+            >
+              <option v-for="c in courses" :key="c.id" :value="c.id">{{ c.title }}</option>
+            </select>
           </div>
+
+          <div class="space-y-1">
+            <label class="font-bold text-slate-700 dark:text-slate-300">Document Title</label>
+            <input
+              v-model="uploadForm.title"
+              type="text"
+              placeholder="e.g. C_Programming_Module1_Handout.pdf"
+              class="w-full px-3 py-2 bg-slate-50 dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xl text-slate-900 dark:text-white"
+              required
+            />
+          </div>
+
+          <div class="space-y-1">
+            <label class="font-bold text-slate-700 dark:text-slate-300">PDF File (PDF Only)</label>
+            <input
+              type="file"
+              accept="application/pdf"
+              @change="handleFileSelect"
+              class="w-full px-3 py-2 bg-slate-50 dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xl text-slate-900 dark:text-white file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-rose-600 file:text-white"
+            />
+          </div>
+
+          <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-gray-700">
+            <button
+              type="button"
+              @click="showUploadModal = false"
+              class="px-4 py-2 rounded-xl text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              :disabled="isUploading"
+              class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold shadow-md transition disabled:opacity-50"
+            >
+              {{ isUploading ? 'Uploading...' : 'Save PDF' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- REPLACE MODAL -->
+    <div
+      v-if="showReplaceModal"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+    >
+      <div class="bg-white dark:bg-gray-800 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-gray-700 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 dark:border-gray-700 pb-3">
+          <h3 class="font-extrabold text-base text-slate-900 dark:text-white">Replace PDF Document</h3>
+          <button @click="showReplaceModal = false" class="text-slate-400 hover:text-slate-600">✕</button>
         </div>
 
-        <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-gray-700 text-xs">
-          <span class="text-slate-400">Page 1 / {{ previewPdf?.pages || 45 }}</span>
-          <div class="flex gap-2">
-            <button class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-bold">⬇ Download</button>
-            <button @click="showPreviewModal = false" class="px-5 py-2 bg-rose-600 text-white rounded-xl font-bold shadow">Close Preview</button>
+        <p class="text-xs text-slate-500">
+          Upload a new version to replace: <span class="font-bold text-slate-800 dark:text-slate-200">{{ selectedPdfForReplace?.title }}</span>
+        </p>
+
+        <form @submit.prevent="submitReplace" class="space-y-4 text-xs">
+          <input
+            type="file"
+            accept="application/pdf"
+            @change="(e: any) => replaceForm.pdf = e.target.files[0]"
+            class="w-full px-3 py-2 bg-slate-50 dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xl"
+            required
+          />
+
+          <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-gray-700">
+            <button
+              type="button"
+              @click="showReplaceModal = false"
+              class="px-4 py-2 rounded-xl text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold shadow-md"
+            >
+              Confirm Replace
+            </button>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   </div>

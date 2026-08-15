@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" width="100%" height="100%">
+  <defs>
+    <linearGradient id="chartBar1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#818CF8"/>
+      <stop offset="100%" stop-color="#4F46E5"/>
+    </linearGradient>
+    <linearGradient id="chartBar2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="100%" stop-color="#0284C7"/>
+    </linearGradient>
+    <linearGradient id="chartBar3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34D399"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <linearGradient id="trendArrow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F43F5E"/>
+      <stop offset="100%" stop-color="#E11D48"/>
+    </linearGradient>
+    <filter id="flaticonChartShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="2.5" stdDeviation="2" flood-opacity="0.16" flood-color="#4338CA"/>
+    </filter>
+  </defs>
+
+  <!-- Board / Card Base -->
+  <g filter="url(#flaticonChartShadow)">
+    <rect x="6" y="8" width="52" height="48" rx="10" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5" />
+  </g>
+
+  <!-- Grid lines -->
+  <line x1="12" y1="20" x2="52" y2="20" stroke="#F1F5F9" stroke-width="1.5" stroke-dasharray="3 3" />
+  <line x1="12" y1="32" x2="52" y2="32" stroke="#F1F5F9" stroke-width="1.5" stroke-dasharray="3 3" />
+  <line x1="12" y1="44" x2="52" y2="44" stroke="#F1F5F9" stroke-width="1.5" stroke-dasharray="3 3" />
+
+  <!-- Bar 1 (Left) -->
+  <rect x="14" y="34" width="7" height="16" rx="3.5" fill="url(#chartBar1)" />
+  <!-- Bar 2 (Middle) -->
+  <rect x="25" y="24" width="7" height="26" rx="3.5" fill="url(#chartBar2)" />
+  <!-- Bar 3 (Right) -->
+  <rect x="36" y="16" width="7" height="34" rx="3.5" fill="url(#chartBar3)" />
+
+  <!-- Smooth Rising Growth Trend Line -->
+  <path d="M14 36 Q 25 24 35 22 T 48 12" fill="none" stroke="url(#trendArrow)" stroke-width="3" stroke-linecap="round" />
+  
+  <!-- Arrow Head on Line -->
+  <polygon points="48,8 52,14 44,14" fill="url(#trendArrow)" transform="rotate(30 48 12)" />
+  
+  <!-- Glowing Peak Point -->
+  <circle cx="48" cy="12" r="3.5" fill="#FFFFFF" stroke="#E11D48" stroke-width="2" />
+</svg>

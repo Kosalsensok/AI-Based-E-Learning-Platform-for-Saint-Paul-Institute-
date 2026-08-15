@@ -1,55 +1,111 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import TeacherLayout from '@/Layouts/TeacherLayout.vue'
 
-// Import the 4 Sub-module Components cleanly organized inside resources/js/Pages/Teacher/Content/
+// Import all 7 Sub-module Components
 import VideosTab from './Videos.vue'
 import PdfsTab from './Pdfs.vue'
 import SlidesTab from './Slides.vue'
 import ModulesChaptersTab from './ModulesChapters.vue'
+import NotesTab from './Notes.vue'
+import AiContentTab from './AiContent.vue'
+import PracticeLabsTab from './PracticeLabs.vue'
 
 const props = defineProps<{
   courses: Array<any>
-  videos: Array<any>
-  pdfs: Array<any>
-  slides: Array<any>
+  courseVideos?: Array<any>
+  courseMaterials?: Array<any>
+  aiContents?: Array<any>
+  labIntegrations?: Array<any>
+  videos?: Array<any>
+  pdfs?: Array<any>
+  slides?: Array<any>
+  notes?: Array<any>
+  labs?: Array<any>
   stats?: {
     videos_count: number
     pdfs_count: number
     slides_count: number
+    notes_count: number
+    labs_count: number
+    ai_count?: number
+    modules_count: number
     chapters_count: number
     storage_used: string
     processing_count: number
   }
+  selectedCourseId?: number | null
 }>()
 
-const activeTab = ref<'videos' | 'pdfs' | 'slides' | 'modules'>('videos')
-const selectedCourseId = ref<number | null>(null)
+type TabKey = 'videos' | 'pdfs' | 'slides' | 'modules' | 'notes' | 'ai-content' | 'coding-lab'
+
+const activeTab = ref<TabKey>('videos')
+const selectedCourseId = ref<number | null>(props.selectedCourseId || props.courses?.[0]?.id || null)
 
 const selectedCourse = computed(() => {
   if (!selectedCourseId.value) return null
   return props.courses?.find(c => c.id == selectedCourseId.value) || null
 })
 
+// Tab navigation definitions matching the exact specification
+const tabs = [
+  { key: 'videos' as TabKey, label: 'Videos', icon: '🎥', iconClass: 'ti-video', countKey: 'videos_count', accent: 'blue' },
+  { key: 'pdfs' as TabKey, label: 'PDFs', icon: '📄', iconClass: 'ti-file-type-pdf', countKey: 'pdfs_count', accent: 'rose' },
+  { key: 'slides' as TabKey, label: 'Slides', icon: '📊', iconClass: 'ti-presentation', countKey: 'slides_count', accent: 'amber' },
+  { key: 'modules' as TabKey, label: 'Modules & Chapters', icon: '📑', iconClass: 'ti-stack-2', countKey: 'chapters_count', accent: 'emerald' },
+  { key: 'notes' as TabKey, label: 'Notes & Downloads', icon: '📙', iconClass: 'ti-file-download', countKey: 'notes_count', accent: 'indigo' },
+  { key: 'ai-content' as TabKey, label: 'AI-Assisted Content', icon: '✨', tag: '🤖', iconClass: 'ti-sparkles', countKey: 'ai_count', accent: 'purple' },
+  { key: 'coding-lab' as TabKey, label: 'Practice Lab', icon: '💻', tag: '💻', iconClass: 'ti-device-laptop', countKey: 'labs_count', accent: 'sky' },
+]
+
+const resolveTab = (raw: string | null): TabKey => {
+  if (!raw) return 'videos'
+  const clean = decodeURIComponent(raw).toLowerCase().trim().replace(/[\s_]+/g, '-')
+  if (clean.includes('ai') || clean === 'ai-content' || clean === 'ai-assisted-content') return 'ai-content'
+  if (clean.includes('lab') || clean === 'coding-lab' || clean === 'practice-lab') return 'coding-lab'
+  if (clean.includes('video')) return 'videos'
+  if (clean.includes('pdf')) return 'pdfs'
+  if (clean.includes('slide')) return 'slides'
+  if (clean.includes('module') || clean.includes('chapter')) return 'modules'
+  if (clean.includes('note') || clean.includes('download')) return 'notes'
+  return 'videos'
+}
+
 onMounted(() => {
   const urlParams = new URLSearchParams(window.location.search)
-  const tab = urlParams.get('tab')
+  const tabParam = urlParams.get('tab')
   const courseIdParam = urlParams.get('course_id')
+  const pathname = window.location.pathname
 
-  if (tab === 'videos' || tab === 'pdfs' || tab === 'slides' || tab === 'modules') {
-    activeTab.value = tab
+  if (tabParam) {
+    activeTab.value = resolveTab(tabParam)
+  } else {
+    // Check if tab is in pathname e.g. /teacher/content/ai-content
+    for (const t of tabs) {
+      if (pathname.includes(t.key)) {
+        activeTab.value = t.key
+        break
+      }
+    }
   }
+
   if (courseIdParam) {
     selectedCourseId.value = Number(courseIdParam)
-  } else if (props.courses && props.courses.length > 0) {
-    selectedCourseId.value = props.courses[0].id
   }
 })
 
-const changeTab = (tab: 'videos' | 'pdfs' | 'slides' | 'modules') => {
-  activeTab.value = tab
+const changeTab = (tabKey: TabKey) => {
+  activeTab.value = tabKey
   const url = new URL(window.location.href)
-  url.searchParams.set('tab', tab)
+  url.searchParams.set('tab', tabKey)
+  if (selectedCourseId.value) {
+    url.searchParams.set('course_id', String(selectedCourseId.value))
+  }
+  window.history.pushState({}, '', url.toString())
+}
+
+const onCourseChange = () => {
+  const url = new URL(window.location.href)
   if (selectedCourseId.value) {
     url.searchParams.set('course_id', String(selectedCourseId.value))
   }
@@ -58,110 +114,70 @@ const changeTab = (tab: 'videos' | 'pdfs' | 'slides' | 'modules') => {
 </script>
 
 <template>
-  <TeacherLayout title="Content Delivery Module">
-    <div class="space-y-6 max-w-7xl mx-auto pb-12">
-      <!-- MAIN MODULE HEADER -->
-      <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden">
+  <TeacherLayout title="Content Delivery — Teacher Panel">
+    <div class="space-y-6 max-w-7xl mx-auto pb-16">
+      
+      <!-- MAIN MODULE HERO BANNER -->
+      <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden border border-indigo-900/50">
         <!-- Background Glow Accents -->
-        <div class="absolute -top-12 -right-12 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl"></div>
-        <div class="absolute -bottom-12 left-1/3 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl"></div>
+        <div class="absolute -top-12 -right-12 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-12 left-1/3 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
 
         <div class="relative z-10 space-y-6">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
             <div>
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-bold mb-2">
+                <span>Saint Paul Institute</span>
+                <span>•</span>
+                <span>E-Learning Management System</span>
+              </div>
               <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight flex items-center gap-3">
-                <span class="p-2.5 bg-blue-600/30 rounded-2xl border border-blue-400/30">📦</span>
-                <span>Content Delivery Module</span>
+                <span class="p-2.5 bg-blue-600/30 rounded-2xl border border-blue-400/30">📁</span>
+                <span>Content Delivery — Teacher Panel</span>
               </h1>
               <p class="text-xs md:text-sm text-slate-300 mt-1">
-                Manage learning materials, organize chapters, add subtitles, and publish lessons for students.
+                Manage curriculum media, Cloudinary videos, PDFs, slides, modules hierarchy, AI content generation, and virtual practice labs.
               </p>
             </div>
 
             <!-- Storage Indicator Badge -->
             <div class="bg-slate-800/80 backdrop-blur border border-slate-700 p-3.5 rounded-2xl text-xs space-y-1.5 min-w-[220px]">
               <div class="flex justify-between font-semibold">
-                <span class="text-slate-300">Cloud Storage Used</span>
+                <span class="text-slate-300">Cloud Storage</span>
                 <span class="text-blue-400 font-bold">{{ props.stats?.storage_used || '18.6GB / 100GB' }}</span>
               </div>
               <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
                 <div class="bg-gradient-to-r from-blue-500 to-indigo-400 h-full w-[18.6%] rounded-full shadow"></div>
               </div>
-              <p class="text-[10px] text-slate-400 text-right">Processing: {{ props.stats?.processing_count || 2 }} files</p>
+              <div class="flex items-center justify-between text-[10px] text-slate-400">
+                <span>Cloudinary & S3 Ready</span>
+                <span>Processing: {{ props.stats?.processing_count || 0 }} files</span>
+              </div>
             </div>
           </div>
 
           <!-- TOP STATS CARDS BAR -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
+          <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
             <div
-              @click="changeTab('videos')"
+              v-for="t in tabs"
+              :key="t.key"
+              @click="changeTab(t.key)"
               :class="[
-                'p-4 rounded-2xl border transition-all cursor-pointer flex items-center gap-3.5',
-                activeTab === 'videos'
-                  ? 'bg-blue-600/20 border-blue-500/60 ring-2 ring-blue-500/30 shadow-lg'
+                'p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between space-y-2',
+                activeTab === t.key
+                  ? 'bg-slate-800 border-indigo-500 ring-2 ring-indigo-500/30 shadow-lg scale-[1.02]'
                   : 'bg-slate-800/50 border-slate-700/60 hover:bg-slate-800'
               ]"
             >
-              <div class="w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-500/40 text-blue-400 flex items-center justify-center text-xl font-bold">
-                🎬
+              <div class="flex items-center justify-between">
+                <span class="text-xl">{{ t.icon }}</span>
+                <span v-if="t.tag" class="text-xs">{{ t.tag }}</span>
               </div>
               <div>
-                <p class="text-[11px] text-slate-400 font-bold uppercase">Videos</p>
-                <p class="text-lg font-extrabold text-white">{{ props.stats?.videos_count || 48 }}</p>
-              </div>
-            </div>
-
-            <div
-              @click="changeTab('pdfs')"
-              :class="[
-                'p-4 rounded-2xl border transition-all cursor-pointer flex items-center gap-3.5',
-                activeTab === 'pdfs'
-                  ? 'bg-rose-600/20 border-rose-500/60 ring-2 ring-rose-500/30 shadow-lg'
-                  : 'bg-slate-800/50 border-slate-700/60 hover:bg-slate-800'
-              ]"
-            >
-              <div class="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-400 flex items-center justify-center text-xl font-bold">
-                📄
-              </div>
-              <div>
-                <p class="text-[11px] text-slate-400 font-bold uppercase">PDFs</p>
-                <p class="text-lg font-extrabold text-white">{{ props.stats?.pdfs_count || 62 }}</p>
-              </div>
-            </div>
-
-            <div
-              @click="changeTab('slides')"
-              :class="[
-                'p-4 rounded-2xl border transition-all cursor-pointer flex items-center gap-3.5',
-                activeTab === 'slides'
-                  ? 'bg-amber-600/20 border-amber-500/60 ring-2 ring-amber-500/30 shadow-lg'
-                  : 'bg-slate-800/50 border-slate-700/60 hover:bg-slate-800'
-              ]"
-            >
-              <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center text-xl font-bold">
-                📊
-              </div>
-              <div>
-                <p class="text-[11px] text-slate-400 font-bold uppercase">Slides</p>
-                <p class="text-lg font-extrabold text-white">{{ props.stats?.slides_count || 35 }}</p>
-              </div>
-            </div>
-
-            <div
-              @click="changeTab('modules')"
-              :class="[
-                'p-4 rounded-2xl border transition-all cursor-pointer flex items-center gap-3.5',
-                activeTab === 'modules'
-                  ? 'bg-emerald-600/20 border-emerald-500/60 ring-2 ring-emerald-500/30 shadow-lg'
-                  : 'bg-slate-800/50 border-slate-700/60 hover:bg-slate-800'
-              ]"
-            >
-              <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center text-xl font-bold">
-                📁
-              </div>
-              <div>
-                <p class="text-[11px] text-slate-400 font-bold uppercase">Chapters</p>
-                <p class="text-lg font-extrabold text-white">{{ props.stats?.chapters_count || 24 }}</p>
+                <p class="text-[10px] text-slate-400 font-bold uppercase truncate">{{ t.label }}</p>
+                <p class="text-base font-extrabold text-white">
+                  {{ (props.stats as any)?.[t.countKey] ?? (t.key === 'videos' ? 18 : t.key === 'pdfs' ? 24 : t.key === 'slides' ? 15 : t.key === 'modules' ? 24 : t.key === 'notes' ? 12 : t.key === 'ai-content' ? 6 : 8) }}
+                </p>
               </div>
             </div>
           </div>
@@ -169,21 +185,22 @@ const changeTab = (tab: 'videos' | 'pdfs' | 'slides' | 'modules') => {
       </div>
 
       <!-- COURSE SCOPE SELECTOR BANNER -->
-      <div class="bg-slate-800/90 rounded-2xl p-5 border border-indigo-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
+      <div class="bg-slate-800/90 rounded-2xl p-4 md:p-5 border border-indigo-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
         <div class="space-y-1">
           <div class="flex items-center gap-2 text-xs font-bold text-indigo-400">
-            <span>Content Delivery Module</span>
+            <span>Content Delivery</span>
             <span>/</span>
             <span class="capitalize">{{ activeTab }}</span>
           </div>
           <p class="text-sm font-extrabold text-white flex items-center gap-2">
-            <span>Scope Content to Specific Course:</span>
+            <span>Filter by Target Course:</span>
           </p>
         </div>
 
         <div class="flex items-center gap-3">
           <select 
             v-model="selectedCourseId" 
+            @change="onCourseChange"
             class="px-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white font-semibold min-w-[240px]"
           >
             <option :value="null">-- Select a Course First --</option>
@@ -197,69 +214,103 @@ const changeTab = (tab: 'videos' | 'pdfs' | 'slides' | 'modules') => {
             :href="`/teacher/courses/${selectedCourseId}/workspace?tab=curriculum`"
             class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition whitespace-nowrap"
           >
-            Go to Course Builder →
+            Course Builder →
           </a>
         </div>
       </div>
 
-      <!-- MAIN CONTENT DELIVERY TABS -->
-      <div class="bg-white dark:bg-gray-800 rounded-2xl p-1.5 border border-slate-200/80 dark:border-gray-700 shadow-sm flex flex-wrap gap-1">
-        <button
-          @click="changeTab('videos')"
-          :class="[
-            'px-5 py-3 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center gap-2',
-            activeTab === 'videos'
-              ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20'
-              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-700'
-          ]"
-        >
-          <span>🎬 Videos</span>
-        </button>
-
-        <button
-          @click="changeTab('pdfs')"
-          :class="[
-            'px-5 py-3 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center gap-2',
-            activeTab === 'pdfs'
-              ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-md shadow-red-500/20'
-              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-700'
-          ]"
-        >
-          <span>📄 PDFs</span>
-        </button>
-
-        <button
-          @click="changeTab('slides')"
-          :class="[
-            'px-5 py-3 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center gap-2',
-            activeTab === 'slides'
-              ? 'bg-gradient-to-r from-amber-500 to-indigo-600 text-white shadow-md shadow-amber-500/20'
-              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-700'
-          ]"
-        >
-          <span>📊 Slides</span>
-        </button>
-
-        <button
-          @click="changeTab('modules')"
-          :class="[
-            'px-5 py-3 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center gap-2',
-            activeTab === 'modules'
-              ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-500/20'
-              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-700'
-          ]"
-        >
-          <span>📁 Modules & Chapters</span>
-        </button>
+      <!-- HORIZONTAL SCROLLABLE TAB BAR (7 PILLS) -->
+      <div class="bg-white dark:bg-gray-800 rounded-2xl p-2 border border-slate-200 dark:border-gray-700 shadow-sm overflow-x-auto scrollbar-thin">
+        <div class="flex items-center gap-2 min-w-max">
+          <button
+            v-for="t in tabs"
+            :key="t.key"
+            @click="changeTab(t.key)"
+            :class="[
+              'px-4 py-2.5 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center gap-2 cursor-pointer border',
+              activeTab === t.key
+                ? (
+                    t.accent === 'blue' ? 'bg-blue-600/10 border-blue-500 text-blue-600 dark:text-blue-400 font-extrabold shadow-sm' :
+                    t.accent === 'rose' ? 'bg-rose-600/10 border-rose-500 text-rose-600 dark:text-rose-400 font-extrabold shadow-sm' :
+                    t.accent === 'amber' ? 'bg-amber-600/10 border-amber-500 text-amber-600 dark:text-amber-400 font-extrabold shadow-sm' :
+                    t.accent === 'emerald' ? 'bg-emerald-600/10 border-emerald-500 text-emerald-600 dark:text-emerald-400 font-extrabold shadow-sm' :
+                    t.accent === 'purple' ? 'bg-purple-600/10 border-purple-500 text-purple-600 dark:text-purple-400 font-extrabold shadow-sm' :
+                    t.accent === 'sky' ? 'bg-sky-600/10 border-sky-500 text-sky-600 dark:text-sky-400 font-extrabold shadow-sm' :
+                    'bg-indigo-600/10 border-indigo-500 text-indigo-600 dark:text-indigo-400 font-extrabold shadow-sm'
+                  )
+                : 'border-transparent text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-700/60 font-medium'
+            ]"
+          >
+            <span>{{ t.icon }}</span>
+            <span>{{ t.label }}</span>
+            <span v-if="t.tag" class="text-xs">{{ t.tag }}</span>
+          </button>
+        </div>
       </div>
 
-      <!-- SUB-MODULE CONTENT TAB PANELS -->
-      <div>
-        <VideosTab v-if="activeTab === 'videos'" :courses="props.courses" :videos="props.videos" />
-        <PdfsTab v-if="activeTab === 'pdfs'" :courses="props.courses" :pdfs="props.pdfs" />
-        <SlidesTab v-if="activeTab === 'slides'" :courses="props.courses" :slides="props.slides" />
-        <ModulesChaptersTab v-if="activeTab === 'modules'" :courses="props.courses" />
+      <!-- CONTENT PANELS (Switches dynamically based on active tab) -->
+      <div class="transition-all duration-200">
+        <!-- 1. VIDEOS -->
+        <VideosTab 
+          v-if="activeTab === 'videos'"
+          :courses="props.courses"
+          :course-videos="props.courseVideos"
+          :videos="props.videos"
+          :selected-course-id="selectedCourseId"
+        />
+
+        <!-- 2. PDFS -->
+        <PdfsTab
+          v-else-if="activeTab === 'pdfs'"
+          :courses="props.courses"
+          :course-materials="props.courseMaterials"
+          :pdfs="props.pdfs"
+          :selected-course-id="selectedCourseId"
+        />
+
+        <!-- 3. SLIDES -->
+        <SlidesTab
+          v-else-if="activeTab === 'slides'"
+          :courses="props.courses"
+          :course-materials="props.courseMaterials"
+          :slides="props.slides"
+          :selected-course-id="selectedCourseId"
+        />
+
+        <!-- 4. MODULES & CHAPTERS -->
+        <ModulesChaptersTab
+          v-else-if="activeTab === 'modules'"
+          :courses="props.courses"
+          :selected-course-id="selectedCourseId"
+        />
+
+        <!-- 5. NOTES & DOWNLOADS -->
+        <NotesTab
+          v-else-if="activeTab === 'notes'"
+          :courses="props.courses"
+          :course-materials="props.courseMaterials"
+          :notes="props.notes"
+          :selected-course-id="selectedCourseId"
+        />
+
+        <!-- 6. AI-ASSISTED CONTENT 🤖 -->
+        <AiContentTab
+          v-else-if="activeTab === 'ai-content'"
+          :courses="props.courses"
+          :ai-contents="props.aiContents"
+          :selected-course-id="selectedCourseId"
+        />
+
+        <!-- 7. PRACTICE LAB 💻 -->
+        <PracticeLabsTab
+          v-else-if="activeTab === 'coding-lab'"
+          :courses="props.courses"
+          :lab-integrations="props.labIntegrations"
+          :labs="props.labs"
+          :selected-course-id="selectedCourseId"
+        />
       </div>
+
     </div>
   </TeacherLayout>
 </template>

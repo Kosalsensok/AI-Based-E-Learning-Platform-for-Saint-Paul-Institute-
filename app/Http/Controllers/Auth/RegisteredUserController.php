@@ -57,7 +57,7 @@ class RegisteredUserController extends Controller
         if ($targetRole === 'teacher') {
             $invitationCode = trim($request->input('invitation_code', ''));
             $validCodes = ['TEACHER-2026-INVITE', 'TEACHER-INVITE', 'ELMS-TEACHER-2026'];
-            
+
             $dbInviteCode = Setting::where('key', 'teacher_invite_code')->value('value');
             if ($dbInviteCode) {
                 $validCodes[] = $dbInviteCode;
@@ -70,32 +70,32 @@ class RegisteredUserController extends Controller
             }
 
             $request->validate([
-                'name'                  => 'required|string|max:255',
-                'name_kh'               => 'nullable|string|max:255',
-                'email'                 => 'required|string|email|max:255|unique:users,email',
-                'phone'                 => 'required|string|max:50|unique:users,phone',
-                'password'              => ['required', 'confirmed', Rules\Password::min(8)],
-                'major_id'              => 'nullable|exists:majors,id',
-                'terms'                 => 'accepted',
+                'name' => 'required|string|max:255',
+                'name_kh' => 'nullable|string|max:255',
+                'email' => 'required|string|email|max:255|unique:users,email',
+                'phone' => 'required|string|max:50|unique:users,phone',
+                'password' => ['required', 'confirmed', Rules\Password::min(8)],
+                'major_id' => 'nullable|exists:majors,id',
+                'terms' => 'accepted',
             ], [
-                'email.unique'          => 'អាសយដ្ឋានអ៊ីមែលនេះមានក្នុងប្រព័ន្ធរួចហើយ',
-                'phone.unique'          => 'លេខទូរស័ព្ទនេះមានក្នុងប្រព័ន្ធរួចហើយ',
-                'password.confirmed'    => 'ការបញ្ជាក់ពាក្យសម្ងាត់មិនត្រូវគ្នាទេ',
-                'terms.accepted'        => 'សូមយល់ព្រមតាមលក្ខខណ្ឌប្រើប្រាស់',
+                'email.unique' => 'អាសយដ្ឋានអ៊ីមែលនេះមានក្នុងប្រព័ន្ធរួចហើយ',
+                'phone.unique' => 'លេខទូរស័ព្ទនេះមានក្នុងប្រព័ន្ធរួចហើយ',
+                'password.confirmed' => 'ការបញ្ជាក់ពាក្យសម្ងាត់មិនត្រូវគ្នាទេ',
+                'terms.accepted' => 'សូមយល់ព្រមតាមលក្ខខណ្ឌប្រើប្រាស់',
             ]);
 
             $user = User::create([
-                'name'          => $request->name,
-                'name_kh'       => $request->name_kh,
-                'email'         => $request->email,
-                'phone'         => $request->phone,
-                'password'      => Hash::make($request->password),
-                'role'          => 'teacher',
-                'major_id'      => $request->major_id,
+                'name' => $request->name,
+                'name_kh' => $request->name_kh,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'password' => Hash::make($request->password),
+                'role' => 'teacher',
+                'major_id' => $request->major_id,
                 'qualification' => $request->input('qualification', 'Higher Education Educator'),
-                'expertise'     => $request->input('expertise', 'Lecturer / Academic Professor'),
-                'status'        => 'active',
-                'is_active'     => true,
+                'expertise' => $request->input('expertise', 'Lecturer / Academic Professor'),
+                'status' => 'active',
+                'is_active' => true,
             ]);
 
             $user->load(['major.department.faculty']);
@@ -109,22 +109,22 @@ class RegisteredUserController extends Controller
 
         // ─── STUDENT REGISTRATION ───
         $request->validate([
-            'name'                  => 'required|string|max:255',
-            'name_kh'               => 'nullable|string|max:255',
-            'email'                 => 'required|string|email|max:255|unique:users,email',
-            'phone'                 => 'required|string|max:50|unique:users,phone',
-            'password'              => ['required', 'confirmed', Rules\Password::min(8)],
-            'major_id'              => 'required|exists:majors,id',
-            'study_type'            => 'required|in:on_campus,online',
-            'payment_method'        => 'nullable|in:aba,cash',
-            'receipt'               => 'nullable|file|mimes:jpeg,jpg,png,pdf|max:5120',
-            'terms'                 => 'accepted',
+            'name' => 'required|string|max:255',
+            'name_kh' => 'nullable|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email',
+            'phone' => 'required|string|max:50|unique:users,phone',
+            'password' => ['required', 'confirmed', Rules\Password::min(8)],
+            'major_id' => 'required|exists:majors,id',
+            'study_type' => 'required|in:on_campus,online',
+            'payment_method' => 'nullable|in:aba,cash',
+            'receipt' => 'nullable|file|mimes:jpeg,jpg,png,pdf|max:5120',
+            'terms' => 'accepted',
         ], [
-            'email.unique'          => 'អាសយដ្ឋានអ៊ីមែលនេះមានក្នុងប្រព័ន្ធរួចហើយ',
-            'phone.unique'          => 'លេខទូរស័ព្ទនេះមានក្នុងប្រព័ន្ធរួចហើយ',
-            'password.confirmed'    => 'ការបញ្ជាក់ពាក្យសម្ងាត់មិនត្រូវគ្នាទេ',
-            'major_id.required'     => 'សូមជ្រើសរើសជំនាញសិក្សា',
-            'terms.accepted'        => 'សូមយល់ព្រមតាមលក្ខខណ្ឌប្រើប្រាស់',
+            'email.unique' => 'អាសយដ្ឋានអ៊ីមែលនេះមានក្នុងប្រព័ន្ធរួចហើយ',
+            'phone.unique' => 'លេខទូរស័ព្ទនេះមានក្នុងប្រព័ន្ធរួចហើយ',
+            'password.confirmed' => 'ការបញ្ជាក់ពាក្យសម្ងាត់មិនត្រូវគ្នាទេ',
+            'major_id.required' => 'សូមជ្រើសរើសជំនាញសិក្សា',
+            'terms.accepted' => 'សូមយល់ព្រមតាមលក្ខខណ្ឌប្រើប្រាស់',
         ]);
 
         // Auto-Generate Student ID (e.g., STU-2026-89421)
@@ -141,44 +141,44 @@ class RegisteredUserController extends Controller
 
         // Create Student Account
         $user = User::create([
-            'name'         => $request->name,
-            'name_kh'      => $request->name_kh,
-            'email'        => $request->email,
-            'phone'        => $request->phone,
-            'password'     => Hash::make($request->password),
-            'role'         => 'student',
-            'major_id'     => $request->major_id,
+            'name' => $request->name,
+            'name_kh' => $request->name_kh,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'password' => Hash::make($request->password),
+            'role' => 'student',
+            'major_id' => $request->major_id,
             'student_code' => $studentCode,
-            'study_type'   => $request->study_type,
-            'status'       => 'active',
-            'is_active'    => true,
+            'study_type' => $request->study_type,
+            'status' => 'active',
+            'is_active' => true,
         ]);
 
         $user->load(['major.department.faculty']);
 
         // Create Initial Registration Payment Record if applicable
         $amount = ($request->payment_method === 'aba') ? 324.00 : 360.00;
-        
+
         $course = Course::first();
         $teacherId = User::where('role', 'teacher')->value('id') ?? User::where('role', 'admin')->value('id');
 
         if ($course && $teacherId && ($request->filled('payment_method') || $receiptPath)) {
             Payment::create([
-                'student_id'          => $user->id,
-                'course_id'           => $course->id,
-                'teacher_id'          => $teacherId,
-                'amount'              => $amount,
-                'currency'            => 'USD',
-                'aba_transaction_id'  => 'REG-' . strtoupper(Str::random(10)),
-                'payment_slip'        => $receiptPath,
-                'status'              => $receiptPath ? 'verifying' : 'pending',
+                'student_id' => $user->id,
+                'course_id' => $course->id,
+                'teacher_id' => $teacherId,
+                'amount' => $amount,
+                'currency' => 'USD',
+                'aba_transaction_id' => 'REG-' . strtoupper(Str::random(10)),
+                'payment_slip' => $receiptPath,
+                'status' => $receiptPath ? 'verifying' : 'pending',
             ]);
         }
 
         // Send Telegram Notification
         $telegramService->notifyNewStudentRegistration($user, [
-            'method'  => strtoupper($request->payment_method ?? 'Cash'),
-            'amount'  => $amount,
+            'method' => strtoupper($request->payment_method ?? 'Cash'),
+            'amount' => $amount,
             'receipt' => $receiptPath,
         ]);
 

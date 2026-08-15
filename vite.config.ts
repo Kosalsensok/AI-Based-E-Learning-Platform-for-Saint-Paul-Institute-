@@ -33,4 +33,34 @@ export default defineConfig({
     }),
   ],
   resolve: { alias: { '@': path.resolve(__dirname, 'resources/js') } },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('vue') || id.includes('@inertiajs') || id.includes('pinia')) {
+              return 'vendor-vue'
+            }
+            if (id.includes('@nuxt/ui') || id.includes('primevue') || id.includes('@primevue') || id.includes('lucide-vue-next') || id.includes('primeicons')) {
+              return 'vendor-ui'
+            }
+            if (id.includes('@codemirror') || id.includes('codemirror') || id.includes('vue-codemirror')) {
+              return 'vendor-editor'
+            }
+            if (id.includes('apexcharts') || id.includes('vue3-apexcharts')) {
+              return 'vendor-charts'
+            }
+            if (id.includes('pdfjs-dist') || id.includes('plyr') || id.includes('hls.js')) {
+              return 'vendor-media'
+            }
+            if (id.includes('@tanstack') || id.includes('@vueuse')) {
+              return 'vendor-utils'
+            }
+            return 'vendor'
+          }
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000,
+  },
 })

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" width="100%" height="100%">
+  <defs>
+    <linearGradient id="quizActGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+    <filter id="quizActShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.2" flood-color="#D97706"/>
+    </filter>
+  </defs>
+  <g filter="url(#quizActShadow)">
+    <rect x="8" y="8" width="48" height="48" rx="14" fill="url(#quizActGrad)" />
+    <!-- Checklist / Edit Pen Icon -->
+    <rect x="18" y="16" width="28" height="32" rx="4" fill="#FFFFFF" />
+    <path d="M22 24 L25 27 L31 21" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+    <line x1="24" y1="34" x2="38" y2="34" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round" />
+    <line x1="24" y1="40" x2="34" y2="40" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round" />
+  </g>
+</svg>

@@ -4,6 +4,7 @@ import { useForm } from '@inertiajs/vue3'
 
 const props = defineProps<{
   courses: Array<any>
+  selectedCourseId?: number | null
 }>()
 
 const activeLeftTab = ref<'videos' | 'pdfs' | 'slides' | 'notes' | 'links'>('videos')

@@ -60,6 +60,40 @@ const openWhy = (item: any) => {
         </div>
       </div>
 
+      <!-- Sub-Tab Navigation Bar -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-700/60 custom-scrollbar">
+        <Link
+          href="/student/ai-path/recommended"
+          class="px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
+        >
+          🎯 1. Recommended Lesson
+        </Link>
+        <Link
+          href="/student/ai-path/review"
+          class="px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-amber-600 text-white shadow-md"
+        >
+          🔄 2. Review Lessons
+        </Link>
+        <Link
+          href="/student/ai-path/weak-topics"
+          class="px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
+        >
+          ⚠️ 3. Weak Topics (<40%)
+        </Link>
+        <Link
+          href="/student/ai-path/next-module"
+          class="px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
+        >
+          ⏭️ 4. Next Module
+        </Link>
+        <Link
+          href="/student/ai-path/next-course"
+          class="px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
+        >
+          🗺️ 5. Next Course Roadmap
+        </Link>
+      </div>
+
       <!-- REVIEW QUEUE LIST CONTAINER (Matching Prompt Layout) -->
       <div class="bg-slate-800/90 border border-amber-500/40 rounded-3xl p-6 shadow-xl space-y-4">
         

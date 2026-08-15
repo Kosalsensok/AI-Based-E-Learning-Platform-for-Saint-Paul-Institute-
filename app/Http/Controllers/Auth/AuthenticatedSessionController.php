@@ -22,21 +22,27 @@ class AuthenticatedSessionController extends Controller
     {
         // 1. Email / Student ID / Phone & Password Basic Validation
         $request->validate([
-            'email'    => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string', 'min:8'],
-            'role'     => ['nullable', 'string', 'in:student,teacher,admin'],
+            'role' => ['nullable', 'string', 'in:student,teacher,admin'],
         ], [
-            'email.required'   => 'សូមបញ្ចូលអាសយដ្ឋានអ៊ីមែល, ID, ឬលេខទូរស័ព្ទ។',
-            'password.required'=> 'សូមបញ្ចូលពាក្យសម្ងាត់។',
-            'password.min'     => 'ពាក្យសម្ងាត់ត្រូវមានយ៉ាងតិច ៨ តួអក្សរ។',
+            'email.required' => 'សូមបញ្ចូលអាសយដ្ឋានអ៊ីមែល, ID, ឬលេខទូរស័ព្ទ។',
+            'password.required' => 'សូមបញ្ចូលពាក្យសម្ងាត់។',
+            'password.min' => 'ពាក្យសម្ងាត់ត្រូវមានយ៉ាងតិច ៨ តួអក្សរ។',
         ]);
 
         $loginInput = trim($request->email);
 
-        $user = User::where('email', $loginInput)
-            ->orWhere('student_code', $loginInput)
-            ->orWhere('phone', $loginInput)
-            ->first();
+        $user = User::where(function ($query) use ($loginInput) {
+            $query->where('email', $loginInput)
+                ->orWhere('student_code', $loginInput)
+                ->orWhere('phone', $loginInput);
+
+            $cleanId = ltrim($loginInput, '#');
+            if (is_numeric($cleanId)) {
+                $query->orWhere('id', (int) $cleanId);
+            }
+        })->first();
 
         // Log Helper
         $ip = $request->ip();
@@ -46,12 +52,12 @@ class AuthenticatedSessionController extends Controller
 
         if (!$user) {
             AuthLog::create([
-                'email'      => $loginInput,
+                'email' => $loginInput,
                 'ip_address' => $ip,
                 'user_agent' => $userAgent,
-                'device'     => $device,
-                'browser'    => $browser,
-                'status'     => 'failed',
+                'device' => $device,
+                'browser' => $browser,
+                'status' => 'failed',
             ]);
 
             return back()->withErrors([
@@ -64,13 +70,13 @@ class AuthenticatedSessionController extends Controller
             $diffMinutes = ceil(now()->diffInSeconds($user->locked_until) / 60);
 
             AuthLog::create([
-                'user_id'    => $user->id,
-                'email'      => $user->email,
+                'user_id' => $user->id,
+                'email' => $user->email,
                 'ip_address' => $ip,
                 'user_agent' => $userAgent,
-                'device'     => $device,
-                'browser'    => $browser,
-                'status'     => 'locked',
+                'device' => $device,
+                'browser' => $browser,
+                'status' => 'locked',
             ]);
 
             return back()->withErrors([
@@ -81,7 +87,7 @@ class AuthenticatedSessionController extends Controller
         // Reset lock if expired
         if ($user->locked_until && $user->locked_until->isPast()) {
             $user->update([
-                'locked_until'   => null,
+                'locked_until' => null,
                 'login_attempts' => 0,
             ]);
         }
@@ -99,13 +105,13 @@ class AuthenticatedSessionController extends Controller
             $user->update($updateData);
 
             AuthLog::create([
-                'user_id'    => $user->id,
-                'email'      => $user->email,
+                'user_id' => $user->id,
+                'email' => $user->email,
                 'ip_address' => $ip,
                 'user_agent' => $userAgent,
-                'device'     => $device,
-                'browser'    => $browser,
-                'status'     => 'failed',
+                'device' => $device,
+                'browser' => $browser,
+                'status' => 'failed',
             ]);
 
             if ($attempts >= 5) {
@@ -149,18 +155,18 @@ class AuthenticatedSessionController extends Controller
         // 6. Successful Login
         $user->update([
             'login_attempts' => 0,
-            'locked_until'   => null,
-            'last_login_at'  => now(),
+            'locked_until' => null,
+            'last_login_at' => now(),
         ]);
 
         AuthLog::create([
-            'user_id'    => $user->id,
-            'email'      => $user->email,
+            'user_id' => $user->id,
+            'email' => $user->email,
             'ip_address' => $ip,
             'user_agent' => $userAgent,
-            'device'     => $device,
-            'browser'    => $browser,
-            'status'     => 'success',
+            'device' => $device,
+            'browser' => $browser,
+            'status' => 'success',
         ]);
 
         // Telegram Notification for Login
@@ -184,7 +190,7 @@ class AuthenticatedSessionController extends Controller
             if (config('jwt.secret')) {
                 $token = \Tymon\JWTAuth\Facades\JWTAuth::fromUser($user);
                 $payload = \Tymon\JWTAuth\Facades\JWTAuth::setToken($token)->getPayload();
-                
+
                 \App\Models\JwtSession::create([
                     'user_id' => $user->id,
                     'token' => $token,
@@ -220,10 +226,14 @@ class AuthenticatedSessionController extends Controller
 
     private function getBrowserName($userAgent)
     {
-        if (str_contains($userAgent, 'Chrome')) return 'Chrome';
-        if (str_contains($userAgent, 'Firefox')) return 'Firefox';
-        if (str_contains($userAgent, 'Safari')) return 'Safari';
-        if (str_contains($userAgent, 'Edge')) return 'Edge';
+        if (str_contains($userAgent, 'Chrome'))
+            return 'Chrome';
+        if (str_contains($userAgent, 'Firefox'))
+            return 'Firefox';
+        if (str_contains($userAgent, 'Safari'))
+            return 'Safari';
+        if (str_contains($userAgent, 'Edge'))
+            return 'Edge';
         return 'Unknown';
     }
 }

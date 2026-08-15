@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" width="100%" height="100%">
+  <defs>
+    <linearGradient id="vidGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="lensGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#60A5FA"/>
+      <stop offset="100%" stop-color="#1D4ED8"/>
+    </linearGradient>
+    <filter id="flaticonVidShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.16" flood-color="#1D4ED8"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#flaticonVidShadow)">
+    <!-- Video Camera Main Body -->
+    <rect x="8" y="16" width="34" height="32" rx="8" fill="url(#vidGrad)" />
+    
+    <!-- Camera Side Lens / Cone -->
+    <path d="M42 26 L56 18 V46 L42 38 Z" fill="url(#lensGrad)" />
+    
+    <!-- Camera Front Lens Reflection -->
+    <ellipse cx="56" cy="32" rx="2" ry="12" fill="#93C5FD" opacity="0.6" />
+
+    <!-- Play Button Triangle inside Camera -->
+    <polygon points="21,26 31,32 21,38" fill="#FFFFFF" />
+
+    <!-- Top Rec Dot -->
+    <circle cx="16" cy="22" r="2.5" fill="#EF4444" />
+  </g>
+</svg>

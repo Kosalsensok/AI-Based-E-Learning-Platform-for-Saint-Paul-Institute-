@@ -30,4 +30,9 @@ class CalendarController extends Controller
     {
         return Inertia::render('Student/Calendar/AssignmentDue');
     }
+
+    public function academicEvents(Request $request)
+    {
+        return Inertia::render('Student/Calendar/AcademicEvents');
+    }
 }

@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bellGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FCD34D"/>
+      <stop offset="50%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+    <linearGradient id="bellClapper" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#B45309"/>
+      <stop offset="100%" stop-color="#78350F"/>
+    </linearGradient>
+    <linearGradient id="liveBadge" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F43F5E"/>
+      <stop offset="100%" stop-color="#E11D48"/>
+    </linearGradient>
+    <filter id="flaticonBellShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="2.5" stdDeviation="2" flood-opacity="0.2" flood-color="#B45309"/>
+    </filter>
+  </defs>
+
+  <!-- Bell Ring Sound Wave Left -->
+  <path d="M12 24 C8 28 8 36 12 40" stroke="#FDE68A" stroke-width="2.5" stroke-linecap="round" fill="none" />
+  
+  <!-- Bell Ring Sound Wave Right -->
+  <path d="M52 24 C56 28 56 36 52 40" stroke="#FDE68A" stroke-width="2.5" stroke-linecap="round" fill="none" />
+
+  <!-- Bell Clapper / Ball at bottom -->
+  <circle cx="32" cy="50" r="5" fill="url(#bellClapper)" />
+
+  <!-- Main Golden Bell Body -->
+  <g filter="url(#flaticonBellShadow)">
+    <!-- Top Small Loop Handle -->
+    <path d="M28 14 C28 10 36 10 36 14" stroke="url(#bellGrad)" stroke-width="3" fill="none" stroke-linecap="round" />
+    
+    <!-- Bell Dome & Flared Rim -->
+    <path d="M32 14 C22 14 18 24 18 36 C18 42 14 44 14 46 H50 C50 44 46 42 46 36 C46 24 42 14 32 14 Z" fill="url(#bellGrad)" />
+    
+    <!-- Bell Bottom Rim Band -->
+    <ellipse cx="32" cy="46" rx="18" ry="3.5" fill="#F59E0B" />
+    <ellipse cx="32" cy="45" rx="17" ry="2.5" fill="#FDE68A" opacity="0.6" />
+
+    <!-- Shiny Highlight Reflection on Left -->
+    <path d="M22 26 C21 32 23 38 25 40" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity="0.7" fill="none" />
+  </g>
+
+  <!-- Red Glowing Alert Notification Badge Dot -->
+  <g filter="url(#flaticonBellShadow)">
+    <circle cx="46" cy="16" r="6" fill="url(#liveBadge)" stroke="#FFFFFF" stroke-width="1.5" />
+    <circle cx="46" cy="16" r="2.5" fill="#FFFFFF" />
+  </g>
+</svg>

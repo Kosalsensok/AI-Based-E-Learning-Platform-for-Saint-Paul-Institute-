@@ -35,4 +35,9 @@ class AiPathController extends Controller
     {
         return Inertia::render('Student/AiLearningPath/NextModule');
     }
+
+    public function nextCourse(Request $request)
+    {
+        return Inertia::render('Student/AiLearningPath/NextCourse');
+    }
 }

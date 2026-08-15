@@ -8,9 +8,23 @@ use Symfony\Component\HttpFoundation\Response;
 
 class EnsureRole
 {
-    public function handle(Request $request, Closure $next, string $role): Response
+    public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        abort_unless($request->user()?->role === $role && $request->user()->is_active, 403);
-        return $next($request);
+        $user = $request->user();
+
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        if (!$user->is_active) {
+            abort(403, 'Account is disabled.');
+        }
+
+        // Admin has superuser access across teacher & admin modules
+        if ($user->role === 'admin' || in_array($user->role, $roles)) {
+            return $next($request);
+        }
+
+        abort(403, 'Unauthorized role access.');
     }
 }

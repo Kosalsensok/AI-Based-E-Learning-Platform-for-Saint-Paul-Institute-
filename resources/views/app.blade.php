@@ -15,7 +15,27 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Inter:wght@300;400;500;600;700;800&family=Kantumruy+Pro:ital,wght@0,300..700;1,300..700&display=swap" rel="stylesheet">
 
+    <script>
+        (function() {
+            try {
+                var storedTheme = localStorage.getItem('theme');
+                if (storedTheme === 'dark' || (!storedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
+
     @routes
+    <!-- Google Identity Services SDK -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <!-- Clerk Authentication SDK -->
+    @if(config('services.clerk.publishable_key') || env('VITE_CLERK_PUBLISHABLE_KEY'))
+    <script async crossorigin="anonymous" data-clerk-publishable-key="{{ config('services.clerk.publishable_key') ?? env('VITE_CLERK_PUBLISHABLE_KEY') }}" src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js" type="text/javascript"></script>
+    @endif
     @vite('resources/js/app.ts')
     @inertiaHead
 </head>

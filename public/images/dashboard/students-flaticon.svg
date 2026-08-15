@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" width="100%" height="100%">
+  <defs>
+    <linearGradient id="studGrad1" x1="10" y1="10" x2="54" y2="54" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#818CF8"/>
+      <stop offset="100%" stop-color="#4F46E5"/>
+    </linearGradient>
+    <linearGradient id="studGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C084FC"/>
+      <stop offset="100%" stop-color="#9333EA"/>
+    </linearGradient>
+    <linearGradient id="skinGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FED7AA"/>
+      <stop offset="100%" stop-color="#FDBA74"/>
+    </linearGradient>
+    <linearGradient id="cyanAccent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="100%" stop-color="#06B6D4"/>
+    </linearGradient>
+    <filter id="flaticonStudShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-opacity="0.15" flood-color="#4338CA"/>
+    </filter>
+  </defs>
+
+  <!-- Background Student Left -->
+  <g opacity="0.85">
+    <circle cx="18" cy="22" r="8" fill="#E0E7FF" />
+    <path d="M6 46 C6 38 12 34 18 34 C24 34 30 38 30 46" fill="#C7D2FE" />
+  </g>
+
+  <!-- Background Student Right -->
+  <g opacity="0.85">
+    <circle cx="46" cy="22" r="8" fill="#F3E8FF" />
+    <path d="M34 46 C34 38 40 34 46 34 C52 34 58 38 58 46" fill="#E9D5FF" />
+  </g>
+
+  <!-- Foreground Main Student (Center) with Shadow -->
+  <g filter="url(#flaticonStudShadow)">
+    <!-- Body / Shirt -->
+    <path d="M16 54 C16 43 23 38 32 38 C41 38 48 43 48 54 V56 H16 V54 Z" fill="url(#studGrad1)" />
+    <!-- Collar / Shirt Neck Accent -->
+    <polygon points="32,46 26,38 38,38" fill="#EEF2FF" />
+
+    <!-- Head & Face -->
+    <circle cx="32" cy="23" r="11" fill="url(#skinGrad1)" />
+    <!-- Modern Hair Style -->
+    <path d="M21 21 C21 14 26 10 32 10 C38 10 43 14 43 21 C41 18 38 18 35 19 C32 20 28 17 21 21 Z" fill="#312E81" />
+  </g>
+
+  <!-- Glowing Online / Star Badge -->
+  <g filter="url(#flaticonStudShadow)">
+    <circle cx="45" cy="45" r="9" fill="url(#cyanAccent)" stroke="#FFFFFF" stroke-width="2" />
+    <path d="M45 40 L46.2 43.5 L49.5 43.5 L46.8 45.5 L47.8 49 L45 47 L42.2 49 L43.2 45.5 L40.5 43.5 L43.8 43.5 Z" fill="#FFFFFF" />
+  </g>
+
+  <!-- Sparkle Accent -->
+  <path d="M10 12 L11.5 15 L14.5 16.5 L11.5 18 L10 21 L8.5 18 L5.5 16.5 L8.5 15 Z" fill="#818CF8" opacity="0.85" />
+</svg>

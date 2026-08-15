@@ -120,6 +120,8 @@ const filteredCourses = computed(() => {
     list = list.filter(c => c.status === 'pending' || c.status === 'pending_approval')
   } else if (activeTab.value === 'published') {
     list = list.filter(c => c.status === 'published')
+  } else if (activeTab.value === 'rejected') {
+    list = list.filter(c => c.status === 'rejected')
   } else if (activeTab.value === 'archived') {
     list = list.filter(c => c.status === 'archived' || c.status === 'paused')
   }
@@ -222,27 +224,83 @@ const getRealisticTitle = (course: any) => {
   return title
 }
 
+const getMajorStyle = (majorName: string) => {
+  const m = (majorName || '').toLowerCase()
+  if (m.includes('tourism') || m.includes('tour')) {
+    return {
+      name: 'Tourism Management',
+      badgeClass: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+      tintClass: 'from-amber-950/70 via-slate-900 to-slate-950',
+      iconClass: 'text-amber-400',
+      icon: '/images/nav/sub/tourism.svg',
+      svg: 'M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064'
+    }
+  }
+  if (m.includes('english') || m.includes('literature') || m.includes('lang')) {
+    return {
+      name: 'English Literature',
+      badgeClass: 'bg-purple-500/15 text-purple-300 border-purple-500/30',
+      tintClass: 'from-purple-950/70 via-slate-900 to-slate-950',
+      iconClass: 'text-purple-400',
+      icon: '/images/nav/sub/language.svg',
+      svg: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253'
+    }
+  }
+  if (m.includes('agronomy') || m.includes('agro') || m.includes('agri')) {
+    return {
+      name: 'Agronomy',
+      badgeClass: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+      tintClass: 'from-emerald-950/70 via-slate-900 to-slate-950',
+      iconClass: 'text-emerald-400',
+      icon: '/images/nav/sub/agronomy.svg',
+      svg: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z'
+    }
+  }
+  if (m.includes('social') || m.includes('work')) {
+    return {
+      name: 'Social Work',
+      badgeClass: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
+      tintClass: 'from-rose-950/70 via-slate-900 to-slate-950',
+      iconClass: 'text-rose-400',
+      icon: '/images/nav/sub/social.svg',
+      svg: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z'
+    }
+  }
+  // Default: IT & Networking
+  return {
+    name: 'IT & Networking',
+    badgeClass: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
+    tintClass: 'from-blue-950/70 via-slate-900 to-slate-950',
+    iconClass: 'text-blue-400',
+    icon: '/images/nav/sub/it.svg',
+    svg: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4'
+  }
+}
+
 const getStatusBadge = (status: string) => {
   switch (status) {
     case 'published':
       return {
         label: 'Published',
-        color: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 ring-1 ring-emerald-500/20',
+        color: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30 ring-1 ring-emerald-500/20',
+        dot: 'bg-emerald-400',
         icon: '/images/actions/toast-success.svg',
         svgPath: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'
       }
     case 'pending':
     case 'pending_approval':
       return {
-        label: 'Pending Approval',
-        color: 'bg-amber-500/15 text-amber-300 border-amber-500/30 ring-1 ring-amber-500/20',
+        label: 'Pending',
+        color: 'bg-purple-500/15 text-purple-300 border-purple-500/30 ring-1 ring-purple-500/20',
+        dot: 'bg-purple-400',
         icon: '/images/nav/sub/history.svg',
         svgPath: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'
       }
     case 'draft':
       return {
         label: 'Draft',
-        color: 'bg-slate-800/80 text-slate-300 border-slate-700 ring-1 ring-slate-700/50',
+        color: 'bg-slate-800 text-slate-300 border-slate-700',
+        dot: 'bg-slate-400',
         icon: '/images/nav/sub/self-study.svg',
         svgPath: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'
       }
@@ -250,20 +308,23 @@ const getStatusBadge = (status: string) => {
       return {
         label: 'Rejected',
         color: 'bg-rose-500/15 text-rose-300 border-rose-500/30 ring-1 ring-rose-500/20',
+        dot: 'bg-rose-400',
         icon: '/images/actions/toast-warning.svg',
         svgPath: 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z'
       }
     case 'paused':
       return {
         label: 'Paused',
-        color: 'bg-orange-500/15 text-orange-300 border-orange-500/30 ring-1 ring-orange-500/20',
+        color: 'bg-orange-500/15 text-orange-300 border-orange-500/30',
+        dot: 'bg-orange-400',
         icon: '/images/nav/sub/suspended.svg',
         svgPath: 'M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z'
       }
     case 'archived':
       return {
         label: 'Archived',
-        color: 'bg-slate-800/90 text-slate-400 border-slate-700',
+        color: 'bg-slate-800 text-slate-400 border-slate-700',
+        dot: 'bg-slate-500',
         icon: '/images/nav/sub/suspended.svg',
         svgPath: 'M5 8h14M5 8a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v1a2 2 0 01-2 2M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4'
       }
@@ -271,10 +332,27 @@ const getStatusBadge = (status: string) => {
       return {
         label: status,
         color: 'bg-slate-800 text-slate-300 border-slate-700',
+        dot: 'bg-slate-400',
         icon: '/images/nav/sub/all-courses.svg',
         svgPath: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
       }
   }
+}
+
+const getContextualMeta = (course: any) => {
+  const modeText = course.learning_mode === 'self_paced' ? 'Self-Paced' : 'Instructor-Led'
+  if (course.status === 'published') {
+    const students = course.enrollments_count || 45
+    return `${modeText} • ${students} students`
+  }
+  if (course.status === 'pending' || course.status === 'pending_approval') {
+    const d = course.submitted_at ? new Date(course.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Recently'
+    return `${modeText} • Submitted: ${d}`
+  }
+  if (course.status === 'rejected') {
+    return `${modeText} • Changes Requested`
+  }
+  return `${modeText} • Last edited: 2h ago`
 }
 
 const openDetails = (course: any) => {
@@ -288,8 +366,14 @@ const openSettings = (course: any) => {
 }
 
 const submitApproval = (course: any) => {
-  if (confirm(`Submit "${course.title}" for admin approval? You won't be able to edit core details while pending.`)) {
+  if (confirm(`Submit "${course.title}" for admin approval? You won't be able to edit core details while pending review.`)) {
     router.post(route('teacher.courses.submit', course.id))
+  }
+}
+
+const withdrawSubmission = (course: any) => {
+  if (confirm(`Withdraw submission for "${course.title}"? The course status will return to Draft and allow you to continue editing.`)) {
+    router.post(route('teacher.courses.withdraw', course.id))
   }
 }
 
@@ -300,7 +384,7 @@ const duplicateCourse = (course: any) => {
 }
 
 const deleteCourse = (course: any) => {
-  if (confirm(`Are you sure you want to delete "${course.title}"? This action cannot be undone.`)) {
+  if (confirm(`Are you sure you want to delete draft "${course.title}"? This action cannot be undone.`)) {
     router.delete(route('teacher.courses.destroy', course.id))
   }
 }
@@ -337,204 +421,103 @@ const openCreateWizard = () => {
   <TeacherLayout title="My Courses">
     <Head title="My Courses — Teacher Panel" />
 
-    <div class="space-y-6 pb-16">
+    <div class="space-y-5 pb-16">
       
-      <!-- Top Page Header Bar -->
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-slate-800/80 p-6 rounded-2xl border border-slate-700/60 shadow-xl backdrop-blur-xl">
-        <div>
-          <div class="flex items-center gap-2 text-xs text-indigo-400 font-semibold mb-1">
-            <span>Teacher Panel</span>
-            <span>/</span>
-            <span>My Courses</span>
+      <!-- 🎨 Top Header Row (Left: Books Icon + "All courses", Right: Button "Create new course") -->
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-slate-900/90 p-5 rounded-2xl border border-slate-800 shadow-xl backdrop-blur-xl">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center shadow-inner shrink-0">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
           </div>
-          <h1 class="text-2xl font-black text-white tracking-tight flex items-center gap-2">
-            <span>My Courses</span>
-          </h1>
-          <p class="text-xs text-slate-300 mt-1">Manage your course curriculum, learning content, and students.</p>
+          <div>
+            <h1 class="text-xl font-extrabold text-white tracking-tight flex items-center gap-2">
+              <span>All courses</span>
+            </h1>
+            <p class="text-xs text-slate-400 mt-0.5">Saint Paul Institute — Teacher & Instructor Workspace</p>
+          </div>
         </div>
 
-        <div class="flex items-center gap-2.5 shrink-0">
+        <div class="flex items-center gap-2.5 shrink-0 self-end sm:self-auto">
           <button
             @click="openSettings(props.courses?.[0])"
             type="button"
-            class="px-3.5 py-2.5 bg-slate-700/70 hover:bg-slate-700 text-slate-200 hover:text-white font-semibold text-xs rounded-xl border border-slate-600 transition-colors duration-200 flex items-center gap-1.5 cursor-pointer shadow-sm"
-            title="Global Course Settings"
+            class="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-semibold text-xs rounded-xl border border-slate-700 transition-colors duration-200 flex items-center gap-1.5 cursor-pointer shadow-sm"
+            title="Course Settings"
           >
             <svg class="w-4 h-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-            <span>Settings</span>
+            <span>Course Settings</span>
           </button>
 
           <button
             @click="openCreateWizard"
             type="button"
-            class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-xl shadow-sm transition-all duration-200 flex items-center gap-2 cursor-pointer"
+            class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-xl shadow-md hover:shadow-indigo-600/30 transition-all duration-200 flex items-center gap-2 cursor-pointer"
           >
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-            <span>Create New Course</span>
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+            <span>Create new course</span>
           </button>
         </div>
       </div>
 
-      <!-- 5 Summary KPI Cards Bar (Subtle & Elegant Interactive Filter Tabs) -->
-      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-        
-        <!-- Stat Card 1: Total Courses -->
-        <div
-          @click="activeTab = 'all'"
-          :class="[
-            activeTab === 'all'
-              ? 'border-indigo-500/60 bg-slate-800 shadow-md'
-              : 'border-slate-800/80 bg-slate-900/70 hover:bg-slate-800/50 hover:border-slate-700/70',
-            'p-4 rounded-2xl border transition-all duration-200 cursor-pointer group'
-          ]"
-        >
-          <div class="flex items-center justify-between text-xs text-slate-300 font-medium mb-1.5">
-            <span :class="activeTab === 'all' ? 'text-indigo-300 font-semibold' : 'text-slate-300'">Total Courses</span>
-            <div class="w-7 h-7 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-            </div>
-          </div>
-          <p :class="['text-2xl font-bold tracking-tight', stats.total > 0 ? 'text-white' : 'text-slate-400']">{{ stats.total }}</p>
-          <p class="text-[11px] text-slate-400 mt-1">All Teacher Courses</p>
-        </div>
-
-        <!-- Stat Card 2: Draft Courses -->
-        <div
-          @click="activeTab = 'drafts'"
-          :class="[
-            activeTab === 'drafts'
-              ? 'border-slate-500/60 bg-slate-800 shadow-md'
-              : 'border-slate-800/80 bg-slate-900/70 hover:bg-slate-800/50 hover:border-slate-700/70',
-            'p-4 rounded-2xl border transition-all duration-200 cursor-pointer group'
-          ]"
-        >
-          <div class="flex items-center justify-between text-xs text-slate-300 font-medium mb-1.5">
-            <span :class="activeTab === 'drafts' ? 'text-slate-200 font-semibold' : 'text-slate-300'">Draft Courses</span>
-            <div :class="[stats.draft > 0 ? 'bg-slate-700/50 text-slate-200 border-slate-600/60' : 'bg-slate-800/60 text-slate-400 border-slate-700/50', 'w-7 h-7 rounded-xl border flex items-center justify-center transition-colors']">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-            </div>
-          </div>
-          <p :class="['text-2xl font-bold tracking-tight', stats.draft > 0 ? 'text-slate-100' : 'text-slate-400']">{{ stats.draft }}</p>
-          <p class="text-[11px] text-slate-400 mt-1">In progress setup</p>
-        </div>
-
-        <!-- Stat Card 3: Pending Approval -->
-        <div
-          @click="activeTab = 'pending'"
-          :class="[
-            activeTab === 'pending'
-              ? 'border-amber-500/60 bg-slate-800 shadow-md'
-              : 'border-slate-800/80 bg-slate-900/70 hover:bg-slate-800/50 hover:border-slate-700/70',
-            'p-4 rounded-2xl border transition-all duration-200 cursor-pointer group'
-          ]"
-        >
-          <div class="flex items-center justify-between text-xs text-slate-300 font-medium mb-1.5">
-            <span :class="activeTab === 'pending' ? 'text-amber-300 font-semibold' : 'text-slate-300'">Pending Approval</span>
-            <div :class="[stats.pending > 0 ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-slate-800/60 text-slate-400 border-slate-700/50', 'w-7 h-7 rounded-xl border flex items-center justify-center transition-colors']">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            </div>
-          </div>
-          <p :class="['text-2xl font-bold tracking-tight', stats.pending > 0 ? 'text-amber-300' : 'text-slate-400']">{{ stats.pending }}</p>
-          <p class="text-[11px] text-slate-400 mt-1">Waiting Admin review</p>
-        </div>
-
-        <!-- Stat Card 4: Published Courses -->
-        <div
-          @click="activeTab = 'published'"
-          :class="[
-            activeTab === 'published'
-              ? 'border-emerald-500/60 bg-slate-800 shadow-md'
-              : 'border-slate-800/80 bg-slate-900/70 hover:bg-slate-800/50 hover:border-slate-700/70',
-            'p-4 rounded-2xl border transition-all duration-200 cursor-pointer group'
-          ]"
-        >
-          <div class="flex items-center justify-between text-xs text-slate-300 font-medium mb-1.5">
-            <span :class="activeTab === 'published' ? 'text-emerald-300 font-semibold' : 'text-slate-300'">Published</span>
-            <div :class="[stats.published > 0 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-slate-800/60 text-slate-400 border-slate-700/50', 'w-7 h-7 rounded-xl border flex items-center justify-center transition-colors']">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-            </div>
-          </div>
-          <p :class="['text-2xl font-bold tracking-tight', stats.published > 0 ? 'text-emerald-400' : 'text-slate-400']">{{ stats.published }}</p>
-          <p class="text-[11px] text-slate-400 mt-1">Active student courses</p>
-        </div>
-
-        <!-- Stat Card 5: Archived / Paused -->
-        <div
-          @click="activeTab = 'archived'"
-          :class="[
-            activeTab === 'archived'
-              ? 'border-slate-500/60 bg-slate-800 shadow-md'
-              : 'border-slate-800/80 bg-slate-900/70 hover:bg-slate-800/50 hover:border-slate-700/70',
-            'p-4 rounded-2xl border transition-all duration-200 cursor-pointer group col-span-2 sm:col-span-1'
-          ]"
-        >
-          <div class="flex items-center justify-between text-xs text-slate-300 font-medium mb-1.5">
-            <span :class="activeTab === 'archived' ? 'text-slate-200 font-semibold' : 'text-slate-300'">Archived / Paused</span>
-            <div :class="[stats.archived > 0 ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-slate-800/60 text-slate-400 border-slate-700/50', 'w-7 h-7 rounded-xl border flex items-center justify-center transition-colors']">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v1a2 2 0 01-2 2M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
-            </div>
-          </div>
-          <p :class="['text-2xl font-bold tracking-tight', stats.archived > 0 ? 'text-slate-200' : 'text-slate-400']">{{ stats.archived }}</p>
-          <p class="text-[11px] text-slate-400 mt-1">History & Paused</p>
-        </div>
-      </div>
-
-      <!-- Streamlined Filter Controls Toolbar -->
-      <div class="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-4 shadow-xl">
+      <!-- 🎨 Filter Bar (Below Header): Search input (flex-grow) + Status dropdown + Major dropdown -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3.5 shadow-xl">
         <div class="flex flex-col md:flex-row items-center justify-between gap-3">
-          <div class="flex flex-wrap items-center gap-3 w-full md:w-auto flex-1">
-            <!-- Search Box (Clean SVG Icon & Standardized Placeholder) -->
-            <div class="relative flex-1 sm:flex-initial min-w-[200px] sm:min-w-[260px]">
+          <div class="flex flex-wrap items-center gap-3 w-full flex-1">
+            <!-- Search input (placeholder: "ស្វែងរកវគ្គសិក្សា...") — flex-grow -->
+            <div class="relative flex-1 min-w-[220px]">
               <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
               <input
                 v-model="searchQuery"
                 type="text"
-                placeholder="Search courses..."
-                class="w-full pl-9 pr-3.5 py-2 bg-slate-900 border border-slate-700/80 rounded-xl text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200"
+                placeholder="ស្វែងរកវគ្គសិក្សា..."
+                class="w-full pl-9 pr-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200"
               />
             </div>
 
-            <!-- Major Filter (Pure English) -->
+            <!-- Status dropdown: All / Draft / Pending / Published -->
+            <select
+              v-model="selectedStatus"
+              class="bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200 cursor-pointer min-w-[130px]"
+            >
+              <option value="all">Status: All</option>
+              <option value="draft">Draft</option>
+              <option value="pending">Pending</option>
+              <option value="published">Published</option>
+              <option value="rejected">Rejected</option>
+            </select>
+
+            <!-- Major dropdown: IT & Networking / Tourism Management / English Literature / Agronomy / Social Work -->
             <select
               v-model="selectedMajor"
-              class="bg-slate-900 border border-slate-700/80 text-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200 cursor-pointer"
+              class="bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200 cursor-pointer min-w-[170px]"
             >
-              <option value="all">All Majors</option>
+              <option value="all">All Majors (5 Majors)</option>
               <option v-for="m in props.majors" :key="m.id" :value="m.id">{{ m.name }}</option>
             </select>
 
-            <!-- Mode Filter (Pure English) -->
+            <!-- Mode Filter: Instructor-Led / Self-Paced -->
             <select
               v-model="selectedMode"
-              class="bg-slate-900 border border-slate-700/80 text-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200 cursor-pointer"
+              class="bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200 cursor-pointer min-w-[130px]"
             >
               <option value="all">All Modes</option>
               <option value="instructor_led">Instructor-Led</option>
               <option value="self_paced">Self-Paced</option>
             </select>
-
-            <!-- Sort dropdown -->
-            <select
-              v-model="sortBy"
-              class="bg-slate-900 border border-slate-700/80 text-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200 cursor-pointer"
-            >
-              <option value="newest">Sort: Newest</option>
-              <option value="oldest">Sort: Oldest</option>
-              <option value="most_students">Sort: Most Students</option>
-              <option value="highest_earnings">Sort: Highest Earnings</option>
-            </select>
           </div>
 
           <!-- Right: Card / Table View Switcher -->
           <div class="flex items-center gap-2 shrink-0 self-end md:self-auto">
-            <div class="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-700/80">
+            <div class="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800">
               <button
                 @click="viewMode = 'card'"
                 :class="[
                   viewMode === 'card' ? 'bg-indigo-600 text-white font-bold shadow-sm' : 'text-slate-400 hover:text-white',
                   'px-3 py-1.5 rounded-lg text-xs transition-all duration-200 flex items-center gap-1.5 cursor-pointer'
                 ]"
-                title="Card View (▦)"
+                title="Card View"
               >
                 <span>▦ Card</span>
               </button>
@@ -544,7 +527,7 @@ const openCreateWizard = () => {
                   viewMode === 'table' ? 'bg-indigo-600 text-white font-bold shadow-sm' : 'text-slate-400 hover:text-white',
                   'px-3 py-1.5 rounded-lg text-xs transition-all duration-200 flex items-center gap-1.5 cursor-pointer'
                 ]"
-                title="Table View (☷)"
+                title="List View"
               >
                 <span>☷ List</span>
               </button>
@@ -553,280 +536,263 @@ const openCreateWizard = () => {
         </div>
       </div>
 
-      <!-- MAIN TAB CONTENT AREA -->
+      <!-- Quick Tab Pills Bar: All / Drafts / Pending / Published -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-1 custom-scrollbar">
+        <button
+          @click="activeTab = 'all'"
+          :class="[
+            activeTab === 'all'
+              ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/20'
+              : 'bg-slate-900/80 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800',
+            'px-4 py-2 rounded-xl text-xs transition-all duration-200 shrink-0 cursor-pointer flex items-center gap-2'
+          ]"
+        >
+          <span>All Courses</span>
+          <span class="px-1.5 py-0.5 rounded-md bg-slate-950/60 text-[10px]">{{ stats.total }}</span>
+        </button>
+
+        <button
+          @click="activeTab = 'drafts'"
+          :class="[
+            activeTab === 'drafts'
+              ? 'bg-slate-700 text-white font-bold shadow-md'
+              : 'bg-slate-900/80 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800',
+            'px-4 py-2 rounded-xl text-xs transition-all duration-200 shrink-0 cursor-pointer flex items-center gap-2'
+          ]"
+        >
+          <span>Draft Courses</span>
+          <span class="px-1.5 py-0.5 rounded-md bg-slate-950/60 text-[10px]">{{ stats.draft }}</span>
+        </button>
+
+        <button
+          @click="activeTab = 'pending'"
+          :class="[
+            activeTab === 'pending'
+              ? 'bg-purple-600 text-white font-bold shadow-md shadow-purple-600/20'
+              : 'bg-slate-900/80 text-purple-300 hover:text-white hover:bg-slate-800 border border-slate-800',
+            'px-4 py-2 rounded-xl text-xs transition-all duration-200 shrink-0 cursor-pointer flex items-center gap-2'
+          ]"
+        >
+          <span>Pending Approval</span>
+          <span class="px-1.5 py-0.5 rounded-md bg-purple-950/80 text-purple-300 border border-purple-500/30 text-[10px]">{{ stats.pending }}</span>
+        </button>
+
+        <button
+          @click="activeTab = 'published'"
+          :class="[
+            activeTab === 'published'
+              ? 'bg-emerald-600 text-white font-bold shadow-md shadow-emerald-600/20'
+              : 'bg-slate-900/80 text-emerald-300 hover:text-white hover:bg-slate-800 border border-slate-800',
+            'px-4 py-2 rounded-xl text-xs transition-all duration-200 shrink-0 cursor-pointer flex items-center gap-2'
+          ]"
+        >
+          <span>Published Courses</span>
+          <span class="px-1.5 py-0.5 rounded-md bg-emerald-950/80 text-emerald-300 border border-emerald-500/30 text-[10px]">{{ stats.published }}</span>
+        </button>
+      </div>
+
+      <!-- MAIN CONTENT: Course Card Grid (auto-fit, minmax(220px, 1fr), gap 16px) -->
       <div>
-
-        <!-- Course Settings Course Picker Banner -->
-        <div v-if="activeTab === 'settings'" class="p-6 bg-slate-800/90 rounded-3xl border border-indigo-500/30 space-y-4 mb-6 shadow-xl">
-          <div>
-            <h3 class="text-base font-extrabold text-white flex items-center gap-2">
-              <span>⚙️ Select a Course to Configure Settings (Mode & Fee)</span>
-            </h3>
-            <p class="text-xs text-slate-300 mt-1">Course Settings (Mode & Fee) belong to individual courses. Select a course from the dropdown to configure its learning mode, fee, and access rules.</p>
-          </div>
-
-          <div class="flex flex-col sm:flex-row items-center gap-3">
-            <select v-model="selectedCourseForSettingId" class="flex-1 w-full px-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white">
-              <option v-for="c in props.courses" :key="c.id" :value="c.id">
-                {{ c.title }} ({{ c.code }}) — {{ c.learning_mode === 'self_paced' ? 'Self-Paced' : 'Instructor-Led' }}, {{ c.is_paid ? `$${c.price} via ABA` : 'Free' }}
-              </option>
-            </select>
-            <button
-              @click="router.get(route('teacher.courses.workspace', { course: selectedCourseForSettingId || props.courses?.[0]?.id, tab: 'settings' }))"
-              type="button"
-              class="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/30 cursor-pointer flex items-center justify-center gap-1.5"
-            >
-              <span>Open Settings</span>
-              <span>→</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Draft Validation Alert Banner (ONLY SHOWN IF DRAFTS EXIST > 0) -->
-        <div v-if="activeTab === 'drafts' && filteredCourses.length > 0" class="mb-4 p-4 rounded-2xl bg-amber-950/30 border border-amber-500/30 flex items-start gap-3">
-          <svg class="w-5 h-5 text-amber-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-          <div class="text-xs text-amber-200">
-            <p class="font-bold">Draft Submission Guidelines</p>
-            <p class="text-amber-300/80 mt-0.5">Please ensure all required details (Basic Info, Academic Info, Learning Mode, Fee Setting, at least 1 Module & 1 Lesson) are completed before submitting your course for Admin approval.</p>
-          </div>
-        </div>
-
+        
         <!-- 2.1 CARD VIEW MODE -->
         <div v-if="viewMode === 'card'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           
           <div
             v-for="course in filteredCourses"
             :key="course.id"
-            class="bg-slate-800/90 border border-slate-700/80 hover:border-indigo-500/50 rounded-2xl overflow-hidden shadow-xl transition-all duration-300 group flex flex-col justify-between"
+            class="bg-slate-900/90 border border-slate-800 hover:border-indigo-500/50 rounded-2xl overflow-hidden shadow-xl transition-all duration-300 group flex flex-col justify-between"
           >
-            <!-- Card Header Thumbnail (Clean, uncluttered cover image) -->
-            <div class="relative aspect-video bg-slate-900 overflow-hidden">
+            <!-- 🖼️ Thumbnail area (110px height): Icon representing major, background tinted by major's accent color -->
+            <div
+              :class="[
+                'relative h-[110px] overflow-hidden flex items-center justify-center bg-gradient-to-tr border-b border-slate-800/80',
+                getMajorStyle(course.major?.name).tintClass
+              ]"
+            >
+              <!-- Background cover image overlay with subtle opacity if available -->
               <img
                 :src="getCourseCover(course)"
                 :alt="getRealisticTitle(course)"
-                class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                @error="(e: any) => e.target.src = 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=600&q=80'"
+                class="absolute inset-0 w-full h-full object-cover opacity-35 mix-blend-overlay transition-transform duration-500 group-hover:scale-105"
+                @error="(e: any) => e.target.style.display = 'none'"
               />
-              <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent"></div>
 
-              <!-- Top Left: Mode Badge -->
-              <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-xl bg-slate-950/85 backdrop-blur-md text-[10px] font-bold text-white border border-slate-700 flex items-center gap-1.5 shadow-md">
-                <img
-                  :src="course.learning_mode === 'self_paced' ? '/images/nav/sub/self-study.svg' : '/images/nav/sub/teacher-led.svg'"
-                  class="w-3.5 h-3.5 object-contain"
-                  alt="Mode"
-                />
-                <span>{{ course.learning_mode === 'self_paced' ? 'Self-Paced' : 'Instructor-Led' }}</span>
+              <!-- Major Accent Vector Icon Centerpiece -->
+              <div class="relative z-10 w-12 h-12 rounded-2xl bg-slate-950/60 backdrop-blur-md border border-slate-700/60 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                <svg :class="['w-6 h-6', getMajorStyle(course.major?.name).iconClass]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" :d="getMajorStyle(course.major?.name).svg" />
+                </svg>
+              </div>
+
+              <!-- Price Tag Top Right -->
+              <span class="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-lg bg-slate-950/80 backdrop-blur-md text-[10px] font-bold text-emerald-300 border border-emerald-500/30 shadow-md">
+                {{ course.is_paid ? `$${Number(course.price || 0).toFixed(2)}` : 'Free' }}
               </span>
 
-              <!-- Top Right: Status Badge (With Flaticon Vector SVG Icon) -->
-              <span
-                :class="[getStatusBadge(course.status).color, 'absolute top-2.5 right-2.5 px-2.5 py-1 rounded-xl text-[10px] font-bold border backdrop-blur-md shadow-md flex items-center gap-1.5']"
-              >
-                <img
-                  v-if="getStatusBadge(course.status).icon"
-                  :src="getStatusBadge(course.status).icon"
-                  class="w-3.5 h-3.5 object-contain shrink-0 filter brightness-125"
-                  alt="Status Icon"
-                />
-                <svg v-else class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" :d="getStatusBadge(course.status).svgPath" />
-                </svg>
-                <span>{{ getStatusBadge(course.status).label }}</span>
+              <!-- Code Pill Top Left -->
+              <span class="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-lg bg-slate-950/80 backdrop-blur-md text-[10px] font-mono font-bold text-indigo-300 border border-slate-700 shadow-md">
+                {{ course.code }}
               </span>
             </div>
 
             <!-- Card Body Content -->
-            <div class="p-4 space-y-3 flex-1 flex flex-col justify-between">
-              <div class="space-y-1.5">
-                <!-- Code Badge and Price Pill line -->
+            <div class="p-3.5 space-y-2.5 flex-1 flex flex-col justify-between">
+              
+              <div class="space-y-2">
+                <!-- 🏷️ Badge row: Major badge (accent color) + Status badge (color-coded) -->
                 <div class="flex items-center justify-between gap-2">
-                  <span class="font-mono text-[10px] font-bold text-indigo-300 bg-indigo-950/80 px-2 py-0.5 rounded-md border border-indigo-500/30">{{ course.code }}</span>
-                  <span class="font-bold text-xs px-2.5 py-0.5 rounded-lg border bg-emerald-500/15 text-emerald-300 border-emerald-500/30 shadow-sm">
-                    {{ course.is_paid ? `$${Number(course.price || 0).toFixed(2)}` : 'Free' }}
+                  <!-- Major Badge -->
+                  <span :class="[getMajorStyle(course.major?.name).badgeClass, 'px-2 py-0.5 rounded-lg text-[10px] font-bold border truncate max-w-[140px]']">
+                    {{ course.major?.name || 'IT & Networking' }}
+                  </span>
+
+                  <!-- Status Badge (color-coded per spec) -->
+                  <span :class="[getStatusBadge(course.status).color, 'px-2 py-0.5 rounded-lg text-[10px] font-bold border flex items-center gap-1.5 shrink-0 shadow-sm']">
+                    <span :class="['w-1.5 h-1.5 rounded-full', getStatusBadge(course.status).dot]"></span>
+                    <span>{{ getStatusBadge(course.status).label }}</span>
                   </span>
                 </div>
 
-                <h3 class="font-bold text-sm text-white group-hover:text-indigo-300 transition-colors line-clamp-1" :title="getRealisticTitle(course)">
+                <!-- 📖 Title: Course name, 14px / font-weight: 500 -->
+                <h3 class="font-medium text-[14px] leading-snug text-white group-hover:text-indigo-300 transition-colors line-clamp-2" :title="getRealisticTitle(course)">
                   {{ getRealisticTitle(course) }}
                 </h3>
-                <p class="text-[11px] text-slate-400 truncate">
-                  {{ course.major?.name || 'IT & Networking' }}
+
+                <!-- ℹ️ Meta line: Mode (Instructor-led / Self-paced) + contextual info -->
+                <p class="text-[11px] text-slate-400 flex items-center gap-1.5 truncate">
+                  <span class="font-medium text-slate-300">{{ getContextualMeta(course) }}</span>
                 </p>
               </div>
 
-              <!-- Key Metrics Grid -->
-              <div class="grid grid-cols-2 gap-2 text-[11px] bg-slate-900/80 p-2.5 rounded-xl border border-slate-700/60">
-                <div class="flex items-center gap-1.5 text-slate-300">
-                  <img :src="'/images/nav/sub/students.svg'" class="w-4 h-4 object-contain shrink-0" alt="Students" />
-                  <span class="font-bold text-white">{{ course.enrollments_count || 45 }} Students</span>
-                </div>
-                <div class="flex items-center gap-1.5 text-slate-300">
-                  <img :src="'/images/nav/content.svg'" class="w-4 h-4 object-contain shrink-0" alt="Modules" />
-                  <span class="font-bold text-white">{{ course.modules_count || 8 }} Modules</span>
-                </div>
-                <div class="flex items-center gap-1.5 text-slate-300 col-span-2 pt-1 border-t border-slate-800/80">
-                  <img :src="'/images/nav/progress.svg'" class="w-4 h-4 object-contain shrink-0" alt="Progress" />
-                  <span class="text-slate-400">Avg Progress: <strong class="text-indigo-300 font-bold">72% Active</strong></span>
-                </div>
+              <!-- Rejection Notice Banner on Card if Rejected -->
+              <div v-if="course.status === 'rejected'" class="p-2 rounded-xl bg-rose-950/40 border border-rose-500/40 text-[10px] text-rose-200 space-y-0.5">
+                <p class="font-bold text-rose-300">Changes Requested:</p>
+                <p class="italic text-rose-200/90 line-clamp-2">
+                  "{{ course.rejection_note || 'Please update the module lessons content before resubmission.' }}"
+                </p>
               </div>
 
-              <!-- Progress Bar -->
-              <div class="space-y-1">
-                <div class="flex justify-between text-[10px] text-slate-400 font-medium">
-                  <span>Course Completion Setup</span>
-                  <span class="text-indigo-400 font-bold">78%</span>
-                </div>
-                <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-slate-700/60">
-                  <div class="bg-gradient-to-r from-indigo-500 to-purple-500 h-1.5 rounded-full" style="width: 78%"></div>
-                </div>
-              </div>
-
-              <!-- Card Footer Buttons & Actions -->
-              <div class="pt-2 border-t border-slate-700/60 flex items-center justify-between gap-2">
-                <button
-                  v-if="course.status === 'draft'"
-                  @click="router.get(route('teacher.courses.workspace', course.id))"
-                  type="button"
-                  class="flex-1 py-2 px-3 bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-white font-bold text-xs rounded-xl border border-amber-500/30 transition-all duration-200 text-center flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
-                >
-                  <span>Continue Setup →</span>
-                </button>
-                <button
-                  v-else-if="course.status === 'pending' || course.status === 'pending_approval'"
-                  @click="openDetails(course)"
-                  type="button"
-                  class="flex-1 py-2 px-3 bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-white font-bold text-xs rounded-xl border border-amber-500/30 transition-all duration-200 text-center flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
-                >
-                  <span>View Approval Status</span>
-                </button>
-                <button
-                  v-else-if="course.status === 'published'"
-                  @click="router.get(route('teacher.courses.workspace', course.id))"
-                  type="button"
-                  class="flex-1 py-2 px-3 bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white font-bold text-xs rounded-xl border border-indigo-500/30 transition-all duration-200 text-center flex items-center justify-center gap-1.5 shadow-sm group-hover:border-indigo-500 cursor-pointer"
-                >
-                  <img :src="'/images/actions/add-course.svg'" class="w-3.5 h-3.5 object-contain brightness-125" alt="Manage" />
-                  <span>Manage Course</span>
-                </button>
-                <button
-                  v-else
-                  @click="router.get(route('teacher.courses.workspace', course.id))"
-                  type="button"
-                  class="flex-1 py-2 px-3 bg-slate-700/60 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl border border-slate-600 transition-all duration-200 text-center flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
-                >
-                  <span>Open Workspace</span>
-                </button>
-
-                <button
-                  @click="openDetails(course)"
-                  type="button"
-                  class="p-2 bg-slate-700/60 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl border border-slate-600 transition-colors duration-200 cursor-pointer"
-                  title="View Details"
-                >
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                </button>
-
-                <!-- Three-Dot Menu Options -->
-                <div class="relative">
+              <!-- 🔘 Action buttons: 2 buttons side-by-side per status mapping -->
+              <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
+                <!-- Status = draft: Button 1: Edit, Button 2: Submit for Approval -->
+                <template v-if="course.status === 'draft'">
                   <button
-                    @click.stop="toggleDropdown(course.id, $event)"
+                    @click="router.get(route('teacher.courses.workspace', course.id))"
                     type="button"
-                    class="p-2 bg-slate-700/60 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl border border-slate-600 transition-colors duration-200 cursor-pointer"
-                    title="More options"
+                    class="py-1.5 px-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-medium text-xs rounded-xl border border-slate-700 transition-colors text-center cursor-pointer flex items-center justify-center gap-1.5"
                   >
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    <span>Edit</span>
                   </button>
-
-                  <div
-                    v-if="activeDropdownId === course.id"
-                    @click.stop
-                    class="absolute right-0 bottom-full mb-2 w-52 bg-slate-900 border border-slate-700/80 rounded-2xl p-2 shadow-2xl z-40 transition-all duration-200"
+                  <button
+                    @click="submitApproval(course)"
+                    type="button"
+                    class="py-1.5 px-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs rounded-xl shadow-sm transition-all text-center cursor-pointer flex items-center justify-center gap-1.5"
                   >
-                    <button
-                      @click="openDetails(course); activeDropdownId = null"
-                      class="w-full text-left px-3 py-2 text-xs font-semibold text-sky-400 hover:bg-slate-800 hover:text-sky-300 rounded-xl flex items-center gap-2 transition-colors cursor-pointer"
-                    >
-                      <svg class="w-4 h-4 text-sky-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                      <span>View Details</span>
-                    </button>
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>Submit</span>
+                  </button>
+                </template>
 
-                    <button
-                      @click="openSettings(course); activeDropdownId = null"
-                      class="w-full text-left px-3 py-2 text-xs font-semibold text-indigo-400 hover:bg-slate-800 hover:text-indigo-300 rounded-xl flex items-center gap-2 transition-colors cursor-pointer"
-                    >
-                      <svg class="w-4 h-4 text-indigo-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                      <span>Course Settings</span>
-                    </button>
+                <!-- Status = pending: Button 1: View, Button 2: Withdraw -->
+                <template v-else-if="course.status === 'pending' || course.status === 'pending_approval'">
+                  <button
+                    @click="openDetails(course)"
+                    type="button"
+                    class="py-1.5 px-2.5 bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 font-medium text-xs rounded-xl border border-purple-500/30 transition-colors text-center cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    <span>View</span>
+                  </button>
+                  <button
+                    @click="withdrawSubmission(course)"
+                    type="button"
+                    class="py-1.5 px-2.5 bg-slate-800 hover:bg-slate-700 text-amber-300 hover:text-amber-200 font-medium text-xs rounded-xl border border-amber-500/30 transition-colors text-center cursor-pointer flex items-center justify-center gap-1.5"
+                    title="Withdraw to draft"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                    <span>Withdraw</span>
+                  </button>
+                </template>
 
-                    <button
-                      @click="duplicateCourse(course); activeDropdownId = null"
-                      class="w-full text-left px-3 py-2 text-xs font-semibold text-blue-400 hover:bg-slate-800 hover:text-blue-300 rounded-xl flex items-center gap-2 transition-colors cursor-pointer"
-                    >
-                      <svg class="w-4 h-4 text-blue-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-                      <span>Duplicate Course</span>
-                    </button>
+                <!-- Status = published: Button 1: View, Button 2: Edit -->
+                <template v-else-if="course.status === 'published'">
+                  <button
+                    @click="openDetails(course)"
+                    type="button"
+                    class="py-1.5 px-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-medium text-xs rounded-xl border border-slate-700 transition-colors text-center cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    <span>View</span>
+                  </button>
+                  <button
+                    @click="router.get(route('teacher.courses.workspace', course.id))"
+                    type="button"
+                    class="py-1.5 px-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs rounded-xl shadow-sm transition-all text-center cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    <span>Edit</span>
+                  </button>
+                </template>
 
-                    <button
-                      v-if="course.status === 'draft' || course.status === 'rejected'"
-                      @click="submitApproval(course); activeDropdownId = null"
-                      class="w-full text-left px-3 py-2 text-xs font-semibold text-emerald-400 hover:bg-slate-800 hover:text-emerald-300 rounded-xl flex items-center gap-2 transition-colors cursor-pointer"
-                    >
-                      <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                      <span>Submit for Approval</span>
-                    </button>
+                <!-- Status = rejected: Button 1: View Reason, Button 2: Revise & Resubmit -->
+                <template v-else-if="course.status === 'rejected'">
+                  <button
+                    @click="openDetails(course)"
+                    type="button"
+                    class="py-1.5 px-2.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 font-medium text-xs rounded-xl border border-rose-500/30 transition-colors text-center cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <span>Reason</span>
+                  </button>
+                  <button
+                    @click="router.get(route('teacher.courses.workspace', course.id))"
+                    type="button"
+                    class="py-1.5 px-2.5 bg-rose-600 hover:bg-rose-500 text-white font-medium text-xs rounded-xl shadow-sm transition-all text-center cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <span>Revise</span>
+                  </button>
+                </template>
 
-                    <button
-                      v-if="course.status === 'published'"
-                      @click="pauseCourse(course); activeDropdownId = null"
-                      class="w-full text-left px-3 py-2 text-xs font-semibold text-amber-400 hover:bg-slate-800 hover:text-amber-300 rounded-xl flex items-center gap-2 transition-colors cursor-pointer"
-                    >
-                      <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                      <span>Pause Enrollment</span>
-                    </button>
-
-                    <button
-                      v-if="course.status === 'published'"
-                      @click="archiveCourse(course); activeDropdownId = null"
-                      class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-slate-200 rounded-xl flex items-center gap-2 transition-colors cursor-pointer"
-                    >
-                      <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v1a2 2 0 01-2 2M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
-                      <span>Archive Course</span>
-                    </button>
-
-                    <button
-                      v-if="course.status === 'draft'"
-                      @click="deleteCourse(course); activeDropdownId = null"
-                      class="w-full text-left px-3 py-2 text-xs font-semibold text-rose-400 hover:bg-rose-950/40 hover:text-rose-300 rounded-xl flex items-center gap-2 transition-colors border-t border-slate-800 mt-1 pt-1.5 cursor-pointer"
-                    >
-                      <svg class="w-4 h-4 text-rose-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                      <span>Delete Draft</span>
-                    </button>
-                  </div>
-                </div>
+                <!-- Default / Other statuses -->
+                <template v-else>
+                  <button
+                    @click="openDetails(course)"
+                    type="button"
+                    class="py-1.5 px-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl border border-slate-700 text-xs font-medium"
+                  >
+                    View
+                  </button>
+                  <button
+                    @click="router.get(route('teacher.courses.workspace', course.id))"
+                    type="button"
+                    class="py-1.5 px-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-medium"
+                  >
+                    Workspace
+                  </button>
+                </template>
               </div>
+
             </div>
           </div>
 
-          <!-- Modern Flaticon Style Empty State Graphic -->
-          <div v-if="filteredCourses.length === 0" class="col-span-full py-16 text-center bg-slate-800/60 rounded-2xl border border-slate-700/60">
-            <div class="relative w-20 h-20 mx-auto mb-3 flex items-center justify-center">
-              <div class="absolute inset-0 bg-indigo-500/20 rounded-full blur-xl"></div>
-              <div class="relative w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-950 via-slate-900 to-purple-950 border border-indigo-500/30 flex items-center justify-center shadow-2xl">
-                <svg class="w-9 h-9 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+          <!-- Empty State Graphic -->
+          <div v-if="filteredCourses.length === 0" class="col-span-full py-16 text-center bg-slate-900/60 rounded-2xl border border-slate-800">
+            <div class="relative w-16 h-16 mx-auto mb-3 flex items-center justify-center">
+              <div class="w-14 h-14 rounded-2xl bg-indigo-950/80 border border-indigo-500/30 flex items-center justify-center shadow-xl">
+                <svg class="w-7 h-7 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z" />
                   <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.055a11.952 11.952 0 01-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
                 </svg>
               </div>
             </div>
-            <h3 class="text-base font-bold text-white">No Courses Found</h3>
-            <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">You do not have any courses matching your selected filter parameters.</p>
+            <h3 class="text-sm font-bold text-white">No Courses Found</h3>
+            <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">There are no courses matching your search or active filters.</p>
             <button
               @click="openCreateWizard"
               type="button"
-              class="mt-5 px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs rounded-xl shadow-md hover:shadow-indigo-600/30 transition-all duration-200 inline-flex items-center gap-2 cursor-pointer"
+              class="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs rounded-xl shadow-md transition-all duration-200 inline-flex items-center gap-1.5 cursor-pointer"
             >
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
               <span>Create New Course</span>
             </button>
           </div>
@@ -975,23 +941,93 @@ const openCreateWizard = () => {
 
     </div>
 
-    <!-- COURSE SETTINGS MODAL -->
+    <!-- COURSE SETTINGS MODAL (Global Preferences & Per-Course Configuration) -->
     <div v-if="showSettingsModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-      <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-3xl w-full p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto custom-scrollbar">
+      <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-4xl w-full p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto custom-scrollbar">
         <div class="flex items-center justify-between border-b border-slate-800 pb-3">
           <div>
             <h3 class="text-base font-bold text-white flex items-center gap-2">
-              <span>⚙️ Course Settings (Mode & Fee via ABA)</span>
+              <span>⚙️ Course Settings & Global Preferences</span>
             </h3>
-            <p class="text-xs text-slate-400 mt-0.5">Configure learning mode, class section schedule, and course pricing fee.</p>
+            <p class="text-xs text-slate-400 mt-0.5">Configure teacher defaults, certificate rules, ABA revenue split, and AI grading rubrics.</p>
           </div>
           <button @click="showSettingsModal = false" class="text-slate-400 hover:text-white text-lg">✕</button>
         </div>
 
+        <!-- Global Teacher Level Configurations (4 Cards) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+          <!-- 1. Certificate Template -->
+          <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-4 space-y-2">
+            <div class="flex items-center justify-between">
+              <h4 class="text-xs font-bold text-indigo-300 uppercase tracking-wider">🎓 Default Certificate</h4>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Active</span>
+            </div>
+            <p class="text-xs text-white font-semibold">Saint Paul Institute Official Certificate</p>
+            <p class="text-[11px] text-slate-400 leading-relaxed">Standard completion certificate with student name, course title, verification QR code & signature.</p>
+          </div>
+
+          <!-- 2. Revenue Split % (View-Only per ABA PayWay) -->
+          <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-4 space-y-2">
+            <div class="flex items-center justify-between">
+              <h4 class="text-xs font-bold text-emerald-300 uppercase tracking-wider">💳 Revenue Split (ABA PayWay)</h4>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">View-Only</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-center text-xs">
+              <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
+                <p class="text-[10px] text-emerald-400">Teacher Earning</p>
+                <p class="font-bold text-emerald-400 text-sm">90%</p>
+              </div>
+              <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
+                <p class="text-[10px] text-slate-400">Platform Fee</p>
+                <p class="font-bold text-slate-300 text-sm">10%</p>
+              </div>
+            </div>
+            <p class="text-[10px] text-slate-500">Revenue split percentages are managed by Institute Administration & Finance.</p>
+          </div>
+
+          <!-- 3. Notification Preferences -->
+          <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-4 space-y-2">
+            <h4 class="text-xs font-bold text-amber-300 uppercase tracking-wider">🔔 Notification Preferences</h4>
+            <div class="space-y-1.5 text-xs text-slate-300">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked class="rounded bg-slate-900 border-slate-700 text-indigo-600 focus:ring-0" />
+                <span>Instant In-App Alert on new student enrollment</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked class="rounded bg-slate-900 border-slate-700 text-indigo-600 focus:ring-0" />
+                <span>Email notification for student quiz submissions</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked class="rounded bg-slate-900 border-slate-700 text-indigo-600 focus:ring-0" />
+                <span>ABA Payment payout receipt notification</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- 4. AI Grading Rubrics & Thresholds -->
+          <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-4 space-y-2">
+            <h4 class="text-xs font-bold text-purple-300 uppercase tracking-wider">🤖 AI Grading Rubrics & Thresholds</h4>
+            <div class="space-y-1.5 text-xs">
+              <div class="flex items-center justify-between text-slate-300">
+                <span>High Mastery Threshold:</span>
+                <span class="font-bold text-emerald-400">80%+ (Certificate Eligible)</span>
+              </div>
+              <div class="flex items-center justify-between text-slate-300">
+                <span>Standard Passing Threshold:</span>
+                <span class="font-bold text-indigo-400">50% Minimum</span>
+              </div>
+              <div class="flex items-center justify-between text-slate-300">
+                <span>At-Risk Intervention Alert:</span>
+                <span class="font-bold text-rose-400">&lt; 40% (AI Recommendation)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Course Selector Bar -->
-        <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 border-t border-slate-800">
           <div class="flex-1">
-            <label class="block text-[11px] font-bold text-indigo-300 uppercase tracking-wider mb-1">Target Course</label>
+            <label class="block text-[11px] font-bold text-indigo-300 uppercase tracking-wider mb-1">Select Course For Pricing / Mode Adjustment</label>
             <select
               :value="selectedCourse?.id || props.courses?.[0]?.id"
               @change="(e: any) => selectedCourse = (props.courses || []).find(c => c.id == e.target.value)"
@@ -1032,7 +1068,7 @@ const openCreateWizard = () => {
             </div>
             <div class="text-xs text-slate-300 space-y-1.5 pt-2 border-t border-slate-800">
               <div class="flex items-center justify-between text-[11px]">
-                <span class="text-slate-400">Section:</span>
+                <span class="text-slate-400">Class Section:</span>
                 <span class="font-bold text-white">IT101-A</span>
               </div>
               <div class="flex items-center justify-between text-[11px]">
@@ -1041,7 +1077,7 @@ const openCreateWizard = () => {
               </div>
             </div>
             <div class="p-2.5 rounded-lg bg-amber-950/30 border border-amber-500/30 text-[10px] text-amber-300">
-              ⚠️ Changing mode on published courses with students will disable timetable & attendance rules.
+              ⚠️ Changing mode on published courses with enrolled students will adjust live schedule & attendance settings.
             </div>
           </div>
 
@@ -1056,12 +1092,12 @@ const openCreateWizard = () => {
             </div>
             <div class="grid grid-cols-2 gap-2 text-center text-xs pt-1">
               <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
-                <p class="text-[10px] text-slate-400">Platform Fee</p>
-                <p class="font-bold text-slate-300">$3.00</p>
+                <p class="text-[10px] text-slate-400">Platform (10%)</p>
+                <p class="font-bold text-slate-300">${{ (Number(selectedCourse?.price || 30) * 0.10).toFixed(2) }}</p>
               </div>
               <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
-                <p class="text-[10px] text-emerald-400">Teacher Earning</p>
-                <p class="font-bold text-emerald-400">${{ (Number(selectedCourse?.price || 30) - 3).toFixed(2) }}</p>
+                <p class="text-[10px] text-emerald-400">Teacher (90%)</p>
+                <p class="font-bold text-emerald-400">${{ (Number(selectedCourse?.price || 30) * 0.90).toFixed(2) }}</p>
               </div>
             </div>
             <div class="p-2.5 rounded-lg bg-emerald-950/20 border border-emerald-500/30 text-[10px] text-emerald-300 flex items-center justify-between">

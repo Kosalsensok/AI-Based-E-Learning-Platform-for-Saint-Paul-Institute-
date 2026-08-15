@@ -9,23 +9,27 @@ import PreTestTab from './PreTest.vue'
 import PostTestTab from './PostTest.vue'
 import PracticeQuizTab from './PracticeQuiz.vue'
 import QuizResultsTab from './QuizResults.vue'
+import AssignmentTab from './AssignmentTab.vue'
+import CodingAssessmentTab from './CodingAssessmentTab.vue'
 
 const props = defineProps<{
   courses: Array<any>
   quizzes: Array<any>
 }>()
 
-const activeTab = ref<'questions' | 'quizzes' | 'pretest' | 'posttest' | 'practice' | 'results'>('questions')
+type AssessmentTabType = 'questions' | 'quizzes' | 'pretest' | 'posttest' | 'practice' | 'assignments' | 'coding' | 'results'
+
+const activeTab = ref<AssessmentTabType>('questions')
 
 onMounted(() => {
   const urlParams = new URLSearchParams(window.location.search)
-  const tab = urlParams.get('tab')
-  if (tab === 'questions' || tab === 'quizzes' || tab === 'pretest' || tab === 'posttest' || tab === 'practice' || tab === 'results') {
+  const tab = urlParams.get('tab') as AssessmentTabType
+  if (['questions', 'quizzes', 'pretest', 'posttest', 'practice', 'assignments', 'coding', 'results'].includes(tab)) {
     activeTab.value = tab
   }
 })
 
-const changeTab = (tab: 'questions' | 'quizzes' | 'pretest' | 'posttest' | 'practice' | 'results') => {
+const changeTab = (tab: AssessmentTabType) => {
   activeTab.value = tab
   const url = new URL(window.location.href)
   url.searchParams.set('tab', tab)
@@ -50,7 +54,7 @@ const changeTab = (tab: 'questions' | 'quizzes' | 'pretest' | 'posttest' | 'prac
                 <span>Quiz & Assessment Module</span>
               </h1>
               <p class="text-xs md:text-sm text-slate-300 mt-1">
-                Comprehensive teacher evaluation suite — Question bank, quizzes, AI grading, and knowledge gap diagnostics.
+                Comprehensive teacher evaluation suite — Question bank, quizzes, assignments, coding assessments, and quiz results.
               </p>
             </div>
           </div>
@@ -113,7 +117,7 @@ const changeTab = (tab: 'questions' | 'quizzes' | 'pretest' | 'posttest' | 'prac
         <button
           @click="changeTab('questions')"
           :class="[
-            'px-4 py-2.5 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center gap-2',
+            'px-3.5 py-2 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center gap-1.5 cursor-pointer',
             activeTab === 'questions'
               ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
               : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-700'
@@ -125,7 +129,7 @@ const changeTab = (tab: 'questions' | 'quizzes' | 'pretest' | 'posttest' | 'prac
         <button
           @click="changeTab('quizzes')"
           :class="[
-            'px-4 py-2.5 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center gap-2',
+            'px-3.5 py-2 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center gap-1.5 cursor-pointer',
             activeTab === 'quizzes'
               ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
               : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-700'
@@ -137,7 +141,7 @@ const changeTab = (tab: 'questions' | 'quizzes' | 'pretest' | 'posttest' | 'prac
         <button
           @click="changeTab('pretest')"
           :class="[
-            'px-4 py-2.5 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center gap-2',
+            'px-3.5 py-2 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center gap-1.5 cursor-pointer',
             activeTab === 'pretest'
               ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
               : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-700'
@@ -147,21 +151,9 @@ const changeTab = (tab: 'questions' | 'quizzes' | 'pretest' | 'posttest' | 'prac
         </button>
 
         <button
-          @click="changeTab('posttest')"
-          :class="[
-            'px-4 py-2.5 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center gap-2',
-            activeTab === 'posttest'
-              ? 'bg-rose-600 text-white shadow-md shadow-rose-500/20'
-              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-700'
-          ]"
-        >
-          <span>🟥 Post-Test</span>
-        </button>
-
-        <button
           @click="changeTab('practice')"
           :class="[
-            'px-4 py-2.5 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center gap-2',
+            'px-3.5 py-2 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center gap-1.5 cursor-pointer',
             activeTab === 'practice'
               ? 'bg-emerald-600 text-white shadow-md shadow-emerald-500/20'
               : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-700'
@@ -171,11 +163,47 @@ const changeTab = (tab: 'questions' | 'quizzes' | 'pretest' | 'posttest' | 'prac
         </button>
 
         <button
+          @click="changeTab('posttest')"
+          :class="[
+            'px-3.5 py-2 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center gap-1.5 cursor-pointer',
+            activeTab === 'posttest'
+              ? 'bg-rose-600 text-white shadow-md shadow-rose-500/20'
+              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-700'
+          ]"
+        >
+          <span>🟥 Post-Test</span>
+        </button>
+
+        <button
+          @click="changeTab('assignments')"
+          :class="[
+            'px-3.5 py-2 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center gap-1.5 cursor-pointer',
+            activeTab === 'assignments'
+              ? 'bg-purple-600 text-white shadow-md shadow-purple-500/20'
+              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-700'
+          ]"
+        >
+          <span>📁 Assignment</span>
+        </button>
+
+        <button
+          @click="changeTab('coding')"
+          :class="[
+            'px-3.5 py-2 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center gap-1.5 cursor-pointer',
+            activeTab === 'coding'
+              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
+              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-700'
+          ]"
+        >
+          <span>💻 Coding Assessment</span>
+        </button>
+
+        <button
           @click="changeTab('results')"
           :class="[
-            'px-4 py-2.5 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center gap-2',
+            'px-3.5 py-2 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center gap-1.5 cursor-pointer',
             activeTab === 'results'
-              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
+              ? 'bg-cyan-600 text-white shadow-md shadow-cyan-500/20'
               : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-700'
           ]"
         >
@@ -190,6 +218,8 @@ const changeTab = (tab: 'questions' | 'quizzes' | 'pretest' | 'posttest' | 'prac
         <PreTestTab v-if="activeTab === 'pretest'" :courses="props.courses" />
         <PostTestTab v-if="activeTab === 'posttest'" :courses="props.courses" />
         <PracticeQuizTab v-if="activeTab === 'practice'" :courses="props.courses" />
+        <AssignmentTab v-if="activeTab === 'assignments'" :courses="props.courses" />
+        <CodingAssessmentTab v-if="activeTab === 'coding'" :courses="props.courses" />
         <QuizResultsTab v-if="activeTab === 'results'" :courses="props.courses" />
       </div>
     </div>

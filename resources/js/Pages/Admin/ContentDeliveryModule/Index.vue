@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, defineAsyncComponent } from 'vue'
 import { router } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import { 
@@ -22,16 +22,16 @@ import NotesDocuments from './NotesDocuments.vue'
 import ModulesChapters from './ModulesChapters.vue'
 import OfflineContent from './OfflineContent.vue'
 
-// Modals
-import UniversalUploadModal from './UniversalUploadModal.vue'
-import VideoPlayerModal from './VideoPlayerModal.vue'
-import PdfViewerModal from './PdfViewerModal.vue'
-import SlideViewerModal from './SlideViewerModal.vue'
-import NoteEditorModal from './NoteEditorModal.vue'
-import LinkViewerModal from './LinkViewerModal.vue'
-import ModuleChapterModal from './ModuleChapterModal.vue'
-import OfflinePackageModal from './OfflinePackageModal.vue'
-import LessonPreviewEditorModal from './LessonPreviewEditorModal.vue'
+// Lazy-Loaded Modals
+const UniversalUploadModal = defineAsyncComponent(() => import('./UniversalUploadModal.vue'))
+const VideoPlayerModal = defineAsyncComponent(() => import('./VideoPlayerModal.vue'))
+const PdfViewerModal = defineAsyncComponent(() => import('./PdfViewerModal.vue'))
+const SlideViewerModal = defineAsyncComponent(() => import('./SlideViewerModal.vue'))
+const NoteEditorModal = defineAsyncComponent(() => import('./NoteEditorModal.vue'))
+const LinkViewerModal = defineAsyncComponent(() => import('./LinkViewerModal.vue'))
+const ModuleChapterModal = defineAsyncComponent(() => import('./ModuleChapterModal.vue'))
+const OfflinePackageModal = defineAsyncComponent(() => import('./OfflinePackageModal.vue'))
+const LessonPreviewEditorModal = defineAsyncComponent(() => import('./LessonPreviewEditorModal.vue'))
 
 const props = withDefaults(defineProps<{
   tab?: string

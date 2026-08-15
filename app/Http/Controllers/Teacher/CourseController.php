@@ -57,6 +57,37 @@ class CourseController extends Controller
         ]);
     }
 
+    public function drafts(Request $request)
+    {
+        $request->merge(['tab' => 'drafts']);
+        return $this->index($request);
+    }
+
+    public function pending(Request $request)
+    {
+        $request->merge(['tab' => 'pending']);
+        return $this->index($request);
+    }
+
+    public function published(Request $request)
+    {
+        $request->merge(['tab' => 'published']);
+        return $this->index($request);
+    }
+
+    public function settings(Request $request, $course = null)
+    {
+        $courseId = null;
+        if ($course instanceof Course) {
+            $courseId = $course->id;
+        } elseif (is_numeric($course)) {
+            $courseId = (int) $course;
+        }
+
+        $request->merge(['tab' => 'settings', 'course_id' => $courseId]);
+        return $this->index($request);
+    }
+
     public function create(Request $request)
     {
         $majors = Major::with('department.faculty')->get();
@@ -137,13 +168,17 @@ class CourseController extends Controller
                 ->with('success', 'Course created! Now you can add modules and lessons.');
         }
 
-        if ($redirectAction === 'submit') {
-            $course->update(['status' => 'pending']);
+        if ($redirectAction === 'submit' || $dbStatus === 'pending') {
+            $course->update([
+                'status' => 'pending',
+                'submitted_at' => now(),
+                'rejection_note' => null,
+            ]);
             return redirect()->route('teacher.courses.index', ['tab' => 'pending'])
                 ->with('success', 'Course submitted for admin approval.');
         }
 
-        $targetTab = ($dbStatus === 'pending') ? 'pending' : ($dbStatus === 'published' ? 'published' : 'drafts');
+        $targetTab = ($dbStatus === 'published') ? 'published' : 'drafts';
 
         return redirect()->route('teacher.courses.index', ['tab' => $targetTab])
             ->with('success', 'Course saved as draft successfully');
@@ -286,8 +321,28 @@ class CourseController extends Controller
         $course = $this->resolveCourse($course);
         if (!$course) abort(404);
 
-        $course->update(['status' => 'pending']);
+        $course->update([
+            'status' => 'pending',
+            'submitted_at' => now(),
+            'rejection_note' => null,
+        ]);
         return back()->with('success', 'Course submitted for admin approval');
+    }
+
+    public function withdraw($course)
+    {
+        $course = $this->resolveCourse($course);
+        if (!$course) abort(404);
+
+        if ($course->status !== 'pending') {
+            return back()->with('error', 'Only pending courses can be withdrawn.');
+        }
+
+        $course->update([
+            'status' => 'draft',
+            'submitted_at' => null,
+        ]);
+        return back()->with('success', 'Course submission withdrawn and reverted to Draft.');
     }
 
     public function cloneCourse(Request $request, $course)

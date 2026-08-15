@@ -10,38 +10,55 @@ use App\Models\Major;
 use App\Models\Semester;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class AcademicStructureController extends Controller
 {
+    private function clearAcademicCache(): void
+    {
+        Cache::forget('academic_structure');
+        Cache::forget('academic_structure.faculties');
+        Cache::forget('academic_structure.departments');
+        Cache::forget('academic_structure.majors');
+        Cache::forget('academic_structure.years');
+        Cache::forget('academic_structure.semesters');
+        Cache::forget('academic.summary_stats');
+        Cache::forget('admin.majors_list');
+    }
+
     private function getSummaryStats(): array
     {
-        $hasFaculties = Schema::hasTable('faculties');
-        $hasDepts = Schema::hasTable('departments');
-        $hasMajors = Schema::hasTable('majors');
-        $hasAcademicYears = Schema::hasTable('academic_years');
-        $hasSemesters = Schema::hasTable('semesters');
+        return Cache::remember('academic.summary_stats', 300, function () {
+            $hasFaculties = Schema::hasTable('faculties');
+            $hasDepts = Schema::hasTable('departments');
+            $hasMajors = Schema::hasTable('majors');
+            $hasAcademicYears = Schema::hasTable('academic_years');
+            $hasSemesters = Schema::hasTable('semesters');
 
-        return [
-            'total_faculties'      => $hasFaculties ? (Faculty::count() ?: 5) : 5,
-            'total_departments'    => $hasDepts ? (Department::count() ?: 12) : 12,
-            'total_majors'         => $hasMajors ? (Major::count() ?: 5) : 5,
-            'total_academic_years' => $hasAcademicYears ? (AcademicYear::count() ?: 4) : 4,
-            'total_semesters'      => $hasSemesters ? (Semester::where('is_active', true)->count() ?: 2) : 2,
-            'total_students'       => User::where('role', 'student')->count() ?: 2458,
-            'total_teachers'       => User::where('role', 'teacher')->count() ?: 145,
-            'total_courses'        => 328,
-        ];
+            return [
+                'total_faculties'      => $hasFaculties ? (Faculty::count() ?: 5) : 5,
+                'total_departments'    => $hasDepts ? (Department::count() ?: 12) : 12,
+                'total_majors'         => $hasMajors ? (Major::count() ?: 5) : 5,
+                'total_academic_years' => $hasAcademicYears ? (AcademicYear::count() ?: 4) : 4,
+                'total_semesters'      => $hasSemesters ? (Semester::where('is_active', true)->count() ?: 2) : 2,
+                'total_students'       => User::where('role', 'student')->count() ?: 2458,
+                'total_teachers'       => User::where('role', 'teacher')->count() ?: 145,
+                'total_courses'        => 328,
+            ];
+        });
     }
 
     // ─── FACULTIES ───
     public function faculties(): Response
     {
-        $faculties = Schema::hasTable('faculties')
-            ? Faculty::withCount(['departments', 'majors'])->latest()->get()
-            : collect();
+        $faculties = Cache::remember('academic_structure.faculties', 86400, function () {
+            return Schema::hasTable('faculties')
+                ? Faculty::with(['departments.majors'])->withCount(['departments', 'majors'])->latest()->get()
+                : collect();
+        });
 
         $defaultFaculties = [
             ['id' => 1, 'code' => 'FAC-001', 'name' => 'Faculty of Computing', 'name_kh' => 'មហាវិទ្យាល័យ វិទ្យាសាស្ត្រកុំព្យូទ័រ', 'dean' => 'Dr. Sok Vichea', 'email' => 'computing@elms.edu', 'est_year' => 2010, 'depts_count' => 2, 'majors_count' => 1, 'students_count' => 520, 'status' => 'active', 'description' => 'Faculty focused on IT and Computer Science'],
@@ -75,6 +92,7 @@ class AcademicStructureController extends Controller
             : ($request->input('status') === 'inactive' ? false : true);
 
         Faculty::create($validated + ['is_active' => $isActive]);
+        $this->clearAcademicCache();
 
         return redirect()->back()->with('success', 'Faculty created successfully.');
     }
@@ -97,6 +115,7 @@ class AcademicStructureController extends Controller
         }
 
         $faculty->update($validated);
+        $this->clearAcademicCache();
 
         return redirect()->back()->with('success', 'Faculty updated successfully.');
     }
@@ -104,6 +123,7 @@ class AcademicStructureController extends Controller
     public function destroyFaculty(Faculty $faculty)
     {
         $faculty->delete();
+        $this->clearAcademicCache();
 
         return redirect()->back()->with('success', 'Faculty deleted successfully.');
     }
@@ -111,11 +131,15 @@ class AcademicStructureController extends Controller
     // ─── DEPARTMENTS ───
     public function departments(): Response
     {
-        $departments = Schema::hasTable('departments')
-            ? Department::with(['faculty'])->withCount(['majors'])->latest()->get()
-            : collect();
+        $departments = Cache::remember('academic_structure.departments', 86400, function () {
+            return Schema::hasTable('departments')
+                ? Department::with(['faculty'])->withCount(['majors'])->latest()->get()
+                : collect();
+        });
 
-        $faculties = Schema::hasTable('faculties') ? Faculty::pluck('name')->toArray() : [];
+        $faculties = Cache::remember('academic_structure.faculties_names', 86400, function () {
+            return Schema::hasTable('faculties') ? Faculty::pluck('name')->toArray() : [];
+        });
 
         $defaultDepts = [
             ['id' => 1, 'code' => 'DEPT-CMP-001', 'name' => 'Computing', 'name_kh' => 'ដេប៉ាតឺម៉ង់ វិទ្យាសាស្ត្រកុំព្យូទ័រ', 'faculty' => 'Faculty of Computing', 'head' => 'Mr. Sophea', 'email' => 'computing.dept@elms.edu', 'majors_count' => 1, 'teachers_count' => 25, 'status' => 'active', 'linked_majors' => ['IT & Networking']],
@@ -159,6 +183,7 @@ class AcademicStructureController extends Controller
             : ($request->input('status') === 'inactive' ? false : true);
 
         Department::create($validated + ['is_active' => $isActive]);
+        $this->clearAcademicCache();
 
         return redirect()->back()->with('success', 'Department created successfully.');
     }
@@ -181,6 +206,7 @@ class AcademicStructureController extends Controller
         }
 
         $department->update($validated);
+        $this->clearAcademicCache();
 
         return redirect()->back()->with('success', 'Department updated successfully.');
     }
@@ -188,6 +214,7 @@ class AcademicStructureController extends Controller
     public function destroyDepartment(Department $department)
     {
         $department->delete();
+        $this->clearAcademicCache();
 
         return redirect()->back()->with('success', 'Department deleted successfully.');
     }
@@ -195,9 +222,11 @@ class AcademicStructureController extends Controller
     // ─── MAJORS ───
     public function majors(): Response
     {
-        $majors = Schema::hasTable('majors')
-            ? Major::with(['department.faculty'])->latest()->get()
-            : collect();
+        $majors = Cache::remember('academic_structure.majors', 86400, function () {
+            return Schema::hasTable('majors')
+                ? Major::with(['department.faculty'])->latest()->get()
+                : collect();
+        });
 
         $defaultMajors = [
             [
@@ -266,6 +295,7 @@ class AcademicStructureController extends Controller
             : ($request->input('status') === 'inactive' ? false : true);
 
         Major::create($validated + ['is_active' => $isActive]);
+        $this->clearAcademicCache();
 
         return redirect()->back()->with('success', 'Major created successfully.');
     }
@@ -291,6 +321,7 @@ class AcademicStructureController extends Controller
         }
 
         $major->update($validated);
+        $this->clearAcademicCache();
 
         return redirect()->back()->with('success', 'Major updated successfully.');
     }
@@ -298,6 +329,7 @@ class AcademicStructureController extends Controller
     public function destroyMajor(Major $major)
     {
         $major->delete();
+        $this->clearAcademicCache();
 
         return redirect()->back()->with('success', 'Major deleted successfully.');
     }
@@ -305,9 +337,11 @@ class AcademicStructureController extends Controller
     // ─── ACADEMIC YEARS ───
     public function academicYears(): Response
     {
-        $academicYears = Schema::hasTable('academic_years')
-            ? AcademicYear::latest()->get()
-            : collect();
+        $academicYears = Cache::remember('academic_structure.years', 86400, function () {
+            return Schema::hasTable('academic_years')
+                ? AcademicYear::latest()->get()
+                : collect();
+        });
 
         $defaultYears = [
             ['id' => 1, 'code' => 'AY-2024-2025', 'name' => 'Academic Year 2024 – 2025', 'start_date' => '01 Sep 2024', 'end_date' => '31 Aug 2025', 'semesters_count' => 2, 'status' => 'active', 'is_active' => true, 'students_count' => 2458, 'courses_count' => 328, 'progress' => 85, 'days_remaining' => 77],
@@ -334,6 +368,7 @@ class AcademicStructureController extends Controller
         ]);
 
         AcademicYear::create($validated);
+        $this->clearAcademicCache();
 
         return redirect()->back()->with('success', 'Academic Year created successfully.');
     }
@@ -350,6 +385,7 @@ class AcademicStructureController extends Controller
         ]);
 
         $academicYear->update($validated);
+        $this->clearAcademicCache();
 
         return redirect()->back()->with('success', 'Academic Year updated successfully.');
     }
@@ -357,6 +393,7 @@ class AcademicStructureController extends Controller
     public function destroyAcademicYear(AcademicYear $academicYear)
     {
         $academicYear->delete();
+        $this->clearAcademicCache();
 
         return redirect()->back()->with('success', 'Academic Year deleted successfully.');
     }
@@ -365,6 +402,7 @@ class AcademicStructureController extends Controller
     {
         AcademicYear::query()->update(['is_active' => false, 'status' => 'completed']);
         $academicYear->update(['is_active' => true, 'status' => 'active']);
+        $this->clearAcademicCache();
 
         return redirect()->back()->with('success', 'Active Academic Year set to ' . $academicYear->name);
     }
@@ -372,9 +410,11 @@ class AcademicStructureController extends Controller
     // ─── SEMESTERS ───
     public function semesters(): Response
     {
-        $semesters = Schema::hasTable('semesters')
-            ? Semester::latest()->get()
-            : collect();
+        $semesters = Cache::remember('academic_structure.semesters', 86400, function () {
+            return Schema::hasTable('semesters')
+                ? Semester::latest()->get()
+                : collect();
+        });
 
         $defaultSemesters = [
             ['id' => 1, 'code' => 'SEM-1-2024-2025', 'name' => 'Semester 1 — 2024-2025', 'parent_year' => 'Academic Year 2024–2025', 'semester_num' => 'Semester 1', 'start_date' => '01 Sep 2024', 'end_date' => '15 Feb 2025', 'status' => 'completed', 'is_active' => false],
@@ -409,6 +449,7 @@ class AcademicStructureController extends Controller
         ]);
 
         Semester::create($validated);
+        $this->clearAcademicCache();
 
         return redirect()->back()->with('success', 'Semester created successfully.');
     }
@@ -432,6 +473,7 @@ class AcademicStructureController extends Controller
         ]);
 
         $semester->update($validated);
+        $this->clearAcademicCache();
 
         return redirect()->back()->with('success', 'Semester updated successfully.');
     }
@@ -439,6 +481,7 @@ class AcademicStructureController extends Controller
     public function destroySemester(Semester $semester)
     {
         $semester->delete();
+        $this->clearAcademicCache();
 
         return redirect()->back()->with('success', 'Semester deleted successfully.');
     }
@@ -447,6 +490,7 @@ class AcademicStructureController extends Controller
     {
         Semester::query()->update(['is_active' => false, 'status' => 'completed']);
         $semester->update(['is_active' => true, 'status' => 'active']);
+        $this->clearAcademicCache();
 
         return redirect()->back()->with('success', 'Active Semester set to ' . $semester->name);
     }

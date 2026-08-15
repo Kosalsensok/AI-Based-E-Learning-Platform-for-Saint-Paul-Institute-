@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <path d="M12 4C7.58172 4 4 7.58172 4 12C4 13.8487 4.62881 15.551 5.68886 16.9077L3.5 19H8.5V14L6.96347 15.5365C6.05929 14.5361 5.5 13.2081 5.5 12C5.5 8.41015 8.41015 5.5 12 5.5C15.5899 5.5 18.5 8.41015 18.5 12C18.5 15.5899 15.5899 18.5 12 18.5C10.6865 18.5 9.46166 18.1102 8.43579 17.4385" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+  <!-- Clock hands -->
+  <path d="M12 8V12L15 14" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</svg>

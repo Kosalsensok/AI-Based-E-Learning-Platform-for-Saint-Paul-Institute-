@@ -104,19 +104,19 @@ class AcademicSeeder extends Seeder
         // 6. Default Users
         User::firstOrCreate(
             ['email' => 'admin@elms.com'],
-            ['name' => 'Super Admin', 'password' => bcrypt('password'), 'role' => 'admin']
+            ['name' => 'Super Admin', 'password' => 'password', 'role' => 'admin']
         );
 
         User::firstOrCreate(
             ['email' => 'teacher@elms.com'],
-            ['name' => 'Mr. Sophea', 'password' => bcrypt('password'), 'role' => 'teacher']
+            ['name' => 'Mr. Sophea', 'password' => 'password', 'role' => 'teacher']
         );
 
         User::firstOrCreate(
             ['email' => 'student@elms.com'],
             [
                 'name' => 'Chan Dara',
-                'password' => bcrypt('password'),
+                'password' => 'password',
                 'role' => 'student',
                 'major_id' => Major::where('code', 'MJR-IT-001')->value('id'),
             ]

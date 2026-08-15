@@ -37,11 +37,18 @@ return [
 
     'telegram' => [
         'bot_token' => env('TELEGRAM_BOT_TOKEN'),
+        'bot_username' => env('TELEGRAM_BOT_USERNAME', 'spi_elms_auth_bot'),
         'chat_id' => env('TELEGRAM_CHAT_ID'),
     ],
 
     'cloudconvert' => [
         'api_key' => env('CLOUDCONVERT_API_KEY'),
+    ],
+
+    'clerk' => [
+        'publishable_key' => env('VITE_CLERK_PUBLISHABLE_KEY'),
+        'secret_key' => env('CLERK_SECRET_KEY'),
+        'app_id' => env('CLERK_APP_ID', 'app_3HuqsrwyUIBYDv90aKgOiwfsKkx'),
     ],
 
 ];

@@ -8,12 +8,15 @@ class Course extends Model
 {
     protected $fillable = [
         'major_id', 'teacher_id', 'title', 'code', 'description',
-        'learning_mode', 'is_paid', 'price', 'status', 'thumbnail'
+        'learning_mode', 'is_paid', 'price', 'status', 'thumbnail',
+        'submitted_at', 'reviewed_at', 'rejection_note'
     ];
 
     protected $casts = [
         'is_paid' => 'boolean',
         'price' => 'decimal:2',
+        'submitted_at' => 'datetime',
+        'reviewed_at' => 'datetime',
     ];
 
     public function major()
@@ -49,5 +52,25 @@ class Course extends Model
     public function payments()
     {
         return $this->hasMany(Payment::class);
+    }
+
+    public function videos()
+    {
+        return $this->hasMany(CourseVideo::class);
+    }
+
+    public function materials()
+    {
+        return $this->hasMany(CourseMaterial::class);
+    }
+
+    public function aiContents()
+    {
+        return $this->hasMany(AiGeneratedContent::class);
+    }
+
+    public function labIntegrations()
+    {
+        return $this->hasMany(LabIntegration::class);
     }
 }

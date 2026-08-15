@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, defineAsyncComponent } from 'vue'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import type { 
   AiRuleItem, 
@@ -19,15 +19,15 @@ import RecommendationLogs from './RecommendationLogs.vue'
 import AiConfiguration from './AiConfiguration.vue'
 import StudentAiView from './StudentAiView.vue'
 
-// Modals
-import RuleSimulatorModal from './Modals/RuleSimulatorModal.vue'
-import CreateRuleModal from './Modals/CreateRuleModal.vue'
-import CreateMappingModal from './Modals/CreateMappingModal.vue'
-import CreateReviewClassModal from './Modals/CreateReviewClassModal.vue'
-import AddPracticeQuizModal from './Modals/AddPracticeQuizModal.vue'
-import NodeEditorModal from './Modals/NodeEditorModal.vue'
-import DecisionNodeModal from './Modals/DecisionNodeModal.vue'
-import LogDetailModal from './Modals/LogDetailModal.vue'
+// Lazy-Loaded Modals (Dynamic Imports for optimal performance)
+const RuleSimulatorModal = defineAsyncComponent(() => import('./Modals/RuleSimulatorModal.vue'))
+const CreateRuleModal = defineAsyncComponent(() => import('./Modals/CreateRuleModal.vue'))
+const CreateMappingModal = defineAsyncComponent(() => import('./Modals/CreateMappingModal.vue'))
+const CreateReviewClassModal = defineAsyncComponent(() => import('./Modals/CreateReviewClassModal.vue'))
+const AddPracticeQuizModal = defineAsyncComponent(() => import('./Modals/AddPracticeQuizModal.vue'))
+const NodeEditorModal = defineAsyncComponent(() => import('./Modals/NodeEditorModal.vue'))
+const DecisionNodeModal = defineAsyncComponent(() => import('./Modals/DecisionNodeModal.vue'))
+const LogDetailModal = defineAsyncComponent(() => import('./Modals/LogDetailModal.vue'))
 
 const props = defineProps<{
   activeTab?: string

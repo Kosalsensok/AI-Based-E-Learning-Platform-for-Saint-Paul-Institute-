@@ -101,12 +101,13 @@ class DashboardController extends Controller
 
     private function getDashboardData(string $period, string $majorId): array
     {
-        // Fetch Majors list
-        $allMajors = Cache::remember('admin.majors_list', 300, function () {
-            $dbMajors = Major::where('is_active', true)->orWhereNull('is_active')->get(['id', 'name', 'code']);
-            if ($dbMajors->count() > 0) {
-                return $dbMajors;
-            }
+        return Cache::remember("admin.dashboard.data.{$period}.{$majorId}", 120, function () use ($period, $majorId) {
+            // Fetch Majors list
+            $allMajors = Cache::remember('admin.majors_list', 300, function () {
+                $dbMajors = Major::where('is_active', true)->orWhereNull('is_active')->get(['id', 'name', 'code']);
+                if ($dbMajors->count() > 0) {
+                    return $dbMajors;
+                }
             return collect([
                 ['id' => 1, 'name' => 'IT & Networking', 'code' => 'ITN'],
                 ['id' => 2, 'name' => 'Tourism Management', 'code' => 'TRM'],
@@ -440,5 +441,6 @@ class DashboardController extends Controller
                 'topCourses'        => $topCourses,
             ],
         ];
+        });
     }
 }

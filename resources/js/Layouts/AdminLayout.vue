@@ -402,8 +402,8 @@ const setStatusMode = (online: boolean) => {
 }
 
 const languages = [
-  { code: 'km', name: '🇰🇭 ភាសាខ្មែរ', flagUrl: '/images/flags/km.svg' },
-  { code: 'en', name: '🇬🇧 English', flagUrl: '/images/flags/en.svg' },
+  { code: 'km', name: 'ភាសាខ្មែរ', flagUrl: '/images/flags/km.svg' },
+  { code: 'en', name: 'English', flagUrl: '/images/flags/en.svg' },
 ]
 
 const selectLanguage = (code: string) => {

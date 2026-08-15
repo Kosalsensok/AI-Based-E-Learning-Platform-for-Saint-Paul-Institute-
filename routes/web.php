@@ -13,6 +13,7 @@ Route::get('/', function () {
 // ─── Public Certificate Verification ───
 Route::get('/verify/{code?}', [CertificateController::class, 'verify']);
 Route::get('/certificate/verify/{code?}', [CertificateController::class, 'verify'])->name('certificate.verify');
+Route::get('/verify-certificate/{uuid?}', [Student\CertificateController::class, 'publicVerify'])->name('verify-certificate.public');
 
 // ─── FR: Authentication Module (ទាំង 3 Roles) ───
 require __DIR__ . '/auth.php';
@@ -201,6 +202,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('progress', [Admin\ProgressController::class, 'index'])->name('progress');
         Route::get('ai-rules', [Admin\AiRuleController::class, 'index'])->name('ai-rules');
         Route::post('ai-rules/update', [Admin\AiRuleController::class, 'update'])->name('ai-rules.update');
+        Route::post('ai-rules/evaluate', [Admin\AiRuleController::class, 'evaluateRules'])->name('ai-rules.evaluate');
         Route::get('certificates', [Admin\CertificateController::class, 'index'])->name('certificates');
         Route::get('certificates/templates', [Admin\CertificateController::class, 'templates'])->name('certificates.templates');
         Route::get('certificates/issue', [Admin\CertificateController::class, 'issueView'])->name('certificates.issue');
@@ -237,13 +239,18 @@ Route::middleware(['auth'])->group(function () {
 
         // Course Management
         Route::get('courses/drafts', [Teacher\CourseController::class, 'drafts'])->name('courses.drafts');
+        Route::get('courses/draft', [Teacher\CourseController::class, 'drafts'])->name('courses.draft');
+        Route::get('courses/pending', [Teacher\CourseController::class, 'pending'])->name('courses.pending');
         Route::get('courses/published', [Teacher\CourseController::class, 'published'])->name('courses.published');
         Route::get('courses/settings', [Teacher\CourseController::class, 'settings'])->name('courses.settings');
         Route::get('courses/{course}/settings', [Teacher\CourseController::class, 'settings'])->name('courses.single-settings');
         Route::get('courses/{course}/workspace', [Teacher\CourseController::class, 'workspace'])->name('courses.workspace');
         Route::resource('courses', Teacher\CourseController::class);
         Route::post('courses/{course}/submit', [Teacher\CourseController::class, 'submitForApproval'])->name('courses.submit');
+        Route::post('courses/{course}/submit-approval', [Teacher\CourseController::class, 'submitForApproval'])->name('courses.submit-approval');
+        Route::post('courses/{course}/withdraw', [Teacher\CourseController::class, 'withdraw'])->name('courses.withdraw');
         Route::post('courses/{course}/publish', [Teacher\CourseController::class, 'publish'])->name('courses.publish');
+        Route::patch('courses/{course}/publish', [Teacher\CourseController::class, 'publish'])->name('courses.patch-publish');
         Route::post('courses/{course}/unpublish', [Teacher\CourseController::class, 'unpublish'])->name('courses.unpublish');
         Route::get('courses/{course}/completeness', [Teacher\CourseController::class, 'checkCompleteness'])->name('courses.completeness');
         Route::post('courses/{course}/clone', [Teacher\CourseController::class, 'cloneCourse'])->name('courses.clone');
@@ -266,17 +273,85 @@ Route::middleware(['auth'])->group(function () {
 
         // Content Delivery Module
         Route::get('content', [Teacher\ContentController::class, 'index'])->name('content.index');
+        Route::get('content-delivery', [Teacher\ContentController::class, 'index'])->name('content.delivery');
+        Route::get('courses/{course}/content', [Teacher\ContentController::class, 'index'])->name('courses.content');
+        Route::get('content/videos', [Teacher\ContentController::class, 'index'])->defaults('tab', 'videos')->name('content.tab.videos');
+        Route::get('content/pdfs', [Teacher\ContentController::class, 'index'])->defaults('tab', 'pdfs')->name('content.tab.pdfs');
+        Route::get('content/slides', [Teacher\ContentController::class, 'index'])->defaults('tab', 'slides')->name('content.tab.slides');
+        Route::get('content/modules', [Teacher\ContentController::class, 'index'])->defaults('tab', 'modules')->name('content.tab.modules');
+        Route::get('content/notes', [Teacher\ContentController::class, 'index'])->defaults('tab', 'notes')->name('content.tab.notes');
+        Route::get('content/ai-content', [Teacher\ContentController::class, 'index'])->defaults('tab', 'ai-content')->name('content.tab.ai-content');
+        Route::get('content/coding-lab', [Teacher\ContentController::class, 'index'])->defaults('tab', 'coding-lab')->name('content.tab.coding-lab');
+        Route::get('content/practice-lab', [Teacher\ContentController::class, 'index'])->defaults('tab', 'coding-lab')->name('content.tab.practice-lab');
+        Route::get('courses/{course}/modules', [Teacher\ContentController::class, 'getModules'])->name('content.get-modules');
+        Route::post('courses/{course}/modules', [Teacher\ContentController::class, 'storeModule'])->name('content.store-module');
+        Route::put('courses/modules/{module}/reorder', [Teacher\ContentController::class, 'reorderModules'])->name('content.modules.reorder');
+        Route::post('courses/{course}/modules/reorder', [Teacher\ContentController::class, 'reorderModules'])->name('content.courses.modules.reorder');
+        Route::get('modules/{module}/chapters', [Teacher\ContentController::class, 'getChapters'])->name('content.get-chapters');
+        Route::post('modules/{module}/chapters', [Teacher\ContentController::class, 'storeChapter'])->name('content.store-chapter');
+        Route::post('chapters/{chapter}/contents', [Teacher\ContentController::class, 'storeChapterContent'])->name('content.store-chapter-content');
+        Route::post('contents/{content}/generate-ai-summary', [Teacher\ContentController::class, 'generateAiSummary'])->name('content.generate-ai-summary');
+        Route::patch('contents/reorder', [Teacher\ContentController::class, 'reorderContents'])->name('content.reorder');
+
+        // 1. Videos
+        Route::post('courses/{course}/videos', [Teacher\ContentController::class, 'storeVideo'])->name('content.courses.videos.store');
+        Route::delete('courses/videos/{video}', [Teacher\ContentController::class, 'destroyVideo'])->name('content.videos.destroy');
+        Route::post('courses/videos/{video}/status', [Teacher\ContentController::class, 'updateVideoStatus'])->name('content.videos.status');
         Route::post('content/upload-video', [Teacher\ContentController::class, 'uploadVideo'])->name('content.upload-video');
+
+        // 2. PDFs & Materials
+        Route::post('courses/{course}/materials', [Teacher\ContentController::class, 'storeMaterial'])->name('content.courses.materials.store');
+        Route::post('courses/{course}/pdfs', [Teacher\ContentController::class, 'storePdf'])->name('content.courses.pdfs.store');
         Route::post('content/upload-pdf', [Teacher\ContentController::class, 'uploadPdf'])->name('content.upload-pdf');
+
+        // 3. Slides
+        Route::post('courses/{course}/slides', [Teacher\ContentController::class, 'storeSlide'])->name('content.courses.slides.store');
         Route::post('content/upload-slide', [Teacher\ContentController::class, 'uploadSlide'])->name('content.upload-slide');
 
+        // 5. Notes & Downloads
+        Route::post('courses/{course}/downloads', [Teacher\ContentController::class, 'storeDownload'])->name('content.courses.downloads.store');
+        Route::post('content/upload-note', [Teacher\ContentController::class, 'uploadNote'])->name('content.upload-note');
+        Route::delete('courses/materials/{material}', [Teacher\ContentController::class, 'destroyMaterial'])->name('content.materials.destroy');
+
+        // 6. AI-Assisted Content Endpoints
+        Route::post('courses/{course}/ai-content', [Teacher\ContentController::class, 'storeAiContent'])->name('content.courses.ai-content.store');
+        Route::post('courses/{course}/ai/generate-quiz', [Teacher\ContentController::class, 'aiGenerateQuizContent'])->name('content.ai.generate-quiz');
+        Route::post('courses/{course}/ai/summarize', [Teacher\ContentController::class, 'aiSummarizeContent'])->name('content.ai.summarize');
+        Route::post('courses/{course}/ai/flashcards', [Teacher\ContentController::class, 'aiFlashcardsContent'])->name('content.ai.flashcards');
+        Route::post('courses/ai/{aiContent}/approve', [Teacher\ContentController::class, 'approveAiContent'])->name('content.ai.approve');
+        Route::delete('courses/ai/{aiContent}', [Teacher\ContentController::class, 'destroyAiContent'])->name('content.ai.destroy');
+
+        // 7. Practice Lab Endpoints
+        Route::post('courses/{course}/labs', [Teacher\ContentController::class, 'storeLabDirect'])->name('content.courses.labs.store');
+        Route::post('courses/{course}/lessons/{lesson}/lab', [Teacher\ContentController::class, 'storeLabIntegration'])->name('content.courses.lessons.lab.store');
+        Route::delete('courses/labs/{lab}', [Teacher\ContentController::class, 'destroyLabIntegration'])->name('content.labs.destroy');
+        Route::post('content/upload-lab', [Teacher\ContentController::class, 'uploadLab'])->name('content.upload-lab');
+
         // Quiz & Assessment Module
+        Route::get('question-bank', [Teacher\QuizController::class, 'questionBankIndex'])->name('question-bank.index');
+        Route::post('question-bank', [Teacher\QuizController::class, 'storeQuestionBank'])->name('question-bank.store');
         Route::resource('courses.quizzes', Teacher\QuizController::class)->shallow();
         Route::resource('quizzes.questions', Teacher\QuestionController::class)->shallow();
         Route::get('quizzes', [Teacher\QuizController::class, 'globalIndex'])->name('quizzes.index');
         Route::get('assessment', [Teacher\QuizController::class, 'globalIndex'])->name('assessment.index');
         Route::post('quizzes/store', [Teacher\QuizController::class, 'store'])->name('quizzes.store');
         Route::post('quizzes/{quiz}/allow-retake', [Teacher\QuizController::class, 'allowRetake'])->name('quizzes.allow-retake');
+
+        // Sub-routes for Pre-test, Practice, Post-test, Assignments, Coding, and Results
+        Route::get('courses/{course}/quizzes', [Teacher\QuizController::class, 'courseQuizzes'])->name('courses.quizzes.index');
+        Route::get('courses/{course}/pretest', [Teacher\QuizController::class, 'preTestIndex'])->name('courses.pretest.index');
+        Route::post('courses/{course}/pretest', [Teacher\QuizController::class, 'storePreTest'])->name('courses.pretest.store');
+        Route::get('courses/{course}/practice-quiz', [Teacher\QuizController::class, 'practiceQuizIndex'])->name('courses.practice-quiz.index');
+        Route::post('courses/{course}/practice-quiz', [Teacher\QuizController::class, 'storePracticeQuiz'])->name('courses.practice-quiz.store');
+        Route::get('courses/{course}/posttest', [Teacher\QuizController::class, 'postTestIndex'])->name('courses.posttest.index');
+        Route::post('courses/{course}/posttest', [Teacher\QuizController::class, 'storePostTest'])->name('courses.posttest.store');
+        Route::get('courses/{course}/assignments', [Teacher\QuizController::class, 'assignmentsIndex'])->name('courses.assignments.index');
+        Route::post('courses/{course}/assignments', [Teacher\QuizController::class, 'storeAssignment'])->name('courses.assignments.store');
+        Route::get('courses/{course}/coding-assessments', [Teacher\QuizController::class, 'codingAssessmentsIndex'])->name('courses.coding-assessments.index');
+        Route::post('courses/{course}/coding-assessments', [Teacher\QuizController::class, 'storeCodingAssessment'])->name('courses.coding-assessments.store');
+        Route::get('courses/{course}/quiz-results', [Teacher\QuizController::class, 'quizResultsIndex'])->name('courses.quiz-results.index');
+        Route::get('courses/{course}/quiz-results/export', [Teacher\QuizController::class, 'exportQuizResults'])->name('courses.quiz-results.export');
+        Route::get('quiz-results/export', [Teacher\QuizController::class, 'exportQuizResults'])->name('quiz-results.export');
 
         // Students Module
         Route::get('students', [Teacher\StudentController::class, 'index'])->name('students.index');
@@ -384,6 +459,25 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/review', [Student\AiPathController::class, 'review'])->name('review');
             Route::get('/weak-topics', [Student\AiPathController::class, 'weakTopics'])->name('weak-topics');
             Route::get('/next-module', [Student\AiPathController::class, 'nextModule'])->name('next-module');
+            Route::get('/next-course', [Student\AiPathController::class, 'nextCourse'])->name('next-course');
+        });
+
+        // 6. AI Assistant / Tutor
+        Route::get('/ai-tutor', [Student\AiTutorController::class, 'index'])->name('ai-tutor');
+        Route::prefix('ai-tutor')->name('ai-tutor.')->group(function () {
+            Route::get('/english', [Student\AiTutorController::class, 'english'])->name('english');
+            Route::get('/chat', [Student\AiTutorController::class, 'chat'])->name('chat');
+            Route::get('/feedback', [Student\AiTutorController::class, 'feedback'])->name('feedback');
+        });
+
+        // 7. Practice Lab (dynamic 5 Majors)
+        Route::get('/practice-lab', [Student\PracticeLabController::class, 'index'])->name('practice-lab');
+        Route::prefix('practice-lab')->name('practice-lab.')->group(function () {
+            Route::get('/it', [Student\PracticeLabController::class, 'it'])->name('it');
+            Route::get('/tourism', [Student\PracticeLabController::class, 'tourism'])->name('tourism');
+            Route::get('/english', [Student\PracticeLabController::class, 'english'])->name('english');
+            Route::get('/agronomy', [Student\PracticeLabController::class, 'agronomy'])->name('agronomy');
+            Route::get('/social-work', [Student\PracticeLabController::class, 'social-work'])->name('social-work');
         });
 
         Route::get('/progress', [Student\ProgressController::class, 'index'])->name('progress');
@@ -423,6 +517,12 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/live-class', [Student\CalendarController::class, 'liveClassSchedule'])->name('live-class');
             Route::get('/upcoming-quiz', [Student\CalendarController::class, 'upcomingQuiz'])->name('upcoming-quiz');
             Route::get('/assignment-due', [Student\CalendarController::class, 'assignmentDue'])->name('assignment-due');
+            Route::get('/academic-events', [Student\CalendarController::class, 'academicEvents'])->name('academic-events');
         });
+
+        // 13. Profile Settings
+        Route::get('/profile', [Student\ProfileController::class, 'index'])->name('profile');
+        Route::post('/profile', [Student\ProfileController::class, 'update'])->name('profile.update');
+        Route::post('/profile/password', [Student\ProfileController::class, 'updatePassword'])->name('profile.password');
     });
 });

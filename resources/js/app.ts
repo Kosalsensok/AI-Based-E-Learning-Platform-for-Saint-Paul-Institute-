@@ -16,6 +16,9 @@ import PrimeVue from 'primevue/config'
 import Aura from '@primevue/themes/aura'
 import ToastService from 'primevue/toastservice'
 import 'primeicons/primeicons.css'
+import { initTheme } from '@/composables/useTheme'
+
+initTheme()
 
 registerSW({ immediate: true })
 window.addEventListener('online', flushQueue)

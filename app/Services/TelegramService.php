@@ -9,12 +9,79 @@ use Illuminate\Support\Facades\Log;
 class TelegramService
 {
     protected ?string $botToken;
+    protected ?string $botUsername;
     protected ?string $chatId;
 
     public function __construct()
     {
         $this->botToken = config('services.telegram.bot_token') ?? env('TELEGRAM_BOT_TOKEN');
+        $this->botUsername = config('services.telegram.bot_username') ?? env('TELEGRAM_BOT_USERNAME', 'spi_elms_auth_bot');
         $this->chatId = config('services.telegram.chat_id') ?? env('TELEGRAM_CHAT_ID');
+    }
+
+    public function getBotToken(): ?string
+    {
+        return $this->botToken;
+    }
+
+    public function getBotUsername(): string
+    {
+        return $this->botUsername ?? 'spi_elms_auth_bot';
+    }
+
+    /**
+     * Verify Telegram OAuth Login Widget Hash (HMAC-SHA-256)
+     */
+    public function verifyTelegramAuth(array $authData): bool
+    {
+        if (empty($authData['hash'])) {
+            return false;
+        }
+
+        $checkHash = (string) $authData['hash'];
+        $botToken = $this->botToken;
+
+        if (empty($botToken)) {
+            Log::warning("Telegram Auth Verification: Bot token is not configured.");
+            return false;
+        }
+
+        // 1. Gather all user data attributes (exclude hash)
+        $dataCheckArr = [];
+        $allowedKeys = ['id', 'first_name', 'last_name', 'username', 'photo_url', 'auth_date'];
+        
+        foreach ($authData as $key => $value) {
+            if ($key !== 'hash' && in_array($key, $allowedKeys, true) && $value !== null && $value !== '') {
+                $dataCheckArr[] = $key . '=' . $value;
+            }
+        }
+
+        // 2. Sort key-value pairs alphabetically
+        sort($dataCheckArr);
+        $dataCheckString = implode("\n", $dataCheckArr);
+
+        // 3. Secret key = raw SHA256 of bot token
+        $secretKey = hash('sha256', $botToken, true);
+
+        // 4. Compute HMAC-SHA256 signature
+        $calculatedHash = hash_hmac('sha256', $dataCheckString, $secretKey);
+
+        // 5. Compare signatures safely
+        if (!hash_equals($calculatedHash, $checkHash)) {
+            Log::warning("Telegram Auth Verification: Invalid hash signature.", [
+                'expected' => $calculatedHash,
+                'received' => $checkHash,
+            ]);
+            return false;
+        }
+
+        // 6. Check auth timestamp validity (valid within 24 hours)
+        if (isset($authData['auth_date']) && (time() - (int) $authData['auth_date'] > 86400)) {
+            Log::warning("Telegram Auth Verification: Auth session expired (> 24 hours).");
+            return false;
+        }
+
+        return true;
     }
 
     /**

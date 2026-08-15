@@ -9,7 +9,8 @@ const translations: Record<LanguageCode, Record<string, string>> = {
   km: kmTranslations
 }
 
-const currentLocale = ref<LanguageCode>('km')
+const savedLocale = typeof window !== 'undefined' ? (localStorage.getItem('elms_lang') as LanguageCode) : null
+const currentLocale = ref<LanguageCode>(savedLocale === 'en' ? 'en' : 'km')
 
 export const i18n = {
   locale: currentLocale,

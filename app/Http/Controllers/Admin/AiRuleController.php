@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\ProcessAiRecommendation;
 use App\Models\AiRecommendation;
 use App\Services\AiRecommendationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 
 class AiRuleController extends Controller
@@ -14,7 +16,11 @@ class AiRuleController extends Controller
     {
         $tab = $request->query('tab') ?: ($request->query('type') ?: 'rules');
 
-        $recommendations = AiRecommendation::with(['user', 'lesson'])->latest()->get();
+        // Optimized eager loading with limit to avoid large memory allocations
+        $recommendations = AiRecommendation::with(['user:id,name,email', 'lesson:id,title'])
+            ->latest('created_at')
+            ->take(100)
+            ->get();
 
         return Inertia::render('Admin/AiRecommendationModule/Index', [
             'activeTab' => $tab,
@@ -38,6 +44,25 @@ class AiRuleController extends Controller
             're_engage'      => ['max_idle_days' => $data['idle_days']],
         ]);
 
-        return back()->with('success', 'AI Recommendation Rules updated successfully!');
+        // Automatically dispatch background evaluation job without blocking the request
+        ProcessAiRecommendation::dispatch(null, ['source' => 'rule_update']);
+
+        return back()->with('success', 'AI Recommendation Rules updated! Background evaluation started.');
+    }
+
+    public function evaluateRules(Request $request)
+    {
+        $userId = $request->input('user_id');
+        
+        // Dispatch to background queue worker
+        ProcessAiRecommendation::dispatch($userId ? (int)$userId : null, [
+            'triggered_by' => auth()->id() ?? 1,
+            'source' => 'manual_trigger',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'AI Rule evaluation dispatched to background queue worker!',
+        ]);
     }
 }

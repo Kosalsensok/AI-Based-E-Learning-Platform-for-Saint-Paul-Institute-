@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, defineAsyncComponent } from 'vue'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import type { QuestionItem, QuizItem, AssignmentItem, ResultItem, Stats } from './types'
 
@@ -9,12 +9,12 @@ import AllQuizzes from './AllQuizzes.vue'
 import Assignments from './Assignments.vue'
 import QuizResults from './QuizResults.vue'
 
-// Modals
-import CreateQuestionModal from './Modals/CreateQuestionModal.vue'
-import CreateQuizModal from './Modals/CreateQuizModal.vue'
-import CreateAssignmentModal from './Modals/CreateAssignmentModal.vue'
-import GradingModal from './Modals/GradingModal.vue'
-import SimulationsModal from './Modals/SimulationsModal.vue'
+// Lazy-Loaded Modals
+const CreateQuestionModal = defineAsyncComponent(() => import('./Modals/CreateQuestionModal.vue'))
+const CreateQuizModal = defineAsyncComponent(() => import('./Modals/CreateQuizModal.vue'))
+const CreateAssignmentModal = defineAsyncComponent(() => import('./Modals/CreateAssignmentModal.vue'))
+const GradingModal = defineAsyncComponent(() => import('./Modals/GradingModal.vue'))
+const SimulationsModal = defineAsyncComponent(() => import('./Modals/SimulationsModal.vue'))
 
 const props = defineProps<{
   questions?: QuestionItem[]
