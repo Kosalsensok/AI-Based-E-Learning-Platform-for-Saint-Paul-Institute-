@@ -6,6 +6,7 @@ RUN apk add --no-cache \
     nginx \
     supervisor \
     curl \
+    git \
     libpng-dev \
     libzip-dev \
     zip \
@@ -18,13 +19,19 @@ RUN docker-php-ext-install pdo_mysql mbstring gd zip bcmath intl opcache pcntl p
 # Get Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Configure Composer environment for resilient network downloads
+ENV COMPOSER_ALLOW_SUPERUSER=1 \
+    COMPOSER_PROCESS_TIMEOUT=600 \
+    COMPOSER_MAX_PARALLEL_HTTP=6
+
 WORKDIR /var/www/html
 
 # Copy application code (including pre-built assets in public/build)
 COPY . .
 
-# Install composer dependencies (production) with ignore platform reqs
-RUN composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs
+# Install composer dependencies (production) with automatic source fallback on network glitch
+RUN composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs --prefer-dist \
+    || composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs --prefer-source
 
 # Set directory permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
