@@ -258,6 +258,10 @@ const getTelegramOAuthUrl = () => {
   return `https://oauth.telegram.org/auth?response_type=code&redirect_uri=${encodeURIComponent(callbackUrl)}&bot_id=${botId}&origin=${encodeURIComponent(origin)}`
 }
 
+const clerkPublishableKey = computed(() => {
+  return (page.props as any).clerk?.publishable_key || 'pk_test_Y2xlcmsuYXBwXzNIdXFzcnd5VUlCWUR2OTBhS2dPaXdmc0treC5sY2xzdGFnZS5kZXYk'
+})
+
 const redirectToTelegramOAuth = () => {
   if (typeof window !== 'undefined') {
     window.location.href = getTelegramOAuthUrl()
@@ -265,9 +269,6 @@ const redirectToTelegramOAuth = () => {
 }
 
 const handleTelegramAuthSuccess = async (tgUser: any) => {
-  isTelegramVerifying.value = true
-  telegramErrorMessage.value = null
-
   try {
     const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || ''
 
@@ -285,7 +286,6 @@ const handleTelegramAuthSuccess = async (tgUser: any) => {
     const data = await response.json().catch(() => ({}))
 
     if (response.ok && data?.success) {
-      showTelegramModal.value = false
       statusMessage.value = data.message || (currentLang.value === 'km'
         ? `ស្វាគមន៍ ${tgUser.first_name || 'Telegram User'}! ចូលប្រើជោគជ័យ។`
         : `Welcome ${tgUser.first_name || 'Telegram User'}! Login successful.`)
@@ -296,12 +296,16 @@ const handleTelegramAuthSuccess = async (tgUser: any) => {
         router.visit(targetUrl)
       }, 1200)
     } else {
-      isTelegramVerifying.value = false
-      telegramErrorMessage.value = data?.message || t('telegram_login_failed', 'ការផ្ទៀងផ្ទាត់ Telegram មិនត្រឹមត្រូវទេ។ សូមព្យាយាមម្តងទៀត!')
+      oauthNotice.value = {
+        type: 'error',
+        message: data?.message || (currentLang.value === 'km' ? 'ការផ្ទៀងផ្ទាត់ Telegram មិនត្រឹមត្រូវទេ។ សូមព្យាយាមម្តងទៀត!' : 'Telegram authentication failed. Please try again!')
+      }
     }
   } catch (err: any) {
-    isTelegramVerifying.value = false
-    telegramErrorMessage.value = t('telegram_login_error', 'មានបញ្ហាក្នុងការតភ្ជាប់ទៅកាន់ម៉ាស៊ីនបម្រើ។ សូមព្យាយាមម្តងទៀត!')
+    oauthNotice.value = {
+      type: 'error',
+      message: currentLang.value === 'km' ? 'មានបញ្ហាក្នុងការតភ្ជាប់ទៅកាន់ម៉ាស៊ីនបម្រើ។ សូមព្យាយាមម្តងទៀត!' : 'Connection error. Please try again!'
+    }
   }
 }
 
