@@ -255,7 +255,7 @@ const getTelegramOAuthUrl = () => {
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://spilms.tech'
   const callbackUrl = `${origin}/auth/telegram/callback`
   const botId = telegramBotId.value
-  return `https://oauth.telegram.org/auth?response_type=code&redirect_uri=${encodeURIComponent(callbackUrl)}&bot_id=${botId}&origin=${encodeURIComponent(origin)}`
+  return `https://oauth.telegram.org/auth?bot_id=${botId}&origin=${encodeURIComponent(origin)}&return_to=${encodeURIComponent(callbackUrl)}&request_access=write`
 }
 
 const clerkPublishableKey = computed(() => {
@@ -542,6 +542,31 @@ const oauthNotice = ref<{
 
 onMounted(() => {
   if (typeof window !== 'undefined') {
+    // 1. Check for Telegram OAuth URL fragment (#tgAuthResult=...)
+    if (window.location.hash && window.location.hash.includes('tgAuthResult=')) {
+      try {
+        const hashStr = window.location.hash.substring(1)
+        const params = new URLSearchParams(hashStr)
+        const tgAuthResult = params.get('tgAuthResult')
+        if (tgAuthResult) {
+          let base64 = tgAuthResult.replace(/-/g, '+').replace(/_/g, '/')
+          while (base64.length % 4 !== 0) base64 += '='
+          const decoded = decodeURIComponent(escape(atob(base64)))
+          const tgUser = JSON.parse(decoded)
+          if (tgUser && tgUser.id) {
+            try {
+              window.history.replaceState({}, document.title, window.location.pathname)
+            } catch (_) {}
+            handleTelegramAuthSuccess(tgUser)
+            return
+          }
+        }
+      } catch (e) {
+        console.error('Telegram Auth Result Hash parsing error:', e)
+      }
+    }
+
+    // 2. Check for query parameter errors and direct OAuth query returns
     const urlParams = new URLSearchParams(window.location.search)
     const err = urlParams.get('error')
     if (err === 'cancelled' || err === 'declined' || err === 'telegram_cancelled') {
@@ -564,6 +589,12 @@ onMounted(() => {
       try {
         window.history.replaceState({}, document.title, window.location.pathname)
       } catch (_) {}
+    } else if (urlParams.get('id') && urlParams.get('hash')) {
+      const tgUser = Object.fromEntries(urlParams.entries())
+      try {
+        window.history.replaceState({}, document.title, window.location.pathname)
+      } catch (_) {}
+      handleTelegramAuthSuccess(tgUser)
     }
   }
 })
