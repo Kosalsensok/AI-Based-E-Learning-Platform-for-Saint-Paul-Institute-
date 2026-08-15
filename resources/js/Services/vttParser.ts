@@ -14,7 +14,7 @@ export function parseVttString(vttText: string): VttCue[] {
 
   let idCounter = 1
   for (const block of blocks) {
-    const lines = block.strip ? block.strip().split('\n') : block.trim().split('\n')
+    const lines = block.trim().split('\n')
     let timeIndex = -1
     for (let i = 0; i < lines.length; i++) {
       if (timestampRegex.test(lines[i])) {

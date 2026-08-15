@@ -56,10 +56,14 @@ const identityPlaceholder = computed(() => {
 })
 
 const initTheme = () => {
-  const saved = localStorage.getItem('theme')
-  if (saved) {
-    isDark.value = saved === 'dark'
-  } else {
+  try {
+    const saved = localStorage.getItem('theme')
+    if (saved) {
+      isDark.value = saved === 'dark'
+    } else {
+      isDark.value = true
+    }
+  } catch (e) {
     isDark.value = true
   }
   applyTheme()
@@ -67,11 +71,14 @@ const initTheme = () => {
 
 const toggleTheme = () => {
   isDark.value = !isDark.value
-  localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
+  try {
+    localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
+  } catch (e) {}
   applyTheme()
 }
 
 const applyTheme = () => {
+  if (typeof document === 'undefined') return
   if (isDark.value) {
     document.documentElement.classList.add('dark')
   } else {
@@ -80,38 +87,53 @@ const applyTheme = () => {
 }
 
 const handleKeyCheck = (e: KeyboardEvent) => {
-  capsLockOn.value = e.getModifierState('CapsLock')
+  try {
+    capsLockOn.value = e.getModifierState ? e.getModifierState('CapsLock') : false
+  } catch (e) {}
 }
 
 const handleClickOutside = (e: MouseEvent) => {
-  const target = e.target as HTMLElement
-  if (!target.closest('.lang-switcher-container')) {
-    isLangOpen.value = false
-  }
+  try {
+    const target = e.target as HTMLElement
+    if (target && !target.closest('.lang-switcher-container')) {
+      isLangOpen.value = false
+    }
+  } catch (e) {}
 }
 
 onMounted(() => {
-  initTheme()
+  try {
+    initTheme()
+  } catch (e) {}
+
   window.addEventListener('keydown', handleKeyCheck)
   window.addEventListener('keyup', handleKeyCheck)
   document.addEventListener('click', handleClickOutside)
 
   // Register Telegram OAuth global callback
   ;(window as any).onTelegramAuth = (user: any) => {
-    handleTelegramAuthSuccess(user)
+    try {
+      handleTelegramAuthSuccess(user)
+    } catch (e) {}
   }
 
   // Pre-check Clerk session if returning from Google OAuth
-  checkClerkOAuthCallback()
+  try {
+    if (clerkPublishableKey.value) {
+      checkClerkOAuthCallback()
+    }
+  } catch (e) {}
 
-  const flashStatus = props.status || (page.props as any).status || (page.props as any).flash?.status
-  if (flashStatus) {
-    statusMessage.value = flashStatus
-    showSuccessModal.value = true
-    setTimeout(() => {
-      showSuccessModal.value = false
-    }, 4500)
-  }
+  try {
+    const flashStatus = props.status || (page.props as any).status || (page.props as any).flash?.status
+    if (flashStatus) {
+      statusMessage.value = flashStatus
+      showSuccessModal.value = true
+      setTimeout(() => {
+        showSuccessModal.value = false
+      }, 4500)
+    }
+  } catch (e) {}
 })
 
 onUnmounted(() => {

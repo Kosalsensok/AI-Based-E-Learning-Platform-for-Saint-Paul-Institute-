@@ -9,7 +9,13 @@ const translations: Record<LanguageCode, Record<string, string>> = {
   km: kmTranslations
 }
 
-const savedLocale = typeof window !== 'undefined' ? (localStorage.getItem('elms_lang') as LanguageCode) : null
+let savedLocale: LanguageCode | null = null
+try {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    savedLocale = localStorage.getItem('elms_lang') as LanguageCode
+  }
+} catch (e) {}
+
 const currentLocale = ref<LanguageCode>(savedLocale === 'en' ? 'en' : 'km')
 
 export const i18n = {
@@ -22,10 +28,12 @@ export const i18n = {
 
   setLanguage(lang: LanguageCode) {
     currentLocale.value = lang
-    if (typeof window !== 'undefined') {
-      document.documentElement.lang = lang
-      localStorage.setItem('elms_lang', lang)
-    }
+    try {
+      if (typeof window !== 'undefined') {
+        document.documentElement.lang = lang
+        localStorage.setItem('elms_lang', lang)
+      }
+    } catch (e) {}
   },
 
   toggleLanguage() {

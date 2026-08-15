@@ -20,8 +20,17 @@ import { initTheme } from '@/composables/useTheme'
 
 initTheme()
 
-registerSW({ immediate: true })
-window.addEventListener('online', flushQueue)
+try {
+  registerSW({ immediate: true })
+} catch (e) {}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', () => {
+    try {
+      flushQueue()
+    } catch (e) {}
+  })
+}
 
 createInertiaApp({
   title: (t) => t ? `${t} - E-LMS` : 'E-LMS',
