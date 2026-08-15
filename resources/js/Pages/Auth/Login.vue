@@ -249,7 +249,7 @@ const telegramBotUsername = computed(() => {
 })
 
 const telegramBotId = computed(() => {
-  return (page.props as any).telegram?.bot_id || '78291045'
+  return (page.props as any).telegram?.bot_id || '8828915669'
 })
 
 const isTelegramConfigured = computed(() => {
