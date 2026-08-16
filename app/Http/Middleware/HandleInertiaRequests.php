@@ -36,7 +36,11 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $botToken = config('services.telegram.bot_token') ?? env('TELEGRAM_BOT_TOKEN');
-        $botId = config('services.telegram.bot_id') ?? env('TELEGRAM_BOT_ID') ?? (!empty($botToken) && str_contains((string) $botToken, ':') ? explode(':', (string) $botToken)[0] : null);
+        $botId = config('services.telegram.bot_id') ?? env('TELEGRAM_BOT_ID');
+        if (!$botId && !empty($botToken) && str_contains((string) $botToken, ':')) {
+            $parts = explode(':', (string) $botToken);
+            $botId = $parts[0] ?? '8828915669';
+        }
 
         return [
             ...parent::share($request),
@@ -45,7 +49,7 @@ class HandleInertiaRequests extends Middleware
             ],
             'telegram' => [
                 'bot_username' => config('services.telegram.bot_username') ?? env('TELEGRAM_BOT_USERNAME', 'spi_elms_auth_bot'),
-                'bot_id' => $botId,
+                'bot_id' => $botId ?? '8828915669',
                 'is_configured' => !empty($botToken),
             ],
             'clerk' => [
