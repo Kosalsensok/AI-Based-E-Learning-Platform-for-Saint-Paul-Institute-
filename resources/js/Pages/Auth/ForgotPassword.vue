@@ -398,6 +398,34 @@ const onResetPassword = () => {
               <span class="leading-tight font-medium">{{ resetForm.errors.email || resetForm.errors.code || resetForm.errors.password }}</span>
             </div>
 
+            <!-- Telegram OTP Delivery Indicator Banner -->
+            <div class="p-3 rounded-2xl bg-sky-500/10 border border-sky-500/30 text-sky-700 dark:text-sky-300 text-xs flex items-center justify-between gap-3 shadow-xs">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-sky-500/20 flex items-center justify-center text-sky-500 shrink-0">
+                  <i class="pi pi-telegram text-base"></i>
+                </div>
+                <div class="flex flex-col text-left">
+                  <span class="font-bold text-[11px] text-slate-800 dark:text-slate-100">
+                    {{ (page.props as any).sent_to_telegram ? 'OTP បានផ្ញើទៅ Telegram' : 'លេខកូដផ្ទៀងផ្ទាត់ OTP' }}
+                  </span>
+                  <span class="text-[10px] text-slate-500 dark:text-slate-400">
+                    {{ (page.props as any).sent_to_telegram ? 'សូមបើកមើលសារពី Telegram Bot របស់អ្នក' : 'បញ្ចូលកូដ 6 ខ្ទង់ដើម្បីប្តូរពាក្យសម្ងាត់' }}
+                  </span>
+                </div>
+              </div>
+
+              <a
+                v-if="(page.props as any).link_telegram_url || (page.props as any).telegram_bot_name"
+                :href="(page.props as any).link_telegram_url || ('https://t.me/' + ((page.props as any).telegram_bot_name || 'spi_elms_auth_bot'))"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="px-2.5 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-600 active:scale-95 text-white font-bold text-[10px] inline-flex items-center gap-1 transition-all shadow-xs shrink-0 cursor-pointer"
+              >
+                <i class="pi pi-external-link text-[9px]"></i>
+                <span>បើក Bot</span>
+              </a>
+            </div>
+
             <!-- Account Identifier Readonly Input -->
             <div class="space-y-1">
               <label class="block text-xs font-bold text-slate-900 dark:text-slate-100">

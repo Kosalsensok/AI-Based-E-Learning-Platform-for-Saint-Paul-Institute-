@@ -320,14 +320,57 @@ class TelegramAuthController extends Controller
         $message = $update['message'] ?? null;
         if ($message && isset($message['chat']['id'])) {
             $chatId = $message['chat']['id'];
-            $text = strtolower(trim($message['text'] ?? ''));
+            $rawText = trim($message['text'] ?? '');
+            $text = strtolower($rawText);
             $senderName = $message['from']['first_name'] ?? 'Student';
+            $telegramUsername = $message['from']['username'] ?? null;
 
             if (str_starts_with($text, '/start')) {
-                $welcomeText = "👋 <b>សូមស្វាគមន៍ {$senderName} មកកាន់ប្រព័ន្ធ SPI AI-ELMS!</b>\n\n" .
-                               "វិទ្យាស្ថាន សន្តប៉ូល (Saint Paul Institute)\n" .
-                               "គណនី Bot នេះត្រូវបានប្រើប្រាស់សម្រាប់ការផ្ទៀងផ្ទាត់ និងចូលប្រើប្រាស់ប្រព័ន្ធដោយសុវត្ថិភាព។\n\n" .
-                               "សូមជ្រើសរើសមុខងារខាងក្រោម៖";
+                $parts = explode(' ', $rawText);
+                $deepLinkParam = $parts[1] ?? null;
+
+                $linkedUser = null;
+
+                // 1. Check if deep link param exists (e.g. /start 12, /start STU241092, /start email)
+                if (!empty($deepLinkParam)) {
+                    $linkedUser = User::where('id', $deepLinkParam)
+                        ->orWhere('student_code', $deepLinkParam)
+                        ->orWhere('email', $deepLinkParam)
+                        ->first();
+                }
+
+                // 2. If no param or not found, try matching by telegram_id or telegram_username
+                if (!$linkedUser) {
+                    $linkedUser = User::where('telegram_id', (string) $chatId)
+                        ->orWhere(function ($q) use ($telegramUsername) {
+                            if (!empty($telegramUsername)) {
+                                $q->where('telegram_username', $telegramUsername);
+                            }
+                        })
+                        ->first();
+                }
+
+                // 3. Link or update user in database
+                if ($linkedUser) {
+                    $updateFields = ['telegram_id' => (string) $chatId];
+                    if ($telegramUsername) {
+                        $updateFields['telegram_username'] = $telegramUsername;
+                    }
+                    $linkedUser->update($updateFields);
+
+                    $welcomeText = "✅ <b>គណនី SPI AI-ELMS របស់អ្នកត្រូវបានភ្ជាប់ដោយជោគជ័យ!</b>\n" .
+                                   "━━━━━━━━━━━━━━━━━━━━━\n\n" .
+                                   "👤 <b>ឈ្មោះ៖</b> {$linkedUser->name}\n" .
+                                   "🆔 <b>Student Code/Email៖</b> " . ($linkedUser->student_code ?? $linkedUser->email) . "\n" .
+                                   "🎓 <b>Role៖</b> " . strtoupper($linkedUser->role) . "\n\n" .
+                                   "ឥឡូវនេះ អ្នកអាចទទួលលេខកូដ OTP (សម្រាប់ Forgot Password) និងដំណឹងផ្សេងៗបានយ៉ាងរហ័សតាម Telegram នេះ។ ✨\n\n" .
+                                   "សូមជ្រើសរើសមុខងារខាងក្រោម៖";
+                } else {
+                    $welcomeText = "👋 <b>សូមស្វាគមន៍ {$senderName} មកកាន់ប្រព័ន្ធ SPI AI-ELMS!</b>\n\n" .
+                                   "🏛️ <b>វិទ្យាស្ថាន សន្តប៉ូល (Saint Paul Institute)</b>\n" .
+                                   "គណនី Bot នេះត្រូវបានប្រើប្រាស់សម្រាប់ការផ្ទៀងផ្ទាត់ និងទទួលលេខកូដ OTP ចូលប្រើប្រាស់ប្រព័ន្ធដោយសុវត្ថិភាព។\n\n" .
+                                   "សូមជ្រើសរើសមុខងារខាងក្រោម៖";
+                }
 
                 $inlineKeyboard = [
                     'inline_keyboard' => [

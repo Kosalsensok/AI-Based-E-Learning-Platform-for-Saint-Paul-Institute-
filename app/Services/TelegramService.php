@@ -85,11 +85,81 @@ class TelegramService
     }
 
     /**
+     * Send a direct text/HTML message to a specific Telegram Chat ID
+     */
+    public function sendDirectMessage(string|int $chatId, string $text, string $parseMode = 'HTML', ?array $replyMarkup = null): bool
+    {
+        if (empty($this->botToken) || empty($chatId)) {
+            Log::info("Telegram Direct Message (Token or ChatId missing):\nChat ID: {$chatId}\n" . strip_tags($text));
+            return false;
+        }
+
+        try {
+            $url = "https://api.telegram.org/bot{$this->botToken}/sendMessage";
+            $payload = [
+                'chat_id'                  => (string) $chatId,
+                'text'                     => $text,
+                'parse_mode'               => $parseMode,
+                'disable_web_page_preview' => true,
+            ];
+
+            if (!empty($replyMarkup)) {
+                $payload['reply_markup'] = json_encode($replyMarkup);
+            }
+
+            $response = Http::timeout(5)->post($url, $payload);
+
+            if ($response->failed()) {
+                Log::error("Telegram API Direct Message Error: " . $response->body());
+                return false;
+            }
+
+            return true;
+        } catch (\Throwable $e) {
+            Log::error("Telegram Direct Message Exception: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Send OTP verification code directly to user's Telegram chat
+     */
+    public function sendPasswordResetOtp(User $user, string $otpCode): bool
+    {
+        $targetChatId = $user->telegram_id ?? $user->telegram_chat_id ?? null;
+
+        if (empty($targetChatId)) {
+            return false;
+        }
+
+        $text = "🔐 <b>SPI AI-ELMS — Password Reset OTP</b>\n" .
+                "━━━━━━━━━━━━━━━━━━━━━\n\n" .
+                "សួស្តី <b>{$user->name}</b>!\n\n" .
+                "លេខកូដផ្ទៀងផ្ទាត់ (OTP) សម្រាប់ផ្លាស់ប្តូរពាក្យសម្ងាត់របស់អ្នកគឺ៖\n\n" .
+                "👉 <code>{$otpCode}</code> 👈\n\n" .
+                "⏳ <i>លេខកូដនេះមានសុពលភាពរយៈពេល ៥ នាទី។</i>\n" .
+                "⚠️ <i>សូមកុំចែករំលែកលេខកូដនេះទៅកាន់អ្នកដទៃជាដាច់ខាត។</i>\n\n" .
+                "🏛️ <i>វិទ្យាស្ថាន សន្តប៉ូល (Saint Paul Institute)</i>";
+
+        $keyboard = [
+            'inline_keyboard' => [
+                [
+                    ['text' => '🌐 បើកទំព័រ Reset Password', 'url' => 'https://spilms.tech/forgot-password']
+                ]
+            ]
+        ];
+
+        return $this->sendDirectMessage($targetChatId, $text, 'HTML', $keyboard);
+    }
+
+    /**
      * Send a general text/HTML message to Telegram channel/group
      */
-    public function sendMessage(string $text, string $parseMode = 'HTML'): bool
+    public function sendMessage(string $text, string $parseMode = 'HTML', string|int|null $chatId = null): bool
     {
-        if (empty($this->botToken) || empty($this->chatId)) {
+        $target = $chatId ?? $this->chatId;
+
+        if (empty($this->botToken) || empty($target)) {
             Log::info("Telegram Notification (Simulated/Token missing):\n" . strip_tags($text));
             return false;
         }
@@ -97,7 +167,7 @@ class TelegramService
         try {
             $url = "https://api.telegram.org/bot{$this->botToken}/sendMessage";
             $response = Http::timeout(5)->post($url, [
-                'chat_id'    => $this->chatId,
+                'chat_id'    => (string) $target,
                 'text'       => $text,
                 'parse_mode' => $parseMode,
                 'disable_web_page_preview' => true,
