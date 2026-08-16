@@ -252,10 +252,7 @@ const isTelegramConfigured = computed(() => {
 })
 
 const getTelegramOAuthUrl = () => {
-  const origin = 'https://spilms.tech'
-  const callbackUrl = 'https://spilms.tech/auth/telegram/callback'
-  const botId = telegramBotId.value || '8828915669'
-  return `https://oauth.telegram.org/auth?response_type=code&redirect_uri=${encodeURIComponent(callbackUrl)}&bot_id=${botId}&origin=${encodeURIComponent(origin)}`
+  return 'https://oauth.telegram.org/auth?response_type=code&bot_id=8828915669&origin=https%3A%2F%2Fspilms.tech&redirect_uri=https%3A%2F%2Fspilms.tech%2Fauth%2Ftelegram%2Fcallback'
 }
 
 const clerkPublishableKey = computed(() => {
@@ -264,7 +261,7 @@ const clerkPublishableKey = computed(() => {
 
 const redirectToTelegramOAuth = () => {
   if (typeof window !== 'undefined') {
-    window.location.href = getTelegramOAuthUrl()
+    window.location.assign(getTelegramOAuthUrl())
   }
 }
 
