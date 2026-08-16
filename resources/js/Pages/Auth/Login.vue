@@ -1020,12 +1020,13 @@ onMounted(() => {
                 >
                   <i class="pi pi-google text-rose-500 text-sm"></i> <span>Google</span>
                 </button>
-                <a
-                  :href="getTelegramOAuthUrl()"
-                  class="h-10.5 py-2 px-3 bg-white dark:bg-slate-800/80 hover:bg-slate-50/90 dark:hover:bg-slate-700/60 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white transition-all duration-150 flex items-center justify-center gap-2 hover:shadow-xs active:scale-98 shadow-2xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-600 select-none no-underline"
+                <button
+                  type="button"
+                  @click="handleSocialLogin('Telegram')"
+                  class="h-10.5 py-2 px-3 bg-white dark:bg-slate-800/80 hover:bg-slate-50/90 dark:hover:bg-slate-700/60 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white transition-all duration-150 flex items-center justify-center gap-2 hover:shadow-xs active:scale-98 shadow-2xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-600 select-none"
                 >
                   <i class="pi pi-telegram text-sky-500 text-sm"></i> <span>Telegram</span>
-                </a>
+                </button>
               </div>
             </div>
 
