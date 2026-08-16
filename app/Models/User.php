@@ -23,6 +23,7 @@ class User extends Authenticatable implements JWTSubject
         'study_type',
         'phone',
         'telegram_id',
+        'telegram_chat_id',
         'telegram_username',
         'telegram_photo_url',
         'google_id',
@@ -34,11 +35,14 @@ class User extends Authenticatable implements JWTSubject
         'expertise',
         'login_attempts',
         'locked_until',
+        'otp_code',
+        'otp_expires_at',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+        'otp_code',
     ];
 
     protected function casts(): array
@@ -48,6 +52,7 @@ class User extends Authenticatable implements JWTSubject
             'password' => 'hashed',
             'is_active' => 'boolean',
             'locked_until' => 'datetime',
+            'otp_expires_at' => 'datetime',
         ];
     }
 
