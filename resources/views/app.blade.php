@@ -47,6 +47,7 @@
 
     <!-- Structured Data (Schema.org) for Google Search & Knowledge Graph -->
     <script type="application/ld+json">
+    @verbatim
     {
       "@context": "https://schema.org",
       "@type": "EducationalOrganization",
@@ -60,6 +61,7 @@
         "https://spi.edu.kh"
       ]
     }
+    @endverbatim
     </script>
 
     <!-- Google Fonts Preconnect & Stylesheets (Kantumruy Pro, Inter, Battambang) -->
