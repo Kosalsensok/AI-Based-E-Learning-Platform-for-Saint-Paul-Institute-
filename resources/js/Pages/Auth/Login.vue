@@ -262,22 +262,29 @@ const clerkPublishableKey = computed(() => {
   return (page.props as any).clerk?.publishable_key || 'pk_test_Y2xlcmsuYXBwXzNIdXFzcnd5VUlCWUR2OTBhS2dPaXdmc0treC5sY2xzdGFnZS5kZXYk'
 })
 
+const isTelegramLoggingIn = ref(false)
+
 const handleTelegramPostMessage = (event: MessageEvent) => {
-  if (!event.origin || !event.origin.includes('telegram.org')) return
+  const origin = event.origin || ''
+  const isAllowedOrigin = origin.includes('telegram.org') || origin.includes('spilms.tech') || (typeof window !== 'undefined' && origin === window.location.origin)
+  if (!isAllowedOrigin) return
+
   if (event.data) {
     try {
       const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data
       if (data.event === 'auth_result') {
         if (data.result === false) {
           // User clicked DECLINE on Telegram popup
+          isTelegramLoggingIn.value = false
           oauthNotice.value = {
             type: 'warning',
             message: currentLang.value === 'km'
-              ? 'ការចូលប្រើប្រាស់ត្រូវបានបដិសេធ! សូមចុច Accept ដើម្បីបន្តចូលប្រើប្រាស់។'
+              ? 'លោកអ្នកបានបដិសេធការ Login! សូមចុច Accept ដើម្បីចូលប្រើប្រាស់។'
               : 'Login was cancelled. Please accept Telegram permissions to access your account.'
           }
         } else if (data.result && (data.result.id || typeof data.result === 'object')) {
           // User clicked ACCEPT on Telegram popup
+          isTelegramLoggingIn.value = true
           handleTelegramAuthSuccess(data.result)
         }
       }
@@ -306,6 +313,7 @@ const redirectToTelegramOAuth = () => {
 }
 
 const handleTelegramAuthSuccess = (tgUser: any) => {
+  isTelegramLoggingIn.value = true
   try {
     const form = document.createElement('form')
     form.method = 'POST'
@@ -331,8 +339,13 @@ const handleTelegramAuthSuccess = (tgUser: any) => {
     }
 
     ;(document.body || document.documentElement).appendChild(form)
-    form.submit()
+    
+    // Smooth transition before form POST
+    setTimeout(() => {
+      form.submit()
+    }, 450)
   } catch (err: any) {
+    isTelegramLoggingIn.value = false
     oauthNotice.value = {
       type: 'error',
       message: currentLang.value === 'km' ? 'មានបញ្ហាក្នុងការតភ្ជាប់ទៅកាន់ម៉ាស៊ីនបម្រើ។ សូមព្យាយាមម្តងទៀត!' : 'Connection error. Please try again!'
@@ -1049,6 +1062,50 @@ onMounted(() => {
         </div>
       </div>
 
+      <!-- Modern Glassmorphism Telegram & OAuth Post-Login Loading Screen -->
+      <Transition
+        enter-active-class="transition duration-300 ease-out"
+        enter-from-class="opacity-0 scale-95"
+        enter-to-class="opacity-100 scale-100"
+        leave-active-class="transition duration-200 ease-in"
+        leave-from-class="opacity-100 scale-100"
+        leave-to-class="opacity-0 scale-95"
+      >
+        <div v-if="isTelegramLoggingIn" class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/60 backdrop-blur-xl select-none font-['Kantumruy_Pro',sans-serif] p-4">
+          <!-- Loading Card -->
+          <div class="relative w-full max-w-sm mx-4 p-8 rounded-3xl bg-slate-900/80 border border-slate-700/50 shadow-2xl shadow-blue-500/10 flex flex-col items-center text-center animate-fade-in">
+            
+            <!-- Ambient Glow ខាងក្រោយ Logo -->
+            <div class="absolute -top-10 w-24 h-24 bg-blue-500/20 rounded-full blur-2xl pointer-events-none"></div>
+
+            <!-- E-LMS Logo ជាមួយ Pulse Effect -->
+            <div class="relative mb-5">
+              <div class="w-20 h-20 rounded-full p-1 bg-gradient-to-tr from-blue-600 via-sky-400 to-indigo-500 shadow-lg shadow-sky-500/30 animate-pulse">
+                <img 
+                  :src="logoUrl" 
+                  alt="E-LMS Logo" 
+                  class="w-full h-full object-cover rounded-full bg-slate-900"
+                />
+              </div>
+            </div>
+
+            <!-- អក្សរខ្មែរច្បាស់ៗ -->
+            <h3 class="text-lg font-bold text-white tracking-wide mb-1.5">
+              កំពុងរៀបចំ Dashboard របស់អ្នក...
+            </h3>
+            <p class="text-xs text-slate-400 font-normal leading-relaxed mb-6">
+              សូមរង់ចាំមួយភ្លែត ប្រព័ន្ធកំពុងផ្ទៀងផ្ទាត់គណនី
+            </p>
+
+            <!-- Modern Animated Progress Bar -->
+            <div class="w-full bg-slate-800/80 rounded-full h-1.5 overflow-hidden p-0.5 border border-slate-700/40">
+              <div class="bg-gradient-to-r from-blue-500 via-sky-400 to-teal-300 h-full rounded-full animate-indeterminate"></div>
+            </div>
+
+          </div>
+        </div>
+      </Transition>
+
       <!-- Compact Success Alert Modal (Checkmark Icon) -->
       <Transition
         enter-active-class="transition duration-300 ease-out"
@@ -1442,6 +1499,32 @@ onMounted(() => {
 }
 .animate-pulse-slow {
   animation: pulse 5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes indeterminate {
+  0% {
+    transform: translateX(-100%) scaleX(0.2);
+  }
+  50% {
+    transform: translateX(0%) scaleX(0.6);
+  }
+  100% {
+    transform: translateX(100%) scaleX(0.2);
+  }
+}
+
+.animate-indeterminate {
+  animation: indeterminate 1.4s infinite cubic-bezier(0.65, 0.815, 0.735, 0.395);
+  transform-origin: 0% 50%;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.96) translateY(4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.35s ease-out forwards;
 }
 </style>
 
