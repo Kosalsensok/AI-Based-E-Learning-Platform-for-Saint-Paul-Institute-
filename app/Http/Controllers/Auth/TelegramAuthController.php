@@ -20,6 +20,16 @@ class TelegramAuthController extends Controller
      */
     public function handleCallback(Request $request, TelegramService $telegramService)
     {
+        if (Auth::check()) {
+            $user = Auth::user();
+            $redirectUrl = match ($user->role) {
+                'admin' => '/admin/dashboard',
+                'teacher' => '/teacher/dashboard',
+                default => '/student/dashboard',
+            };
+            return redirect()->to($redirectUrl);
+        }
+
         $data = $request->isMethod('post') ? $request->all() : $request->query();
 
         // 1. Check if required Telegram OAuth ID is present
@@ -242,7 +252,7 @@ class TelegramAuthController extends Controller
             ]);
         }
 
-        return redirect()->intended($redirectUrl);
+        return redirect()->to($redirectUrl);
     }
 
     private function getBrowserName($userAgent)
