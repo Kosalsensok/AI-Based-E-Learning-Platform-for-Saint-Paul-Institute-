@@ -749,8 +749,8 @@ onMounted(() => {
     </div>
 
     <!-- Master Centered Login Card (Clean & Focused) -->
-    <div class="max-w-md w-full p-[1px] rounded-3xl bg-gradient-to-b from-blue-500/40 via-indigo-500/20 to-purple-500/30 dark:from-blue-500/30 dark:via-slate-800/40 dark:to-indigo-500/20 shadow-2xl shadow-slate-900/10 dark:shadow-black/60 relative z-10 my-auto transition-all">
-      <div class="w-full bg-white/95 dark:bg-[#0E172E]/95 backdrop-blur-2xl rounded-[23px] p-6 sm:p-8 flex flex-col justify-center relative z-20 space-y-4 transition-colors">
+    <div :class="['w-full p-[1px] rounded-3xl bg-gradient-to-b from-blue-500/40 via-indigo-500/20 to-purple-500/30 dark:from-blue-500/30 dark:via-slate-800/40 dark:to-indigo-500/20 shadow-2xl shadow-slate-900/10 dark:shadow-black/60 relative z-10 my-auto transition-all duration-300', isTelegramLoggingIn ? 'max-w-sm' : 'max-w-md']">
+      <div :class="['w-full bg-white/95 dark:bg-[#0E172E]/95 backdrop-blur-2xl rounded-[23px] flex flex-col justify-center relative z-20 transition-all duration-300 font-[\'Kantumruy_Pro\',sans-serif]', isTelegramLoggingIn ? 'p-8 items-center text-center' : 'p-6 sm:p-8 space-y-4']">
         
         <!-- Header with Logo & Brand Name -->
         <div v-if="!isTelegramLoggingIn" class="w-full space-y-4">
@@ -1072,30 +1072,34 @@ onMounted(() => {
         </div>
 
         <!-- ២. ផ្ទាំង LOADING (បង្ហាញតែពេលកំពុង Authenticate ជំនួស Form ខាងលើ) -->
-        <div v-else class="flex flex-col items-center justify-center py-10 text-center animate-fade-in select-none">
-            
-            <!-- Logo ជាមួយ Pulse Animation -->
-            <div class="relative mb-6">
-              <div class="absolute -inset-2 bg-sky-400/30 rounded-full blur-lg animate-pulse"></div>
-              <div class="relative w-20 h-20 rounded-full p-1 bg-white dark:bg-slate-800 shadow-lg">
-                <img :src="logoUrl" alt="E-LMS Logo" class="w-full h-full object-cover rounded-full" />
-              </div>
+        <div v-else class="w-full flex flex-col items-center justify-center text-center animate-fade-in select-none">
+          
+          <!-- Logo E-LMS with Soft Glow -->
+          <div class="relative mb-5">
+            <div class="absolute -inset-1.5 bg-gradient-to-r from-blue-500 to-sky-400 rounded-full blur-md opacity-40 animate-pulse"></div>
+            <div class="relative w-18 h-18 rounded-full p-1 bg-white dark:bg-slate-800 shadow-md">
+              <img 
+                :src="logoUrl" 
+                alt="E-LMS Logo" 
+                class="w-full h-full object-cover rounded-full"
+              />
             </div>
-
-            <!-- អក្សរខ្មែរច្បាស់ៗ -->
-            <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-1.5">
-              កំពុងរៀបចំ Dashboard របស់អ្នក...
-            </h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mb-6">
-              សូមរង់ចាំមួយភ្លែត ប្រព័ន្ធកំពុងផ្ទៀងផ្ទាត់គណនី
-            </p>
-
-            <!-- Smooth Progress Bar -->
-            <div class="w-48 bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden p-0.5 border border-slate-200 dark:border-slate-700">
-              <div class="bg-gradient-to-r from-blue-500 to-sky-400 h-full rounded-full animate-indeterminate"></div>
-            </div>
-
           </div>
+
+          <!-- ចំណងជើងច្បាស់ៗ -->
+          <h3 class="text-lg font-bold text-slate-800 dark:text-white tracking-wide mb-1.5">
+            កំពុងរៀបចំ Dashboard របស់អ្នក...
+          </h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 font-medium mb-6">
+            សូមរង់ចាំមួយភ្លែត ប្រព័ន្ធកំពុងផ្ទៀងផ្ទាត់គណនី
+          </p>
+
+          <!-- Modern Loading Progress Bar -->
+          <div class="w-48 bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden p-0.5 border border-slate-200/80 dark:border-slate-700">
+            <div class="bg-gradient-to-r from-blue-600 via-sky-400 to-teal-400 h-full rounded-full animate-indeterminate"></div>
+          </div>
+
+        </div>
         </div>
       </div>
 
@@ -1507,7 +1511,7 @@ onMounted(() => {
 }
 
 .animate-indeterminate {
-  animation: indeterminate 1.4s infinite cubic-bezier(0.65, 0.815, 0.735, 0.395);
+  animation: indeterminate 1.2s infinite cubic-bezier(0.65, 0.815, 0.735, 0.395);
   transform-origin: 0% 50%;
 }
 
