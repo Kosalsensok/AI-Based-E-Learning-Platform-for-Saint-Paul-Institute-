@@ -753,6 +753,7 @@ onMounted(() => {
       <div class="w-full bg-white/95 dark:bg-[#0E172E]/95 backdrop-blur-2xl rounded-[23px] p-6 sm:p-8 flex flex-col justify-center relative z-20 space-y-4 transition-colors">
         
         <!-- Header with Logo & Brand Name -->
+        <div v-if="!isTelegramLoggingIn" class="w-full space-y-4">
           <div class="text-center pb-1 relative">
             <div class="flex flex-col items-center justify-center gap-1.5">
               <div class="relative group">
@@ -1067,48 +1068,36 @@ onMounted(() => {
                 </Link>
               </p>
             </div>
+          </div>
+        </div>
+
+        <!-- ២. ផ្ទាំង LOADING (បង្ហាញតែពេលកំពុង Authenticate ជំនួស Form ខាងលើ) -->
+        <div v-else class="flex flex-col items-center justify-center py-10 text-center animate-fade-in select-none">
+            
+            <!-- Logo ជាមួយ Pulse Animation -->
+            <div class="relative mb-6">
+              <div class="absolute -inset-2 bg-sky-400/30 rounded-full blur-lg animate-pulse"></div>
+              <div class="relative w-20 h-20 rounded-full p-1 bg-white dark:bg-slate-800 shadow-lg">
+                <img :src="logoUrl" alt="E-LMS Logo" class="w-full h-full object-cover rounded-full" />
+              </div>
+            </div>
+
+            <!-- អក្សរខ្មែរច្បាស់ៗ -->
+            <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-1.5">
+              កំពុងរៀបចំ Dashboard របស់អ្នក...
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-6">
+              សូមរង់ចាំមួយភ្លែត ប្រព័ន្ធកំពុងផ្ទៀងផ្ទាត់គណនី
+            </p>
+
+            <!-- Smooth Progress Bar -->
+            <div class="w-48 bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden p-0.5 border border-slate-200 dark:border-slate-700">
+              <div class="bg-gradient-to-r from-blue-500 to-sky-400 h-full rounded-full animate-indeterminate"></div>
+            </div>
 
           </div>
         </div>
       </div>
-
-      <!-- Modern Minimalist Telegram & OAuth Post-Login Loading Screen -->
-      <Transition
-        enter-active-class="transition duration-300 ease-out"
-        enter-from-class="opacity-0 scale-95"
-        enter-to-class="opacity-100 scale-100"
-        leave-active-class="transition duration-200 ease-in"
-        leave-from-class="opacity-100 scale-100"
-        leave-to-class="opacity-0 scale-95"
-      >
-        <div v-if="isTelegramLoggingIn" class="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-transparent pointer-events-none font-['Kantumruy_Pro',sans-serif] p-4 select-none">
-          <!-- Logo E-LMS -->
-          <div class="relative mb-5">
-            <!-- Glow ពន្លឺស្រាលៗជុំវិញ Logo -->
-            <div class="absolute -inset-2 bg-sky-400/40 rounded-full blur-md animate-pulse"></div>
-            <div class="relative w-20 h-20 rounded-full p-1 bg-white shadow-xl">
-              <img 
-                :src="logoUrl" 
-                alt="E-LMS Logo" 
-                class="w-full h-full object-cover rounded-full"
-              />
-            </div>
-          </div>
-
-          <!-- អក្សរខ្មែរច្បាស់ៗ -->
-          <h3 class="text-xl font-bold text-slate-800 dark:text-white tracking-wide mb-1.5 drop-shadow text-center">
-            កំពុងរៀបចំ Dashboard របស់អ្នក...
-          </h3>
-          <p class="text-xs text-slate-600 dark:text-slate-300 font-medium mb-5 drop-shadow-sm text-center">
-            សូមរង់ចាំមួយភ្លែត ប្រព័ន្ធកំពុងផ្ទៀងផ្ទាត់គណនី
-          </p>
-
-          <!-- Progress Bar តូចល្មមចំកណ្តាល -->
-          <div class="w-56 bg-slate-300/70 dark:bg-slate-700/70 rounded-full h-1.5 overflow-hidden p-0.5 shadow-sm">
-            <div class="bg-gradient-to-r from-blue-500 via-sky-400 to-indigo-500 h-full rounded-full animate-indeterminate"></div>
-          </div>
-        </div>
-      </Transition>
 
       <!-- Compact Success Alert Modal (Checkmark Icon) -->
       <Transition
