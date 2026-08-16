@@ -131,32 +131,33 @@
     })();
     </script>
 </head>
-<body class="bg-slate-900/30 backdrop-blur-md text-slate-100 min-h-screen flex flex-col items-center justify-center p-4 font-khmer select-none overflow-hidden relative">
-    <div id="loading-screen" class="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-slate-900/30 backdrop-blur-md transition-all duration-300 font-khmer select-none">
+<body class="bg-slate-950/45 backdrop-blur-xl text-slate-100 min-h-screen flex flex-col items-center justify-center p-4 font-khmer select-none overflow-hidden relative">
+    <div id="loading-screen" class="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-slate-950/45 backdrop-blur-xl transition-all duration-300 font-khmer select-none">
       
-      <!-- Logo E-LMS មានពន្លឺ Pulse ស្រាលៗ -->
+      <!-- Logo E-LMS + Glow Ring -->
       <div class="relative mb-6">
-        <div class="w-24 h-24 rounded-full p-1 bg-gradient-to-tr from-blue-600 to-sky-400 shadow-xl shadow-blue-500/25 animate-pulse">
+        <div class="absolute -inset-1.5 bg-gradient-to-r from-blue-500 to-sky-400 rounded-full blur-md opacity-70 animate-pulse"></div>
+        <div class="relative w-20 h-20 rounded-full p-1 bg-white shadow-2xl">
           <img 
             src="/images/logo.png" 
             alt="E-LMS Logo" 
-            class="w-full h-full object-cover rounded-full bg-white shadow-inner"
+            class="w-full h-full object-cover rounded-full"
             onerror="this.src='/logo.png'"
           />
         </div>
       </div>
 
-      <!-- អក្សរខ្មែរច្បាស់ គ្មាន Background -->
-      <h3 class="text-xl font-bold text-slate-800 dark:text-white tracking-wide mb-2 drop-shadow-sm text-center">
+      <!-- អក្សរខ្មែរច្បាស់ៗ Contrast ខ្ពស់ -->
+      <h3 class="text-xl font-bold text-white tracking-wide mb-1.5 drop-shadow-md text-center">
         កំពុងរៀបចំ Dashboard របស់អ្នក...
       </h3>
-      <p class="text-sm text-slate-500 dark:text-slate-300 font-normal mb-6 drop-shadow-sm text-center">
+      <p class="text-sm text-slate-200/90 font-normal mb-6 drop-shadow text-center">
         សូមរង់ចាំមួយភ្លែត ប្រព័ន្ធកំពុងផ្ទៀងផ្ទាត់គណនី
       </p>
 
-      <!-- Modern Loading Bar តូចល្មមចំកណ្តាល -->
-      <div class="w-56 bg-slate-200/60 dark:bg-slate-700/60 rounded-full h-1.5 overflow-hidden p-0.5 backdrop-blur-sm">
-        <div class="bg-gradient-to-r from-blue-600 via-sky-400 to-indigo-500 h-full rounded-full animate-indeterminate"></div>
+      <!-- Smooth Indeterminate Progress Bar -->
+      <div class="w-60 bg-white/20 rounded-full h-1.5 overflow-hidden p-0.5 backdrop-blur-md shadow-inner">
+        <div class="bg-gradient-to-r from-sky-400 via-blue-500 to-teal-300 h-full rounded-full animate-indeterminate"></div>
       </div>
 
     </div>
