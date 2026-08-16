@@ -2,6 +2,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { Head, Link, router, usePage } from '@inertiajs/vue3'
 import { i18n } from '@/Services/i18n'
+import GlobalToast from '@/Components/GlobalToast.vue'
 
 const logoUrl = '/images/logo.png'
 const actionBtnIcon = '/images/actions/action-button.svg'
@@ -609,6 +610,7 @@ onUnmounted(() => {
 
 <template>
   <Head :title="pageTitle" />
+  <GlobalToast />
   <div class="min-h-screen bg-slate-900 text-slate-200 selection:bg-indigo-500/30">
     <!-- Sidebar for Desktop -->
     <div :class="[isSidebarCollapsed ? 'w-20 overflow-visible' : 'w-72', 'fixed inset-y-0 left-0 z-50 hidden flex-col bg-slate-900/90 backdrop-blur-xl border-r border-slate-800 lg:flex transition-all duration-300']">

@@ -46,5 +46,9 @@ createInertiaApp({
       .use(ToastService)
       .mount(el)
   },
-  progress: { color: '#1e40af' },
+  progress: {
+    color: '#3B82F6',
+    showSpinner: false,
+    delay: 50,
+  },
 })

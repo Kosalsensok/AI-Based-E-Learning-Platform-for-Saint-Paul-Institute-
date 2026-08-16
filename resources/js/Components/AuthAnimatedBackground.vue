@@ -4,11 +4,28 @@ import * as THREE from 'three'
 
 const containerRef = ref<HTMLDivElement | null>(null)
 const canvasRef = ref<HTMLCanvasElement | null>(null)
+const isMobile = ref(false)
 
 let animationFrameId: number | null = null
-let scene: THREE.Scene
-let camera: THREE.PerspectiveCamera
-let renderer: THREE.WebGLRenderer
+let isAnimating = false
+let startTime = 0
+let scene: THREE.Scene | null = null
+let camera: THREE.PerspectiveCamera | null = null
+let renderer: THREE.WebGLRenderer | null = null
+let observer: IntersectionObserver | null = null
+
+// Three.js object references for animation loop
+let mainGroup: THREE.Group | null = null
+let innerSphere: THREE.Mesh | null = null
+let outerWire: THREE.Mesh | null = null
+let ringMesh: THREE.Mesh | null = null
+let aiCoreGroup: THREE.Group | null = null
+let outerTorus: THREE.Mesh | null = null
+let innerNode: THREE.Mesh | null = null
+let techMatrixGroup: THREE.Group | null = null
+let glassCube1: THREE.Mesh | null = null
+let glassCube2: THREE.Mesh | null = null
+let particleCloud: THREE.Points | null = null
 
 // Subtle mouse tracking for gentle 3D parallax
 const mouse = { x: 0, y: 0, targetX: 0, targetY: 0 }
@@ -20,8 +37,82 @@ const handleMouseMove = (e: MouseEvent) => {
   mouse.targetY = (e.clientY - halfHeight) / halfHeight
 }
 
+const animate = () => {
+  if (!isAnimating) return
+  animationFrameId = requestAnimationFrame(animate)
+  const elapsedTime = (performance.now() - startTime) / 1000
+
+  // Smooth mouse lerp
+  mouse.x += (mouse.targetX - mouse.x) * 0.03
+  mouse.y += (mouse.targetY - mouse.y) * 0.03
+
+  if (mainGroup) {
+    mainGroup.rotation.y = mouse.x * 0.08
+    mainGroup.rotation.x = -mouse.y * 0.06
+  }
+
+  // Serene Floating Animations
+  if (innerSphere) innerSphere.rotation.y = elapsedTime * 0.25
+  if (outerWire) {
+    outerWire.rotation.x = elapsedTime * 0.15
+    outerWire.rotation.y = elapsedTime * 0.2
+  }
+  if (ringMesh) ringMesh.rotation.z = elapsedTime * 0.18
+  if (aiCoreGroup) aiCoreGroup.position.y = 4.8 + Math.sin(elapsedTime * 1.0) * 0.15
+
+  if (outerTorus) outerTorus.rotation.z = elapsedTime * 0.12
+  if (innerNode) innerNode.rotation.y = elapsedTime * 0.3
+  if (techMatrixGroup) techMatrixGroup.position.y = -4.8 + Math.sin(elapsedTime * 1.2 + 1) * 0.12
+
+  if (glassCube1) {
+    glassCube1.rotation.x += 0.003
+    glassCube1.rotation.y += 0.004
+  }
+  if (glassCube2) {
+    glassCube2.rotation.x -= 0.003
+  }
+
+  if (particleCloud) particleCloud.rotation.y = elapsedTime * 0.012
+
+  if (renderer && scene && camera) {
+    renderer.render(scene, camera)
+  }
+}
+
+const startAnimation = () => {
+  if (isAnimating || document.hidden || isMobile.value || !renderer) return
+  isAnimating = true
+  if (!startTime) startTime = performance.now()
+  animate()
+}
+
+const stopAnimation = () => {
+  if (animationFrameId !== null) {
+    cancelAnimationFrame(animationFrameId)
+    animationFrameId = null
+  }
+  isAnimating = false
+}
+
+const handleVisibilityChange = () => {
+  if (document.hidden) {
+    stopAnimation()
+  } else {
+    startAnimation()
+  }
+}
+
+const checkMobile = () => {
+  if (typeof window !== 'undefined') {
+    isMobile.value = window.innerWidth < 768
+  }
+}
+
 const initThree = () => {
   try {
+    checkMobile()
+    // Skip heavy 3D rendering on mobile devices, use ultra-light CSS gradient instead
+    if (isMobile.value) return
     if (!canvasRef.value || !containerRef.value) return
 
     const width = containerRef.value.clientWidth || window.innerWidth
@@ -61,13 +152,13 @@ const initThree = () => {
     scene.add(purplePoint)
 
     // Main 3D Group
-    const mainGroup = new THREE.Group()
+    mainGroup = new THREE.Group()
     scene.add(mainGroup)
 
     // ==========================================
     // 1. SUBTLE HOLOGRAPHIC AI CORE (TOP-LEFT)
     // ==========================================
-    const aiCoreGroup = new THREE.Group()
+    aiCoreGroup = new THREE.Group()
     aiCoreGroup.position.set(-8.5, 4.8, -3)
 
     // Inner Soft Glowing Core
@@ -81,7 +172,7 @@ const initThree = () => {
       transparent: true,
       opacity: 0.65,
     })
-    const innerSphere = new THREE.Mesh(innerSphereGeo, innerSphereMat)
+    innerSphere = new THREE.Mesh(innerSphereGeo, innerSphereMat)
     aiCoreGroup.add(innerSphere)
 
     // Outer Delicate Wireframe Icosahedron
@@ -92,7 +183,7 @@ const initThree = () => {
       transparent: true,
       opacity: 0.28,
     })
-    const outerWire = new THREE.Mesh(outerWireGeo, outerWireMat)
+    outerWire = new THREE.Mesh(outerWireGeo, outerWireMat)
     aiCoreGroup.add(outerWire)
 
     // Subtle Orbital Ring
@@ -102,7 +193,7 @@ const initThree = () => {
       transparent: true,
       opacity: 0.3,
     })
-    const ringMesh = new THREE.Mesh(ringGeo, ringMat)
+    ringMesh = new THREE.Mesh(ringGeo, ringMat)
     ringMesh.rotation.x = Math.PI / 3
     aiCoreGroup.add(ringMesh)
 
@@ -111,7 +202,7 @@ const initThree = () => {
     // ==========================================
     // 2. SUBTLE TECH RING MATRIX (BOTTOM-RIGHT)
     // ==========================================
-    const techMatrixGroup = new THREE.Group()
+    techMatrixGroup = new THREE.Group()
     techMatrixGroup.position.set(8.5, -4.8, -2)
 
     const outerTorusGeo = new THREE.TorusGeometry(2.6, 0.03, 16, 64)
@@ -121,7 +212,7 @@ const initThree = () => {
       transparent: true,
       opacity: 0.25,
     })
-    const outerTorus = new THREE.Mesh(outerTorusGeo, outerTorusMat)
+    outerTorus = new THREE.Mesh(outerTorusGeo, outerTorusMat)
     outerTorus.rotation.x = Math.PI / 2.5
     techMatrixGroup.add(outerTorus)
 
@@ -132,7 +223,7 @@ const initThree = () => {
       transparent: true,
       opacity: 0.5,
     })
-    const innerNode = new THREE.Mesh(innerNodeGeo, innerNodeMat)
+    innerNode = new THREE.Mesh(innerNodeGeo, innerNodeMat)
     techMatrixGroup.add(innerNode)
 
     mainGroup.add(techMatrixGroup)
@@ -154,13 +245,13 @@ const initThree = () => {
     })
 
     // Glass Cube 1 (Upper Right Accent)
-    const glassCube1 = new THREE.Mesh(cubeGeo, glassMat)
+    glassCube1 = new THREE.Mesh(cubeGeo, glassMat)
     glassCube1.position.set(9.0, 5.5, -4)
     glassCube1.rotation.set(0.4, 0.6, 0.2)
     glassGroup.add(glassCube1)
 
     // Glass Cube 2 (Lower Left Accent)
-    const glassCube2 = new THREE.Mesh(cubeGeo, glassMat)
+    glassCube2 = new THREE.Mesh(cubeGeo, glassMat)
     glassCube2.position.set(-9.0, -5.5, -3)
     glassCube2.rotation.set(-0.3, 0.3, 0.5)
     glassGroup.add(glassCube2)
@@ -187,47 +278,24 @@ const initThree = () => {
       transparent: true,
       opacity: 0.4,
     })
-    const particleCloud = new THREE.Points(particleGeo, particleMat)
+    particleCloud = new THREE.Points(particleGeo, particleMat)
     mainGroup.add(particleCloud)
 
-    // ==========================================
-    // SERENE ANIMATION LOOP & GENTLE PARALLAX
-    // ==========================================
-    const startTime = performance.now()
+    // Start Animation
+    startTime = performance.now()
+    startAnimation()
 
-    const animate = () => {
-      animationFrameId = requestAnimationFrame(animate)
-      const elapsedTime = (performance.now() - startTime) / 1000
-
-      // Smooth mouse lerp
-      mouse.x += (mouse.targetX - mouse.x) * 0.03
-      mouse.y += (mouse.targetY - mouse.y) * 0.03
-
-      // Gentle & Subtle Mouse Tilt
-      mainGroup.rotation.y = mouse.x * 0.08
-      mainGroup.rotation.x = -mouse.y * 0.06
-
-      // Serene Floating Animations
-      innerSphere.rotation.y = elapsedTime * 0.25
-      outerWire.rotation.x = elapsedTime * 0.15
-      outerWire.rotation.y = elapsedTime * 0.2
-      ringMesh.rotation.z = elapsedTime * 0.18
-      aiCoreGroup.position.y = 4.8 + Math.sin(elapsedTime * 1.0) * 0.15
-
-      outerTorus.rotation.z = elapsedTime * 0.12
-      innerNode.rotation.y = elapsedTime * 0.3
-      techMatrixGroup.position.y = -4.8 + Math.sin(elapsedTime * 1.2 + 1) * 0.12
-
-      glassCube1.rotation.x += 0.003
-      glassCube1.rotation.y += 0.004
-      glassCube2.rotation.x -= 0.003
-
-      particleCloud.rotation.y = elapsedTime * 0.012
-
-      renderer.render(scene, camera)
+    // IntersectionObserver to pause Three.js when scrolled off screen
+    if (typeof IntersectionObserver !== 'undefined' && containerRef.value) {
+      observer = new IntersectionObserver(([entry]) => {
+        if (entry.isIntersecting) {
+          startAnimation()
+        } else {
+          stopAnimation()
+        }
+      }, { threshold: 0.05 })
+      observer.observe(containerRef.value)
     }
-
-    animate()
   } catch (err) {
     console.warn('AuthAnimatedBackground 3D canvas skipped gracefully:', err)
   }
@@ -235,6 +303,23 @@ const initThree = () => {
 
 const handleResize = () => {
   try {
+    const wasMobile = isMobile.value
+    checkMobile()
+
+    if (isMobile.value) {
+      stopAnimation()
+      if (renderer) {
+        renderer.dispose()
+        renderer = null
+      }
+      return
+    }
+
+    if (wasMobile && !isMobile.value && !renderer) {
+      initThree()
+      return
+    }
+
     if (!containerRef.value || !camera || !renderer) return
     const width = containerRef.value.clientWidth || window.innerWidth
     const height = containerRef.value.clientHeight || window.innerHeight
@@ -246,27 +331,49 @@ const handleResize = () => {
 }
 
 onMounted(() => {
+  checkMobile()
   initThree()
   window.addEventListener('mousemove', handleMouseMove, { passive: true })
   window.addEventListener('resize', handleResize, { passive: true })
+  document.addEventListener('visibilitychange', handleVisibilityChange)
 })
 
 onUnmounted(() => {
-  if (animationFrameId !== null) {
-    cancelAnimationFrame(animationFrameId)
-  }
+  stopAnimation()
   window.removeEventListener('mousemove', handleMouseMove)
   window.removeEventListener('resize', handleResize)
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
+  if (observer) {
+    observer.disconnect()
+    observer = null
+  }
   try {
     if (renderer) {
       renderer.dispose()
+      renderer = null
     }
+    scene = null
+    camera = null
+    mainGroup = null
+    innerSphere = null
+    outerWire = null
+    ringMesh = null
+    aiCoreGroup = null
+    outerTorus = null
+    innerNode = null
+    techMatrixGroup = null
+    glassCube1 = null
+    glassCube2 = null
+    particleCloud = null
   } catch (e) {}
 })
 </script>
 
 <template>
   <div ref="containerRef" class="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-hidden select-none">
-    <canvas ref="canvasRef" class="w-full h-full block"></canvas>
+    <!-- Desktop 3D Canvas -->
+    <canvas v-if="!isMobile" ref="canvasRef" class="w-full h-full block"></canvas>
+    <!-- Mobile Lightweight Ambient CSS Gradient Fallback -->
+    <div v-else class="w-full h-full absolute inset-0 bg-gradient-to-br from-blue-900/30 via-slate-900/50 to-indigo-950/40"></div>
   </div>
 </template>
