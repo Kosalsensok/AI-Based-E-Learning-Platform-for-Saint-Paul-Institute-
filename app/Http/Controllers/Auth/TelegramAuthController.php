@@ -256,22 +256,67 @@ class TelegramAuthController extends Controller
     }
 
     /**
-     * Handle incoming Telegram bot webhook updates (/start, /dashboard, /support commands)
+     * Handle incoming Telegram bot webhook updates (/start, /dashboard, /support commands & inline button clicks)
      */
     public function handleWebhook(Request $request, TelegramService $telegramService)
     {
         $update = $request->all();
-        $message = $update['message'] ?? null;
+        $botToken = $telegramService->getBotToken();
 
+        if (!$botToken) {
+            return response()->json(['ok' => true]);
+        }
+
+        $supportText = "💬 <b>ផ្នែកជំនួយបច្ចេកទេស SPI AI-ELMS</b>\n" .
+                       "🏛️ <b>វិទ្យាស្ថាន សន្តប៉ូល (Saint Paul Institute)</b>\n" .
+                       "━━━━━━━━━━━━━━━━━━━━━\n\n" .
+                       "ប្រសិនបើអ្នកជួបប្រទះបញ្ហាក្នុងការ Login ឬត្រូវការជំនួយបច្ចេកទេស សូមទាក់ទងមកកាន់យើងខ្ញុំ៖\n\n" .
+                       "📧 <b>Email ផ្លូវការ៖</b> <code>info@spilms.tech</code>\n" .
+                       "🌐 <b>គេហទំព័រ៖</b> https://spilms.tech\n" .
+                       "⏰ <b>ម៉ោងបម្រើការ៖</b> ច័ន្ទ - សៅរ៍ (៨:០០ ព្រឹក - ៥:០០ ល្ងាច)\n\n" .
+                       "ក្រុមការងារបច្ចេកទេសរបស់យើងខ្ញុំរីករាយនឹងជួយដោះស្រាយជូនអ្នកជានិច្ច! ✨";
+
+        $supportKeyboard = [
+            'inline_keyboard' => [
+                [
+                    ['text' => '✉️ ផ្ញើ Email (info@spilms.tech)', 'url' => 'https://mail.google.com/mail/?view=cm&fs=1&to=info@spilms.tech']
+                ],
+                [
+                    ['text' => '🌐 ចូលទៅកាន់គេហទំព័រ spilms.tech', 'url' => 'https://spilms.tech']
+                ]
+            ]
+        ];
+
+        // 1. Handle Inline Button Callback Queries
+        $callbackQuery = $update['callback_query'] ?? null;
+        if ($callbackQuery && isset($callbackQuery['message']['chat']['id'])) {
+            $chatId = $callbackQuery['message']['chat']['id'];
+            $cbData = $callbackQuery['data'] ?? '';
+            $cbId = $callbackQuery['id'] ?? null;
+
+            if ($cbId) {
+                \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/answerCallbackQuery", [
+                    'callback_query_id' => $cbId,
+                ]);
+            }
+
+            if ($cbData === 'support') {
+                \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                    'chat_id' => $chatId,
+                    'text' => $supportText,
+                    'parse_mode' => 'HTML',
+                    'reply_markup' => json_encode($supportKeyboard)
+                ]);
+            }
+            return response()->json(['ok' => true]);
+        }
+
+        // 2. Handle Text Messages and Commands
+        $message = $update['message'] ?? null;
         if ($message && isset($message['chat']['id'])) {
             $chatId = $message['chat']['id'];
             $text = strtolower(trim($message['text'] ?? ''));
             $senderName = $message['from']['first_name'] ?? 'Student';
-            $botToken = $telegramService->getBotToken();
-
-            if (!$botToken) {
-                return response()->json(['ok' => true]);
-            }
 
             if (str_starts_with($text, '/start')) {
                 $welcomeText = "👋 <b>សូមស្វាគមន៍ {$senderName} មកកាន់ប្រព័ន្ធ SPI AI-ELMS!</b>\n\n" .
@@ -286,7 +331,7 @@ class TelegramAuthController extends Controller
                         ],
                         [
                             ['text' => '📊 ចូលទៅ Dashboard', 'url' => 'https://spilms.tech/student/dashboard'],
-                            ['text' => '💬 ជំនួយការបច្ចេកទេស', 'url' => 'https://spilms.tech']
+                            ['text' => '💬 ជំនួយការបច្ចេកទេស', 'callback_data' => 'support']
                         ]
                     ]
                 ];
@@ -298,31 +343,11 @@ class TelegramAuthController extends Controller
                     'reply_markup' => json_encode($inlineKeyboard)
                 ]);
             } elseif (str_starts_with($text, '/support') || str_starts_with($text, '/help') || $text === 'support' || $text === 'help') {
-                $supportText = "💬 <b>ផ្នែកជំនួយបច្ចេកទេស SPI AI-ELMS</b>\n" .
-                               "🏛️ <b>វិទ្យាស្ថាន សន្តប៉ូល (Saint Paul Institute)</b>\n" .
-                               "━━━━━━━━━━━━━━━━━━━━━\n\n" .
-                               "ប្រសិនបើអ្នកជួបប្រទះបញ្ហាក្នុងការ Login ឬត្រូវការជំនួយបច្ចេកទេស សូមទាក់ទងមកកាន់យើងខ្ញុំ៖\n\n" .
-                               "📧 <b>Email ផ្លូវការ៖</b> info@spilms.tech\n" .
-                               "🌐 <b>គេហទំព័រ៖</b> https://spilms.tech\n" .
-                               "⏰ <b>ម៉ោងបម្រើការ៖</b> ច័ន្ទ - សៅរ៍ (៨:០០ ព្រឹក - ៥:០០ ល្ងាច)\n\n" .
-                               "ក្រុមការងារបច្ចេកទេសរបស់យើងខ្ញុំរីករាយនឹងជួយដោះស្រាយជូនអ្នកជានិច្ច! ✨";
-
-                $inlineKeyboard = [
-                    'inline_keyboard' => [
-                        [
-                            ['text' => '✉️ ផ្ញើ Email (info@spilms.tech)', 'url' => 'https://mail.google.com/mail/?view=cm&fs=1&to=info@spilms.tech']
-                        ],
-                        [
-                            ['text' => '🌐 ចូលទៅកាន់គេហទំព័រ spilms.tech', 'url' => 'https://spilms.tech']
-                        ]
-                    ]
-                ];
-
                 \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
                     'chat_id' => $chatId,
                     'text' => $supportText,
                     'parse_mode' => 'HTML',
-                    'reply_markup' => json_encode($inlineKeyboard)
+                    'reply_markup' => json_encode($supportKeyboard)
                 ]);
             } elseif (str_starts_with($text, '/dashboard')) {
                 $dashboardText = "📊 <b>ចូលទៅកាន់ប្រព័ន្ធគ្រប់គ្រងការសិក្សា Dashboard</b>\n\n" .
