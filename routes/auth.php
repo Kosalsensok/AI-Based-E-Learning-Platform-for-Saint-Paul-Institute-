@@ -16,18 +16,17 @@ Route::middleware('guest')->group(function () {
     Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
     Route::post('reset-password', [PasswordResetLinkController::class, 'resetPassword'])->name('password.update');
 
-    // ─── Telegram OAuth Widget & Direct Redirect Routes ───
-    Route::match(['get', 'post'], 'auth/telegram', [\App\Http\Controllers\Auth\TelegramAuthController::class, 'handleCallback'])->name('auth.telegram');
-    Route::get('auth/telegram/callback', [\App\Http\Controllers\Auth\TelegramAuthController::class, 'handleCallback'])->name('auth.telegram.callback');
-    Route::match(['get', 'post'], 'api/auth/telegram', [\App\Http\Controllers\Auth\TelegramAuthController::class, 'handleCallback'])->name('api.auth.telegram');
-    Route::get('api/auth/telegram/callback', [\App\Http\Controllers\Auth\TelegramAuthController::class, 'handleCallback'])->name('api.auth.telegram.callback');
+// ─── Telegram OAuth Widget & Direct Redirect Routes ───
+Route::match(['get', 'post'], 'auth/telegram', [\App\Http\Controllers\Auth\TelegramAuthController::class, 'handleCallback'])->name('auth.telegram');
+Route::get('auth/telegram/callback', [\App\Http\Controllers\Auth\TelegramAuthController::class, 'handleCallback'])->name('auth.telegram.callback');
+Route::match(['get', 'post'], 'api/auth/telegram', [\App\Http\Controllers\Auth\TelegramAuthController::class, 'handleCallback'])->name('api.auth.telegram');
+Route::get('api/auth/telegram/callback', [\App\Http\Controllers\Auth\TelegramAuthController::class, 'handleCallback'])->name('api.auth.telegram.callback');
 
-    // ─── Clerk & Google OAuth Routes ───
-    Route::match(['get', 'post'], 'auth/clerk', [\App\Http\Controllers\Auth\ClerkAuthController::class, 'handleCallback'])->name('auth.clerk');
-    Route::match(['get', 'post'], 'auth/google', [\App\Http\Controllers\Auth\ClerkAuthController::class, 'handleCallback'])->name('auth.google');
-    Route::get('auth/clerk/callback', [\App\Http\Controllers\Auth\ClerkAuthController::class, 'handleCallback'])->name('auth.clerk.callback');
-    Route::match(['get', 'post'], 'api/auth/clerk', [\App\Http\Controllers\Auth\ClerkAuthController::class, 'handleCallback'])->name('api.auth.clerk');
-});
+// ─── Clerk & Google OAuth Routes ───
+Route::match(['get', 'post'], 'auth/clerk', [\App\Http\Controllers\Auth\ClerkAuthController::class, 'handleCallback'])->name('auth.clerk');
+Route::match(['get', 'post'], 'auth/google', [\App\Http\Controllers\Auth\ClerkAuthController::class, 'handleCallback'])->name('auth.google');
+Route::get('auth/clerk/callback', [\App\Http\Controllers\Auth\ClerkAuthController::class, 'handleCallback'])->name('auth.clerk.callback');
+Route::match(['get', 'post'], 'api/auth/clerk', [\App\Http\Controllers\Auth\ClerkAuthController::class, 'handleCallback'])->name('api.auth.clerk');
 
 Route::middleware('auth')->group(function () {
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
