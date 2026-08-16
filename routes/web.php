@@ -23,6 +23,19 @@ Route::get('/sitemap.xml', function () {
     ]);
 });
 
+// ─── Robots TXT for Search Engines ───
+Route::get('/robots.txt', function () {
+    $path = public_path('robots.txt');
+    if (file_exists($path)) {
+        return response()->file($path, [
+            'Content-Type' => 'text/plain; charset=utf-8',
+        ]);
+    }
+    return response("User-agent: *\nAllow: /\nSitemap: https://spilms.tech/sitemap.xml\n", 200, [
+        'Content-Type' => 'text/plain; charset=utf-8',
+    ]);
+});
+
 // ─── Public Certificate Verification ───
 Route::get('/verify/{code?}', [CertificateController::class, 'verify']);
 Route::get('/certificate/verify/{code?}', [CertificateController::class, 'verify'])->name('certificate.verify');

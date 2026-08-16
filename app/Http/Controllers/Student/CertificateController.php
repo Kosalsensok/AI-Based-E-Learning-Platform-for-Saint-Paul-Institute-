@@ -33,11 +33,14 @@ class CertificateController extends Controller
         return Inertia::render('Student/Certificates/VerifyCertificate');
     }
 
-    public function publicVerify(Request $request, $uuid)
+    public function publicVerify(Request $request, $uuid = null)
     {
-        $certificate = Certificate::where('certificate_uuid', $uuid)
-            ->with(['student', 'course'])
-            ->first();
+        $certificate = null;
+        if ($uuid) {
+            $certificate = Certificate::where('certificate_uuid', $uuid)
+                ->with(['student', 'course'])
+                ->first();
+        }
 
         return Inertia::render('Student/Certificates/VerifyCertificate', [
             'publicCertUuid' => $uuid,
