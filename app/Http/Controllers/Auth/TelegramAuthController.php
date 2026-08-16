@@ -255,6 +255,51 @@ class TelegramAuthController extends Controller
         return redirect()->to($redirectUrl);
     }
 
+    /**
+     * Handle incoming Telegram bot webhook updates (/start command, etc.)
+     */
+    public function handleWebhook(Request $request, TelegramService $telegramService)
+    {
+        $update = $request->all();
+        $message = $update['message'] ?? null;
+
+        if ($message && isset($message['chat']['id'])) {
+            $chatId = $message['chat']['id'];
+            $text = trim($message['text'] ?? '');
+            $senderName = $message['from']['first_name'] ?? 'Student';
+
+            if (str_starts_with($text, '/start')) {
+                $welcomeText = "👋 <b>សូមស្វាគមន៍ {$senderName} មកកាន់ប្រព័ន្ធ SPI AI-ELMS!</b>\n\n" .
+                               "វិទ្យាស្ថាន សន្តប៉ូល (Saint Paul Institute)\n" .
+                               "គណនី Bot នេះត្រូវបានប្រើប្រាស់សម្រាប់ការផ្ទៀងផ្ទាត់ និងចូលប្រើប្រាស់ប្រព័ន្ធដោយសុវត្ថិភាព។\n\n" .
+                               "សូមចុចប៊ូតុងខាងក្រោមដើម្បីចូលទៅកាន់ទំព័រ Login៖";
+
+                $inlineKeyboard = [
+                    'inline_keyboard' => [
+                        [
+                            [
+                                'text' => '🚀 ចូលប្រើប្រាស់ SPI LMS (Login)',
+                                'url' => 'https://spilms.tech/login'
+                            ]
+                        ]
+                    ]
+                ];
+
+                $botToken = $telegramService->getBotToken();
+                if ($botToken) {
+                    \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                        'chat_id' => $chatId,
+                        'text' => $welcomeText,
+                        'parse_mode' => 'HTML',
+                        'reply_markup' => json_encode($inlineKeyboard)
+                    ]);
+                }
+            }
+        }
+
+        return response()->json(['ok' => true]);
+    }
+
     private function getBrowserName($userAgent)
     {
         if (str_contains($userAgent, 'Chrome'))
