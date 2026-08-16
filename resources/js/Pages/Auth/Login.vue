@@ -265,39 +265,33 @@ const redirectToTelegramOAuth = () => {
   }
 }
 
-const handleTelegramAuthSuccess = async (tgUser: any) => {
+const handleTelegramAuthSuccess = (tgUser: any) => {
   try {
-    const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || ''
+    const form = document.createElement('form')
+    form.method = 'POST'
+    form.action = '/auth/telegram'
 
-    const response = await fetch('/auth/telegram', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-CSRF-TOKEN': csrfToken,
-        'X-Requested-With': 'XMLHttpRequest',
-      },
-      body: JSON.stringify(tgUser),
-    })
+    const csrfMeta = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement
+    if (csrfMeta && csrfMeta.content) {
+      const csrfInput = document.createElement('input')
+      csrfInput.type = 'hidden'
+      csrfInput.name = '_token'
+      csrfInput.value = csrfMeta.content
+      form.appendChild(csrfInput)
+    }
 
-    const data = await response.json().catch(() => ({}))
-
-    if (response.ok && data?.success) {
-      statusMessage.value = data.message || (currentLang.value === 'km'
-        ? `ស្វាគមន៍ ${tgUser.first_name || 'Telegram User'}! ចូលប្រើជោគជ័យ។`
-        : `Welcome ${tgUser.first_name || 'Telegram User'}! Login successful.`)
-      showSuccessModal.value = true
-
-      setTimeout(() => {
-        const targetUrl = data.redirect || '/student/dashboard'
-        router.visit(targetUrl)
-      }, 1200)
-    } else {
-      oauthNotice.value = {
-        type: 'error',
-        message: data?.message || (currentLang.value === 'km' ? 'ការផ្ទៀងផ្ទាត់ Telegram មិនត្រឹមត្រូវទេ។ សូមព្យាយាមម្តងទៀត!' : 'Telegram authentication failed. Please try again!')
+    for (const key in tgUser) {
+      if (Object.prototype.hasOwnProperty.call(tgUser, key) && tgUser[key] !== null && tgUser[key] !== undefined) {
+        const input = document.createElement('input')
+        input.type = 'hidden'
+        input.name = key
+        input.value = typeof tgUser[key] === 'object' ? JSON.stringify(tgUser[key]) : String(tgUser[key])
+        form.appendChild(input)
       }
     }
+
+    ;(document.body || document.documentElement).appendChild(form)
+    form.submit()
   } catch (err: any) {
     oauthNotice.value = {
       type: 'error',

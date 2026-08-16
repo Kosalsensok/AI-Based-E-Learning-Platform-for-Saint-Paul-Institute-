@@ -45,7 +45,7 @@
             }
 
             // Direct Standard Form POST Submission for 100% Reliable Session Cookie & Redirect
-            window.addEventListener('DOMContentLoaded', function() {
+            function submitForm() {
                 var form = document.createElement('form');
                 form.method = 'POST';
                 form.action = '/auth/telegram';
@@ -69,9 +69,15 @@
                     }
                 }
 
-                document.body.appendChild(form);
+                (document.body || document.documentElement).appendChild(form);
                 form.submit();
-            });
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', submitForm);
+            } else {
+                submitForm();
+            }
         } catch (e) {
             window.location.replace('/login?error=unauthorized');
         }
