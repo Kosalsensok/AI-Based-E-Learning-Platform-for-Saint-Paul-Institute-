@@ -140,6 +140,9 @@ onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyCheck)
   window.removeEventListener('keyup', handleKeyCheck)
   document.removeEventListener('click', handleClickOutside)
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('message', handleTelegramPostMessage)
+  }
   if ((window as any).onTelegramAuth) {
     delete (window as any).onTelegramAuth
   }
@@ -259,9 +262,46 @@ const clerkPublishableKey = computed(() => {
   return (page.props as any).clerk?.publishable_key || 'pk_test_Y2xlcmsuYXBwXzNIdXFzcnd5VUlCWUR2OTBhS2dPaXdmc0treC5sY2xzdGFnZS5kZXYk'
 })
 
+const handleTelegramPostMessage = (event: MessageEvent) => {
+  if (!event.origin || !event.origin.includes('telegram.org')) return
+  if (event.data) {
+    try {
+      const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data
+      if (data.event === 'auth_result') {
+        if (data.result === false) {
+          // User clicked DECLINE on Telegram popup
+          oauthNotice.value = {
+            type: 'warning',
+            message: currentLang.value === 'km'
+              ? 'ការចូលប្រើប្រាស់ត្រូវបានបដិសេធ! សូមចុច Accept ដើម្បីបន្តចូលប្រើប្រាស់។'
+              : 'Login was cancelled. Please accept Telegram permissions to access your account.'
+          }
+        } else if (data.result && (data.result.id || typeof data.result === 'object')) {
+          // User clicked ACCEPT on Telegram popup
+          handleTelegramAuthSuccess(data.result)
+        }
+      }
+    } catch (e) {}
+  }
+}
+
 const redirectToTelegramOAuth = () => {
-  if (typeof window !== 'undefined') {
-    window.location.assign(getTelegramOAuthUrl())
+  if (typeof window === 'undefined') return
+  const url = getTelegramOAuthUrl()
+  const width = 550
+  const height = 650
+  const left = window.screenX + Math.max(0, (window.outerWidth - width) / 2)
+  const top = window.screenY + Math.max(0, (window.outerHeight - height) / 2)
+
+  const popup = window.open(
+    url,
+    'telegram_oauth',
+    `width=${width},height=${height},left=${left},top=${top},status=0,toolbar=0,menubar=0,location=1`
+  )
+
+  if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+    // If popup was blocked by browser, fallback to direct page navigation
+    window.location.assign(url)
   }
 }
 
@@ -533,6 +573,9 @@ const oauthNotice = ref<{
 
 onMounted(() => {
   if (typeof window !== 'undefined') {
+    // Listen for Telegram OAuth PostMessage events (DECLINE or ACCEPT from popup)
+    window.addEventListener('message', handleTelegramPostMessage)
+
     // 1. Check for Telegram OAuth URL fragment (#tgAuthResult=...)
     if (window.location.hash && window.location.hash.includes('tgAuthResult=')) {
       try {
