@@ -1081,11 +1081,12 @@ onMounted(() => {
         leave-from-class="opacity-100 scale-100"
         leave-to-class="opacity-0 scale-95"
       >
-        <div v-if="isTelegramLoggingIn" class="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-slate-950/50 backdrop-blur-2xl transition-all duration-300 font-['Kantumruy_Pro',sans-serif] p-4 select-none">
-          <!-- Logo E-LMS with Glow Pulse -->
-          <div class="relative mb-6">
-            <div class="absolute -inset-2 bg-gradient-to-r from-blue-500 to-sky-400 rounded-full blur-lg opacity-75 animate-pulse"></div>
-            <div class="relative w-20 h-20 rounded-full p-1 bg-white shadow-2xl">
+        <div v-if="isTelegramLoggingIn" class="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-transparent pointer-events-none font-['Kantumruy_Pro',sans-serif] p-4 select-none">
+          <!-- Logo E-LMS -->
+          <div class="relative mb-5">
+            <!-- Glow ពន្លឺស្រាលៗជុំវិញ Logo -->
+            <div class="absolute -inset-2 bg-sky-400/40 rounded-full blur-md animate-pulse"></div>
+            <div class="relative w-20 h-20 rounded-full p-1 bg-white shadow-xl">
               <img 
                 :src="logoUrl" 
                 alt="E-LMS Logo" 
@@ -1094,17 +1095,17 @@ onMounted(() => {
             </div>
           </div>
 
-          <!-- ចំណងជើង និងអក្សរបកស្រាយ -->
-          <h3 class="text-xl font-bold text-white tracking-wide mb-1.5 drop-shadow-md text-center">
+          <!-- អក្សរខ្មែរច្បាស់ៗ -->
+          <h3 class="text-xl font-bold text-slate-800 dark:text-white tracking-wide mb-1.5 drop-shadow text-center">
             កំពុងរៀបចំ Dashboard របស់អ្នក...
           </h3>
-          <p class="text-xs text-slate-200/90 font-medium mb-6 drop-shadow text-center">
+          <p class="text-xs text-slate-600 dark:text-slate-300 font-medium mb-5 drop-shadow-sm text-center">
             សូមរង់ចាំមួយភ្លែត ប្រព័ន្ធកំពុងផ្ទៀងផ្ទាត់គណនី
           </p>
 
-          <!-- Smooth Indeterminate Progress Bar -->
-          <div class="w-64 bg-white/20 rounded-full h-1.5 overflow-hidden p-0.5 backdrop-blur-md shadow-inner">
-            <div class="bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-400 h-full rounded-full animate-indeterminate"></div>
+          <!-- Progress Bar តូចល្មមចំកណ្តាល -->
+          <div class="w-56 bg-slate-300/70 dark:bg-slate-700/70 rounded-full h-1.5 overflow-hidden p-0.5 shadow-sm">
+            <div class="bg-gradient-to-r from-blue-500 via-sky-400 to-indigo-500 h-full rounded-full animate-indeterminate"></div>
           </div>
         </div>
       </Transition>
