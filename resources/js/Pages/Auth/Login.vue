@@ -252,7 +252,7 @@ const isTelegramConfigured = computed(() => {
 })
 
 const getTelegramOAuthUrl = () => {
-  return 'https://oauth.telegram.org/auth?response_type=code&bot_id=8828915669&origin=https%3A%2F%2Fspilms.tech&redirect_uri=https%3A%2F%2Fspilms.tech%2Fauth%2Ftelegram%2Fcallback&request_access=write&prompt=consent'
+  return 'https://oauth.telegram.org/auth?response_type=code&bot_id=8828915669&origin=https%3A%2F%2Fspilms.tech&redirect_uri=https%3A%2F%2Fspilms.tech%2Fauth%2Ftelegram%2Fcallback&return_to=https%3A%2F%2Fspilms.tech%2Fauth%2Ftelegram%2Fcallback&request_access=write'
 }
 
 const clerkPublishableKey = computed(() => {
