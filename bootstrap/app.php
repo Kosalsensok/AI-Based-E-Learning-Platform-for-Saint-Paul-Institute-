@@ -16,7 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
         $middleware->web(append: [\App\Http\Middleware\HandleInertiaRequests::class]);
         $middleware->alias(['role' => \App\Http\Middleware\EnsureRole::class]);
-        $middleware->validateCsrfTokens(except: [
+        $middleware->preventRequestForgery(except: [
             'auth/telegram',
             'auth/telegram/*',
             'api/auth/telegram',
