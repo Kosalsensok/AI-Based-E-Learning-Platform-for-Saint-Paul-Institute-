@@ -10,6 +10,19 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+// ─── Sitemap XML for Googlebot & Search Engines ───
+Route::get('/sitemap.xml', function () {
+    $path = public_path('sitemap.xml');
+    if (file_exists($path)) {
+        return response()->file($path, [
+            'Content-Type' => 'application/xml; charset=utf-8',
+        ]);
+    }
+    return response('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://spilms.tech/</loc><lastmod>' . date('Y-m-d') . '</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url></urlset>', 200, [
+        'Content-Type' => 'application/xml; charset=utf-8',
+    ]);
+});
+
 // ─── Public Certificate Verification ───
 Route::get('/verify/{code?}', [CertificateController::class, 'verify']);
 Route::get('/certificate/verify/{code?}', [CertificateController::class, 'verify'])->name('certificate.verify');
