@@ -255,7 +255,7 @@ const getTelegramOAuthUrl = () => {
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://spilms.tech'
   const callbackUrl = `${origin}/auth/telegram/callback`
   const botId = telegramBotId.value || '8828915669'
-  return `https://oauth.telegram.org/auth?response_type=code&bot_id=${botId}&origin=${encodeURIComponent(origin)}&redirect_uri=${encodeURIComponent(callbackUrl)}&return_to=${encodeURIComponent(callbackUrl)}&request_access=write`
+  return `https://oauth.telegram.org/auth?response_type=code&redirect_uri=${encodeURIComponent(callbackUrl)}&bot_id=${botId}&origin=${encodeURIComponent(origin)}`
 }
 
 const clerkPublishableKey = computed(() => {

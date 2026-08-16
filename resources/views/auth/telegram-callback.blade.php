@@ -59,8 +59,7 @@
             }
 
             if (!tgUser || !tgUser.id) {
-                document.getElementById('status-text').innerText = 'ការចូលប្រើត្រូវបានបោះបង់... កំពុងត្រឡប់ទៅ Login';
-                setTimeout(() => { window.location.href = '/login?error=cancelled'; }, 800);
+                window.location.replace('/login' + (window.location.search || '?error=cancelled'));
                 return;
             }
 
@@ -83,7 +82,7 @@
             form.submit();
         } catch (e) {
             console.error('Telegram Callback Error:', e);
-            window.location.href = '/login?error=unauthorized';
+            window.location.replace('/login?error=unauthorized');
         }
     })();
     </script>
