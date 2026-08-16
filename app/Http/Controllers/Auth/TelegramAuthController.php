@@ -30,6 +30,11 @@ class TelegramAuthController extends Controller
             return redirect()->to($redirectUrl);
         }
 
+        // Handle explicit error or decline return from Telegram
+        if ($request->has('error') || $request->query('status') === 'declined' || $request->query('error') === 'declined' || $request->query('error') === 'cancelled') {
+            return redirect('/login?status=declined');
+        }
+
         $data = $request->isMethod('post') ? $request->all() : $request->query();
 
         // 1. Check if required Telegram OAuth ID is present

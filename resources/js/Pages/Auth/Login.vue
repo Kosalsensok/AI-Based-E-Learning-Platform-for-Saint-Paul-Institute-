@@ -255,7 +255,7 @@ const isTelegramConfigured = computed(() => {
 })
 
 const getTelegramOAuthUrl = () => {
-  return 'https://oauth.telegram.org/auth?response_type=code&bot_id=8828915669&origin=https%3A%2F%2Fspilms.tech&redirect_uri=https%3A%2F%2Fspilms.tech%2Fauth%2Ftelegram%2Fcallback&return_to=https%3A%2F%2Fspilms.tech%2Fauth%2Ftelegram%2Fcallback&request_access=write'
+  return 'https://oauth.telegram.org/auth?bot_id=8828915669&origin=https%3A%2F%2Fspilms.tech&return_to=https%3A%2F%2Fspilms.tech%2Fauth%2Ftelegram%2Fcallback&request_access=write'
 }
 
 const clerkPublishableKey = computed(() => {
@@ -601,11 +601,12 @@ onMounted(() => {
     // 2. Check for query parameter errors and direct OAuth query returns
     const urlParams = new URLSearchParams(window.location.search)
     const err = urlParams.get('error')
-    if (err === 'cancelled' || err === 'declined' || err === 'telegram_cancelled') {
+    const status = urlParams.get('status')
+    if (status === 'declined' || err === 'cancelled' || err === 'declined' || err === 'telegram_cancelled') {
       oauthNotice.value = {
         type: 'warning',
         message: currentLang.value === 'km'
-          ? 'ការចូលប្រើប្រាស់ត្រូវបានបដិសេធ! សូមចុច Accept ដើម្បីបន្តចូលប្រើប្រាស់។'
+          ? 'លោកអ្នកបានបដិសេធការ Login! សូមចុច Accept ដើម្បីចូលប្រើប្រាស់។'
           : 'Login was cancelled. Please accept Telegram permissions to access your account.'
       }
       try {
