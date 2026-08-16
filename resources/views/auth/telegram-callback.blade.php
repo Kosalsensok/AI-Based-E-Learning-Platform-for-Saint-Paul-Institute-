@@ -7,18 +7,37 @@
     <title>កំពុងរៀបចំ Dashboard របស់អ្នក... | SPI LMS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
+        @keyframes indeterminate {
+            0% {
+                transform: translateX(-100%) scaleX(0.2);
+            }
+            50% {
+                transform: translateX(0%) scaleX(0.6);
+            }
+            100% {
+                transform: translateX(100%) scaleX(0.2);
+            }
+        }
+
+        .animate-indeterminate {
+            animation: indeterminate 1.4s infinite cubic-bezier(0.65, 0.815, 0.735, 0.395);
+            transform-origin: 0% 50%;
+        }
+
+        .font-khmer {
             font-family: 'Kantumruy Pro', 'Plus Jakarta Sans', sans-serif;
         }
-        @keyframes pulseGlow {
-            0%, 100% { transform: scale(1); opacity: 0.3; }
-            50% { transform: scale(1.15); opacity: 0.6; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.96) translateY(4px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
         }
-        .glow-effect {
-            animation: pulseGlow 3s ease-in-out infinite;
+
+        .animate-fade-in {
+            animation: fadeIn 0.35s ease-out forwards;
         }
     </style>
     <script>
@@ -56,7 +75,15 @@
             }
 
             if (!tgUser || !tgUser.id) {
-                window.location.replace('/login' + (window.location.search || '?error=cancelled'));
+                // If user declined or no hash in popup window: notify window.opener and close
+                if (window.opener && !window.opener.closed) {
+                    try {
+                        window.opener.postMessage({ event: 'auth_result', result: false }, '*');
+                        window.close();
+                        return;
+                    } catch(e) {}
+                }
+                window.location.replace('/login?status=declined');
                 return;
             }
 
@@ -104,35 +131,40 @@
     })();
     </script>
 </head>
-<body class="bg-[#070D1E] text-slate-100 min-h-screen flex items-center justify-center p-4 font-sans select-none overflow-hidden relative">
-    <!-- Ambient Backdrop Glows -->
-    <div class="absolute w-[450px] h-[450px] rounded-full bg-blue-600/15 blur-[120px] pointer-events-none glow-effect"></div>
-    <div class="absolute w-[350px] h-[350px] rounded-full bg-sky-500/10 blur-[100px] pointer-events-none -bottom-10 -right-10"></div>
+<body class="bg-slate-950/60 backdrop-blur-xl text-slate-100 min-h-screen flex items-center justify-center p-4 font-khmer select-none overflow-hidden relative">
+    <div id="loading-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xl transition-opacity duration-300">
+      <!-- Loading Card -->
+      <div class="relative w-full max-w-sm mx-4 p-8 rounded-3xl bg-slate-900/80 border border-slate-700/50 shadow-2xl shadow-blue-500/10 flex flex-col items-center text-center animate-fade-in font-khmer">
+        
+        <!-- Ambient Glow ខាងក្រោយ Logo -->
+        <div class="absolute -top-10 w-24 h-24 bg-blue-500/20 rounded-full blur-2xl pointer-events-none"></div>
 
-    <!-- Luxury Transition Card -->
-    <div class="relative z-10 w-full max-w-sm p-8 rounded-3xl bg-slate-900/70 border border-slate-800/80 backdrop-blur-xl shadow-2xl shadow-black/50 text-center flex flex-col items-center gap-5">
-        <!-- Logo with Glow -->
-        <div class="relative flex items-center justify-center">
-            <div class="absolute w-16 h-16 rounded-full bg-sky-500/20 blur-md"></div>
-            <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-sky-400 p-0.5 shadow-lg shadow-sky-500/20 flex items-center justify-center relative z-10">
-                <div class="w-full h-full bg-[#0B132B] rounded-[14px] flex items-center justify-center">
-                    <svg class="w-7 h-7 text-sky-400 fill-current" viewBox="0 0 24 24">
-                        <path d="M12 2L1 7l11 5 9-4.09V17h2V7L12 2zm0 13l-7-3.18V17l7 3.18L19 17v-5.18L12 15z"/>
-                    </svg>
-                </div>
-            </div>
+        <!-- E-LMS Logo ជាមួយ Pulse Effect -->
+        <div class="relative mb-5">
+          <div class="w-20 h-20 rounded-full p-1 bg-gradient-to-tr from-blue-600 via-sky-400 to-indigo-500 shadow-lg shadow-sky-500/30 animate-pulse">
+            <img 
+              src="/images/logo.png" 
+              alt="E-LMS Logo" 
+              class="w-full h-full object-cover rounded-full bg-slate-900"
+              onerror="this.src='/logo.png'"
+            />
+          </div>
         </div>
 
-        <!-- Spinner & Status Text -->
-        <div class="flex flex-col items-center gap-2">
-            <h3 class="text-base font-bold text-white tracking-wide">កំពុងរៀបចំ Dashboard របស់អ្នក...</h3>
-            <p class="text-xs text-slate-400 font-medium">សូមរង់ចាំមួយភ្លែត ប្រព័ន្ធកំពុងតភ្ជាប់គណនី</p>
+        <!-- អក្សរខ្មែរច្បាស់ៗ -->
+        <h3 class="text-lg font-bold text-white tracking-wide mb-1.5">
+          កំពុងរៀបចំ Dashboard របស់អ្នក...
+        </h3>
+        <p class="text-xs text-slate-400 font-normal leading-relaxed mb-6">
+          សូមរង់ចាំមួយភ្លែត ប្រព័ន្ធកំពុងផ្ទៀងផ្ទាត់គណនី
+        </p>
+
+        <!-- Modern Animated Progress Bar -->
+        <div class="w-full bg-slate-800/80 rounded-full h-1.5 overflow-hidden p-0.5 border border-slate-700/40">
+          <div class="bg-gradient-to-r from-blue-500 via-sky-400 to-teal-300 h-full rounded-full animate-indeterminate"></div>
         </div>
 
-        <!-- Animated Progress Line -->
-        <div class="w-full bg-slate-800/80 rounded-full h-1.5 overflow-hidden p-0.5">
-            <div class="bg-gradient-to-r from-blue-500 via-sky-400 to-blue-500 h-full rounded-full w-2/3 animate-[pulse_1.5s_ease-in-out_infinite]"></div>
-        </div>
+      </div>
     </div>
 </body>
 </html>
