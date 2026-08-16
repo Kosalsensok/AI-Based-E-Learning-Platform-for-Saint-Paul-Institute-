@@ -22,8 +22,20 @@
     </div>
 
     <script>
-    (async function() {
+    (function() {
         try {
+            function safeBase64Decode(str) {
+                try {
+                    let b64 = str.replace(/-/g, '+').replace(/_/g, '/');
+                    while (b64.length % 4 !== 0) b64 += '=';
+                    const binString = atob(b64);
+                    const bytes = Uint8Array.from(binString, (m) => m.charCodeAt(0));
+                    return new TextDecoder().decode(bytes);
+                } catch (e) {
+                    return atob(str);
+                }
+            }
+
             let tgUser = null;
             
             // 1. Try parsing hash fragment (#tgAuthResult=...)
@@ -32,9 +44,7 @@
                 const params = new URLSearchParams(hashStr);
                 const tgAuthResult = params.get('tgAuthResult');
                 if (tgAuthResult) {
-                    let base64 = tgAuthResult.replace(/-/g, '+').replace(/_/g, '/');
-                    while (base64.length % 4 !== 0) base64 += '=';
-                    const decoded = atob(base64);
+                    const decoded = safeBase64Decode(tgAuthResult);
                     tgUser = JSON.parse(decoded);
                 }
             }
@@ -43,7 +53,8 @@
             if (!tgUser) {
                 const searchParams = new URLSearchParams(window.location.search);
                 if (searchParams.get('id')) {
-                    tgUser = Object.fromEntries(searchParams.entries());
+                    tgUser = {};
+                    searchParams.forEach((val, key) => { tgUser[key] = val; });
                 }
             }
 
@@ -53,26 +64,25 @@
                 return;
             }
 
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
-            const res = await fetch('/auth/telegram', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify(tgUser)
-            });
+            // Direct Standard Form POST Submission for 100% Reliable Session Cookie & Redirect
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/auth/telegram';
 
-            const data = await res.json().catch(() => ({}));
-            if (res.ok && data.success) {
-                window.location.href = data.redirect || '/student/dashboard';
-            } else {
-                window.location.href = '/login?error=unauthorized';
+            for (const [key, value] of Object.entries(tgUser)) {
+                if (value !== null && value !== undefined) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = key;
+                    input.value = typeof value === 'object' ? JSON.stringify(value) : String(value);
+                    form.appendChild(input);
+                }
             }
+
+            document.body.appendChild(form);
+            form.submit();
         } catch (e) {
-            console.error(e);
+            console.error('Telegram Callback Error:', e);
             window.location.href = '/login?error=unauthorized';
         }
     })();

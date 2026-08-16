@@ -16,6 +16,16 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
         $middleware->web(append: [\App\Http\Middleware\HandleInertiaRequests::class]);
         $middleware->alias(['role' => \App\Http\Middleware\EnsureRole::class]);
+        $middleware->validateCsrfTokens(except: [
+            'auth/telegram',
+            'auth/telegram/*',
+            'api/auth/telegram',
+            'api/auth/telegram/*',
+            'auth/clerk',
+            'auth/clerk/*',
+            'auth/google',
+            'auth/google/*',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
