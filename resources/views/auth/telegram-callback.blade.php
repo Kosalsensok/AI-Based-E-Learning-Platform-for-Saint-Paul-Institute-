@@ -131,12 +131,12 @@
     })();
     </script>
 </head>
-<body class="bg-slate-950/45 backdrop-blur-xl text-slate-100 min-h-screen flex flex-col items-center justify-center p-4 font-khmer select-none overflow-hidden relative">
-    <div id="loading-screen" class="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-slate-950/45 backdrop-blur-xl transition-all duration-300 font-khmer select-none">
+<body class="bg-slate-950/40 backdrop-blur-xl text-slate-100 min-h-screen flex flex-col items-center justify-center p-4 font-khmer select-none overflow-hidden relative">
+    <div id="loading-screen" class="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-slate-950/40 backdrop-blur-xl transition-all duration-300 font-khmer select-none">
       
-      <!-- Logo E-LMS + Glow Ring -->
+      <!-- Logo E-LMS with Glow Pulse -->
       <div class="relative mb-6">
-        <div class="absolute -inset-1.5 bg-gradient-to-r from-blue-500 to-sky-400 rounded-full blur-md opacity-70 animate-pulse"></div>
+        <div class="absolute -inset-2 bg-gradient-to-r from-blue-500 to-sky-400 rounded-full blur-lg opacity-75 animate-pulse"></div>
         <div class="relative w-20 h-20 rounded-full p-1 bg-white shadow-2xl">
           <img 
             src="/images/logo.png" 
@@ -147,17 +147,17 @@
         </div>
       </div>
 
-      <!-- អក្សរខ្មែរច្បាស់ៗ Contrast ខ្ពស់ -->
+      <!-- ចំណងជើង និងអក្សរបកស្រាយ -->
       <h3 class="text-xl font-bold text-white tracking-wide mb-1.5 drop-shadow-md text-center">
         កំពុងរៀបចំ Dashboard របស់អ្នក...
       </h3>
-      <p class="text-sm text-slate-200/90 font-normal mb-6 drop-shadow text-center">
+      <p class="text-xs text-slate-200/90 font-medium mb-6 drop-shadow text-center">
         សូមរង់ចាំមួយភ្លែត ប្រព័ន្ធកំពុងផ្ទៀងផ្ទាត់គណនី
       </p>
 
       <!-- Smooth Indeterminate Progress Bar -->
-      <div class="w-60 bg-white/20 rounded-full h-1.5 overflow-hidden p-0.5 backdrop-blur-md shadow-inner">
-        <div class="bg-gradient-to-r from-sky-400 via-blue-500 to-teal-300 h-full rounded-full animate-indeterminate"></div>
+      <div class="w-64 bg-white/20 rounded-full h-1.5 overflow-hidden p-0.5 backdrop-blur-md shadow-inner">
+        <div class="bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-400 h-full rounded-full animate-indeterminate"></div>
       </div>
 
     </div>
