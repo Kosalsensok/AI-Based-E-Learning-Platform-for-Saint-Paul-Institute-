@@ -1,9 +1,54 @@
 <!DOCTYPE html>
-<html lang="km">
+<html lang="km" class="dark" style="color-scheme: dark;">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#1e40af">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover">
+    <meta name="theme-color" content="#0b132b">
+
+    <!-- Anti-FOUC & Instant Theme Injection (Runs Synchronously Before First Paint) -->
+    <script>
+        (function() {
+            try {
+                var storedTheme = localStorage.getItem('theme');
+                var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (storedTheme === 'dark' || (!storedTheme && prefersDark) || storedTheme === null) {
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.style.colorScheme = 'dark';
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    document.documentElement.style.colorScheme = 'light';
+                }
+            } catch (e) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+    <style>
+        /* Instant baseline styling to eliminate White Flash / FOUC on reload */
+        html {
+            background-color: #0b132b;
+            color-scheme: dark;
+            -webkit-text-size-adjust: 100%;
+            text-rendering: optimizeLegibility;
+        }
+        html:not(.dark) {
+            background-color: #f8fafc;
+            color-scheme: light;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-color: transparent;
+        }
+        [v-cloak] { display: none !important; }
+    </style>
+
+    <!-- Preconnect & Asynchronous Font Loading (font-display: swap) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Inter:wght@300;400;500;600;700;800&family=Kantumruy+Pro:ital,wght@0,300..700;1,300..700&family=Noto+Sans+Khmer:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Favicon Links for Google Search, Mobile, and Desktop Browsers -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -64,24 +109,6 @@
     @endverbatim
     </script>
 
-    <!-- Google Fonts Preconnect & Stylesheets (Kantumruy Pro, Inter, Battambang) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Inter:wght@300;400;500;600;700;800&family=Kantumruy+Pro:ital,wght@0,300..700;1,300..700&display=swap" rel="stylesheet">
-
-    <script>
-        (function() {
-            try {
-                var storedTheme = localStorage.getItem('theme');
-                if (storedTheme === 'dark' || (!storedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                    document.documentElement.classList.add('dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                }
-            } catch (e) {}
-        })();
-    </script>
-
     @routes
     <!-- Google Identity Services SDK -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -90,6 +117,7 @@
     @if(config('services.clerk.publishable_key') || env('VITE_CLERK_PUBLISHABLE_KEY'))
     <script async crossorigin="anonymous" data-clerk-publishable-key="{{ config('services.clerk.publishable_key') ?? env('VITE_CLERK_PUBLISHABLE_KEY') }}" src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js" type="text/javascript"></script>
     @endif
+
     @vite('resources/js/app.ts')
     @inertiaHead
 </head>

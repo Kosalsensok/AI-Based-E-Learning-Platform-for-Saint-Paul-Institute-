@@ -5,6 +5,7 @@ import * as THREE from 'three'
 const containerRef = ref<HTMLDivElement | null>(null)
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const isMobile = ref(false)
+const isCanvasReady = ref(false)
 
 let animationFrameId: number | null = null
 let isAnimating = false
@@ -284,6 +285,7 @@ const initThree = () => {
     // Start Animation
     startTime = performance.now()
     startAnimation()
+    isCanvasReady.value = true
 
     // IntersectionObserver to pause Three.js when scrolled off screen
     if (typeof IntersectionObserver !== 'undefined' && containerRef.value) {
@@ -370,9 +372,13 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="containerRef" class="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-hidden select-none">
-    <!-- Desktop 3D Canvas -->
-    <canvas v-if="!isMobile" ref="canvasRef" class="w-full h-full block"></canvas>
+  <div ref="containerRef" class="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-hidden select-none bg-gradient-to-br from-blue-950/20 via-slate-950/30 to-indigo-950/20">
+    <!-- Desktop 3D Canvas with Smooth 700ms Fade-in to Prevent Popping -->
+    <canvas
+      v-if="!isMobile"
+      ref="canvasRef"
+      :class="['w-full h-full block transition-opacity duration-700 ease-out', isCanvasReady ? 'opacity-100' : 'opacity-0']"
+    ></canvas>
     <!-- Mobile Lightweight Ambient CSS Gradient Fallback -->
     <div v-else class="w-full h-full absolute inset-0 bg-gradient-to-br from-blue-900/30 via-slate-900/50 to-indigo-950/40"></div>
   </div>

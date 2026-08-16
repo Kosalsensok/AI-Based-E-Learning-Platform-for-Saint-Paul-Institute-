@@ -676,6 +676,10 @@ onMounted(() => {
           <img
             :src="languages.find(l => l.code === currentLang)?.flagUrl || '/images/flags/km.svg'"
             :alt="currentLang"
+            width="16"
+            height="16"
+            loading="eager"
+            decoding="async"
             class="w-4 h-4 rounded-full object-cover shrink-0 ring-1 ring-slate-300 dark:ring-slate-600"
           />
           <span class="text-[11px] font-bold tracking-wide">
@@ -710,7 +714,7 @@ onMounted(() => {
               ]"
             >
               <span class="flex items-center gap-2.5">
-                <img :src="lang.flagUrl" :alt="lang.name" class="w-4 h-4 rounded-full object-cover shrink-0 shadow-xs" />
+                <img :src="lang.flagUrl" :alt="lang.name" width="16" height="16" loading="eager" decoding="async" class="w-4 h-4 rounded-full object-cover shrink-0 shadow-xs" />
                 <span>{{ lang.name }}</span>
               </span>
               <i v-if="currentLang === lang.code" class="pi pi-check text-xs text-blue-600 dark:text-blue-400 font-bold shrink-0"></i>
@@ -761,6 +765,10 @@ onMounted(() => {
                 <img
                   :src="logoUrl"
                   alt="Saint Paul Institute Official Crest Logo"
+                  width="56"
+                  height="56"
+                  fetchpriority="high"
+                  decoding="async"
                   class="relative w-14 h-14 rounded-full shadow-lg object-contain ring-2 ring-blue-500/40 ring-offset-2 ring-offset-white dark:ring-offset-[#0E172E] bg-white p-0.5 transition-transform duration-300 group-hover:scale-105"
                 />
               </div>
