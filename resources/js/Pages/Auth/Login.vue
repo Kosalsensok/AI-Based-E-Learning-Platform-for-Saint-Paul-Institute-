@@ -252,7 +252,7 @@ const isTelegramConfigured = computed(() => {
 })
 
 const getTelegramOAuthUrl = () => {
-  return 'https://oauth.telegram.org/auth?response_type=code&bot_id=8828915669&origin=https%3A%2F%2Fspilms.tech&redirect_uri=https%3A%2F%2Fspilms.tech%2Fauth%2Ftelegram%2Fcallback'
+  return 'https://oauth.telegram.org/auth?response_type=code&bot_id=8828915669&origin=https%3A%2F%2Fspilms.tech&redirect_uri=https%3A%2F%2Fspilms.tech%2Fauth%2Ftelegram%2Fcallback&request_access=write&prompt=consent'
 }
 
 const clerkPublishableKey = computed(() => {
@@ -543,6 +543,7 @@ onMounted(() => {
     if (window.location.hash && window.location.hash.includes('tgAuthResult=')) {
       try {
         const hashStr = window.location.hash.substring(1)
+        window.history.replaceState(null, '', window.location.pathname)
         const params = new URLSearchParams(hashStr)
         const tgAuthResult = params.get('tgAuthResult')
         if (tgAuthResult) {
@@ -551,9 +552,6 @@ onMounted(() => {
           const decoded = decodeURIComponent(escape(atob(base64)))
           const tgUser = JSON.parse(decoded)
           if (tgUser && tgUser.id) {
-            try {
-              window.history.replaceState({}, document.title, window.location.pathname)
-            } catch (_) {}
             handleTelegramAuthSuccess(tgUser)
             return
           }
