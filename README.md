@@ -23,8 +23,11 @@
     <a href="#-system-architecture">Architecture</a> •
     <a href="#-portals--modules">Portals</a> •
     <a href="#-installation--setup">Getting Started</a> •
+    <a href="https://spilms.tech/privacy">Privacy Policy</a> •
+    <a href="https://spilms.tech/terms">Terms of Service</a> •
     <a href="#-license">License</a>
   </p>
+
 
   ---
 </div>
