@@ -1,0 +1,11 @@
+.git
+.github
+node_modules
+tests
+brain
+.phpunit.cache
+*.log
+.env
+.env.*
+.vscode
+.idea
