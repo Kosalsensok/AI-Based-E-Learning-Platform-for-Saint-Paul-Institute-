@@ -20,8 +20,8 @@ class ClerkAuthController extends Controller
      */
     public function redirectToGoogle(Request $request)
     {
-        $googleClientId = config('services.google.client_id') ?: (env('GOOGLE_CLIENT_ID') ?: '234152985184-008ph2d1p9gpgvcgefootjcgtjgiv16i.apps.googleusercontent.com');
-        $redirectUri = config('services.google.redirect') ?: (env('GOOGLE_REDIRECT_URI') ?: url('/auth/google/callback'));
+        $googleClientId = config('services.google.client_id') ?? env('GOOGLE_CLIENT_ID');
+        $redirectUri = config('services.google.redirect') ?? env('GOOGLE_REDIRECT_URI') ?? url('/auth/google/callback');
 
         // Generate PKCE code verifier and code challenge (RFC 7636)
         $codeVerifier = Str::random(64);
@@ -68,9 +68,9 @@ class ClerkAuthController extends Controller
         if (!empty($data['code'])) {
             try {
                 $code = $data['code'];
-                $googleClientId = config('services.google.client_id') ?: (env('GOOGLE_CLIENT_ID') ?: '234152985184-008ph2d1p9gpgvcgefootjcgtjgiv16i.apps.googleusercontent.com');
-                $googleClientSecret = config('services.google.client_secret') ?: env('GOOGLE_CLIENT_SECRET');
-                $redirectUri = config('services.google.redirect') ?: (env('GOOGLE_REDIRECT_URI') ?: url('/auth/google/callback'));
+                $googleClientId = config('services.google.client_id') ?? env('GOOGLE_CLIENT_ID');
+                $googleClientSecret = config('services.google.client_secret') ?? env('GOOGLE_CLIENT_SECRET');
+                $redirectUri = config('services.google.redirect') ?? env('GOOGLE_REDIRECT_URI') ?? url('/auth/google/callback');
 
                 // Extract code_verifier from state or session
                 $codeVerifier = null;
