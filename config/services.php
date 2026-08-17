@@ -47,7 +47,7 @@ return [
     ],
 
     'google' => [
-        'client_id' => env('GOOGLE_CLIENT_ID', '234152985184-d4ak67ites7cm3bqjdukukosiumsukog.apps.googleusercontent.com'),
+        'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         'redirect' => env('GOOGLE_REDIRECT_URI', 'https://spilms.tech/auth/google/callback'),
     ],
