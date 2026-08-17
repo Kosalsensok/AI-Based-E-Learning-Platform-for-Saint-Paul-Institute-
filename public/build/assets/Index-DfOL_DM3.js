@@ -1,1 +1,0 @@
-import{F as e,d as t,x as n}from"./vendor-ui-Coywd-AD.js";import{t as r}from"./Index-BtlZUc_3.js";var i=n({__name:`Index`,props:{enrollments:{},activeTab:{}},setup(n){return(i,a)=>(e(),t(r,{enrollments:n.enrollments,activeTab:n.activeTab},null,8,[`enrollments`,`activeTab`]))}});export{i as default};

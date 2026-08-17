@@ -384,7 +384,6 @@ const handleGoogleAuthSuccess = async (googleUser: any) => {
     const data = await response.json().catch(() => ({}))
 
     if (response.ok && data?.success) {
-      showGoogleModal.value = false
       statusMessage.value = data.message || (currentLang.value === 'km'
         ? `ស្វាគមន៍ ${googleUser.first_name || googleUser.name || 'Google User'}! ចូលប្រើតាម Google ជោគជ័យ។`
         : `Welcome ${googleUser.first_name || googleUser.name || 'Google User'}! Google login successful.`)
