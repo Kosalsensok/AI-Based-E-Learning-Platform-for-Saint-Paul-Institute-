@@ -138,6 +138,88 @@ class PasswordResetLinkController extends Controller
     }
 
     /**
+     * Verify the entered 6-digit OTP code before displaying new password form.
+     */
+    public function verifyOtp(Request $request)
+    {
+        $input = trim($request->input('email') ?? $request->input('identifier') ?? '');
+        $code = trim($request->input('code') ?? $request->input('otpCode') ?? '');
+
+        if (empty($input) || empty($code)) {
+            $msg = 'សូមបញ្ចូលព័ត៌មានគណនី និងលេខកូដ OTP ៦ ខ្ទង់។';
+            if ($request->is('api/*') || (!$request->header('X-Inertia') && $request->wantsJson())) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return back()->withErrors(['code' => $msg]);
+        }
+
+        $user = User::where(function ($query) use ($input) {
+            $query->where('email', $input)
+                ->orWhere('student_code', $input)
+                ->orWhere('phone', $input);
+
+            $cleanId = ltrim($input, '#');
+            if (is_numeric($cleanId)) {
+                $query->orWhere('id', (int) $cleanId);
+            }
+        })->first();
+
+        if (!$user) {
+            $msg = 'រកមិនឃើញគណនីនេះទេ។';
+            if ($request->is('api/*') || (!$request->header('X-Inertia') && $request->wantsJson())) {
+                return response()->json(['success' => false, 'message' => $msg], 404);
+            }
+            return back()->withErrors(['code' => $msg]);
+        }
+
+        $sessionCode = session('reset_code');
+        $sessionUserId = session('reset_user_id');
+        $sessionExpiresAt = session('reset_expires_at');
+
+        $isValidOtp = false;
+
+        // 1. Check in database
+        if (!empty($user->otp_code) && $user->otp_code === $code) {
+            if (!$user->otp_expires_at || $user->otp_expires_at->isFuture()) {
+                $isValidOtp = true;
+            }
+        }
+
+        // 2. Check in session fallback
+        if (!$isValidOtp && $sessionCode === $code && $sessionUserId == $user->id) {
+            if (!$sessionExpiresAt || now()->timestamp <= $sessionExpiresAt) {
+                $isValidOtp = true;
+            }
+        }
+
+        if (!$isValidOtp) {
+            $msg = 'លេខកូដ OTP មិនត្រឹមត្រូវ ឬផុតសុពលភាព (៥ នាទី)!';
+            if ($request->is('api/*') || (!$request->header('X-Inertia') && $request->wantsJson())) {
+                return response()->json(['success' => false, 'message' => $msg], 400);
+            }
+            return back()->withErrors(['code' => $msg]);
+        }
+
+        session(['reset_otp_verified' => true]);
+
+        $successMsg = 'លេខកូដ OTP ត្រូវបានផ្ទៀងផ្ទាត់ត្រឹមត្រូវ!';
+
+        if ($request->is('api/*') || (!$request->header('X-Inertia') && $request->wantsJson())) {
+            return response()->json([
+                'success' => true,
+                'message' => $successMsg,
+            ]);
+        }
+
+        return back()->with([
+            'success'            => true,
+            'status'             => $successMsg,
+            'message'            => $successMsg,
+            'reset_otp_verified' => true,
+        ]);
+    }
+
+    /**
      * Reset user password using verification code.
      */
     public function resetPassword(Request $request)
