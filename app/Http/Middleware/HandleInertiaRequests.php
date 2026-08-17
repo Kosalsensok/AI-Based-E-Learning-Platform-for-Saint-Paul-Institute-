@@ -67,7 +67,6 @@ class HandleInertiaRequests extends Middleware
                 'link_telegram_url' => fn () => $request->session()->get('link_telegram_url') ?? $request->session()->get('telegram_url'),
                 'telegram_url'      => fn () => $request->session()->get('link_telegram_url') ?? $request->session()->get('telegram_url'),
                 'telegram_bot_name' => fn () => $request->session()->get('telegram_bot_name'),
-                'demo_code'         => fn () => $request->session()->get('demo_code'),
                 'reset_user'        => fn () => $request->session()->get('reset_user'),
             ],
         ];

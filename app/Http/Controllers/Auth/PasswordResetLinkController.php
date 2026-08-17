@@ -110,7 +110,6 @@ class PasswordResetLinkController extends Controller
                 'link_telegram_url' => $linkTelegramUrl,
                 'telegram_url'      => $linkTelegramUrl,
                 'telegram_bot_name' => $botUsername,
-                'demo_code'         => $code,
                 'user'              => [
                     'id'    => $user->id,
                     'name'  => $user->name,
@@ -123,7 +122,6 @@ class PasswordResetLinkController extends Controller
             'success'           => true,
             'status'            => $statusMsg,
             'message'           => $statusMsg,
-            'demo_code'         => $code,
             'has_telegram'      => $hasTelegram,
             'sent_to_telegram'  => $sentDirectly,
             'telegram_bot_name' => $botUsername,
