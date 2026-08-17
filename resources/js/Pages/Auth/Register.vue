@@ -553,6 +553,11 @@ const submit = () => {
                     {{ t('register_terms_label', 'I agree to the Terms of Service & Privacy Policy') }}
                   </span>
                 </label>
+                <div class="flex items-center gap-2 mt-1 ml-6.5 text-[11px] text-slate-500 dark:text-slate-400">
+                  <a href="/terms" target="_blank" class="hover:underline text-blue-600 dark:text-sky-400 font-medium">Terms of Service</a>
+                  <span>•</span>
+                  <a href="/privacy" target="_blank" class="hover:underline text-blue-600 dark:text-sky-400 font-medium">Privacy Policy</a>
+                </div>
               </div>
 
               <!-- Primary CTA Button (Matching Soft Blue Active Tab Aesthetic) -->

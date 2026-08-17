@@ -5,6 +5,7 @@ use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\Student;
 use App\Http\Controllers\Teacher;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -40,6 +41,21 @@ Route::get('/robots.txt', function () {
 Route::get('/verify/{code?}', [CertificateController::class, 'verify']);
 Route::get('/certificate/verify/{code?}', [CertificateController::class, 'verify'])->name('certificate.verify');
 Route::get('/verify-certificate/{uuid?}', [Student\CertificateController::class, 'publicVerify'])->name('verify-certificate.public');
+
+// ─── Legal & Google OAuth Compliance (Privacy & Terms) ───
+Route::get('/privacy', function () {
+    return Inertia::render('Privacy');
+})->name('privacy');
+Route::get('/privacy-policy', function () {
+    return redirect()->route('privacy');
+});
+
+Route::get('/terms', function () {
+    return Inertia::render('Terms');
+})->name('terms');
+Route::get('/terms-of-service', function () {
+    return redirect()->route('terms');
+});
 
 // ─── FR: Authentication Module (ទាំង 3 Roles) ───
 require __DIR__ . '/auth.php';

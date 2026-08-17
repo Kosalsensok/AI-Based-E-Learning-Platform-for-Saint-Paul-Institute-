@@ -996,6 +996,13 @@ onMounted(() => {
                 </Link>
               </p>
             </div>
+
+            <!-- Privacy & Terms Legal Footer -->
+            <div class="mt-2.5 pt-2 flex items-center justify-center gap-3 text-[11px] text-slate-500 dark:text-slate-400 select-none">
+              <Link href="/privacy" class="hover:text-blue-600 dark:hover:text-sky-400 hover:underline transition-colors">{{ t('privacy_policy', 'Privacy Policy') }}</Link>
+              <span>•</span>
+              <Link href="/terms" class="hover:text-blue-600 dark:hover:text-sky-400 hover:underline transition-colors">{{ t('terms_of_service', 'Terms of Service') }}</Link>
+            </div>
           </div>
         </div>
 
