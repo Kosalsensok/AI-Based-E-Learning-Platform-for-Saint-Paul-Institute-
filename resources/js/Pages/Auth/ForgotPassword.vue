@@ -660,7 +660,7 @@ const onResetPassword = () => {
       </div>
     </div>
 
-    <!-- Compact Success Alert Modal (Checkmark Icon) -->
+    <!-- Compact Success Alert Modal (Checkmark Icon & Action Buttons) -->
     <Transition
       enter-active-class="transition duration-300 ease-out"
       enter-from-class="opacity-0 scale-90 translate-y-2"
@@ -670,33 +670,55 @@ const onResetPassword = () => {
       leave-to-class="opacity-0 scale-90 translate-y-2"
     >
       <div v-if="showSuccessModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm select-none">
-        <div class="max-w-xs w-full bg-white dark:bg-[#0E172E] rounded-3xl p-6 shadow-2xl border border-emerald-500/30 text-center flex flex-col items-center space-y-3.5 transform transition-all">
+        <div class="max-w-sm w-full bg-white dark:bg-[#0E172E] rounded-3xl p-6 sm:p-7 shadow-2xl border border-emerald-500/30 text-center flex flex-col items-center space-y-4 transform transition-all">
           <!-- Icon with glowing ring -->
           <div class="relative flex items-center justify-center">
             <div class="absolute -inset-2 bg-gradient-to-r from-emerald-500/30 to-teal-500/30 rounded-full blur-md animate-pulse"></div>
-            <div class="relative w-14 h-14 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-lg shadow-emerald-500/25 ring-4 ring-white dark:ring-[#0E172E]">
-              <svg class="w-7 h-7 text-white stroke-current" fill="none" viewBox="0 0 24 24" stroke-width="3">
+            <div class="relative w-16 h-16 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-lg shadow-emerald-500/25 ring-4 ring-white dark:ring-[#0E172E]">
+              <svg class="w-8 h-8 text-white stroke-current" fill="none" viewBox="0 0 24 24" stroke-width="3">
                 <path stroke-linecap="round" stroke-linejoin="round" class="checkmark-path" d="M4.5 12.75l6 6 9-13.5"/>
               </svg>
             </div>
           </div>
           
-          <div class="space-y-1">
-            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">
+          <div class="space-y-1.5 px-1">
+            <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">
               {{ successTitle || t('forgot_modal_success_title', 'ផ្ញើកូដជោគជ័យ!') }}
             </h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+            <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
               {{ successMessage || t('forgot_modal_success_msg', 'កូដផ្ទៀងផ្ទាត់ 6 ខ្ទង់ ត្រូវបានផ្ញើទៅកាន់ Telegram Bot របស់អ្នករួចរាល់ហើយ!') }}
             </p>
           </div>
 
-          <button
-            type="button"
-            @click="showSuccessModal = false"
-            class="w-full py-2 px-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-300 text-xs font-bold transition-all duration-150 cursor-pointer active:scale-95"
-          >
-            {{ t('login_modal_close', 'យល់ព្រម') }}
-          </button>
+          <!-- Action Buttons (Fast UX Journey) -->
+          <div class="w-full flex flex-col gap-2.5 pt-1">
+            <!-- Open Telegram Button if waiting for OTP -->
+            <a
+              v-if="step === 2 && !isOtpVerified"
+              :href="flashData.link_telegram_url || flashData.telegram_url || ('https://t.me/' + (flashData.telegram_bot_name || 'spi_elms_auth_bot'))"
+              target="_blank"
+              rel="noopener noreferrer"
+              @click="showSuccessModal = false"
+              class="w-full py-2.5 px-4 rounded-xl bg-sky-500 hover:bg-sky-600 active:scale-95 text-white text-xs sm:text-sm font-bold shadow-md shadow-sky-500/25 transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer select-none"
+            >
+              <i class="pi pi-telegram text-sm"></i>
+              <span>{{ t('forgot_telegram_modal_btn', 'បើក Telegram យក OTP') }}</span>
+            </a>
+
+            <!-- Dismiss / Got It Button -->
+            <button
+              type="button"
+              @click="showSuccessModal = false"
+              :class="[
+                'w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all duration-150 cursor-pointer active:scale-95 select-none',
+                step === 2 && !isOtpVerified
+                  ? 'bg-slate-100 dark:bg-slate-800/90 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200'
+                  : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/25'
+              ]"
+            >
+              {{ t('forgot_modal_got_it', 'យល់ព្រម') }}
+            </button>
+          </div>
         </div>
       </div>
     </Transition>

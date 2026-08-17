@@ -1136,10 +1136,20 @@ onMounted(() => {
               <h3 class="text-base font-extrabold text-slate-900 dark:text-white">
                 {{ statusMessage ? t('login_modal_status_title', 'ជូនដំណឹង') : t('login_modal_success_title', 'ចូលប្រើប្រាស់ជោគជ័យ!') }}
               </h3>
-              <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              <p class="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
                 {{ statusMessage || t('login_modal_success_msg', 'កំពុងបញ្ជូនអ្នកទៅកាន់ទំព័រដើម...') }}
               </p>
             </div>
+
+            <!-- Action Button: Login Now or Got It -->
+            <button
+              v-if="statusMessage"
+              type="button"
+              @click="showSuccessModal = false"
+              class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs sm:text-sm font-bold shadow-lg shadow-emerald-600/25 transition-all duration-150 cursor-pointer select-none"
+            >
+              {{ t('login_modal_btn_login_now', 'ចូលប្រព័ន្ធឥឡូវនេះ (Login)') }}
+            </button>
           </div>
         </div>
       </Transition>
