@@ -16,15 +16,30 @@ use Illuminate\Support\Str;
 class ClerkAuthController extends Controller
 {
     /**
-     * Redirect directly to Google OAuth Consent Screen (Full Page Redirect).
+     * Redirect directly to Google OAuth Consent Screen (Full Page Redirect with PKCE).
      */
     public function redirectToGoogle(Request $request)
     {
         $googleClientId = config('services.google.client_id') ?? env('GOOGLE_CLIENT_ID') ?? '234152985184-d4ak67ites7cm3bqjdukukosiumsukog.apps.googleusercontent.com';
         $redirectUri = config('services.google.redirect') ?? env('GOOGLE_REDIRECT_URI') ?? url('/auth/google/callback');
 
-        $state = Str::random(40);
-        $request->session()->put('google_oauth_state', $state);
+        // Generate PKCE code verifier and code challenge (RFC 7636)
+        $codeVerifier = Str::random(64);
+        $codeChallenge = rtrim(strtr(base64_encode(hash('sha256', $codeVerifier, true)), '+/', '-_'), '=');
+
+        // Embed verifier inside state to ensure 100% reliability across cross-site redirects
+        $stateData = [
+            'verifier' => $codeVerifier,
+            'nonce'    => Str::random(16),
+            'time'     => time(),
+        ];
+        $state = base64_encode(json_encode($stateData));
+
+        if ($request->hasSession()) {
+            $request->session()->put('google_code_verifier', $codeVerifier);
+            $request->session()->put('google_oauth_state', $state);
+            $request->session()->save();
+        }
 
         $params = http_build_query([
             'client_id'              => $googleClientId,
@@ -34,6 +49,8 @@ class ClerkAuthController extends Controller
             'access_type'            => 'offline',
             'prompt'                 => 'select_account',
             'state'                  => $state,
+            'code_challenge'         => $codeChallenge,
+            'code_challenge_method'  => 'S256',
             'include_granted_scopes' => 'true',
         ]);
 
@@ -55,12 +72,28 @@ class ClerkAuthController extends Controller
                 $googleClientSecret = config('services.google.client_secret') ?? env('GOOGLE_CLIENT_SECRET');
                 $redirectUri = config('services.google.redirect') ?? env('GOOGLE_REDIRECT_URI') ?? url('/auth/google/callback');
 
+                // Extract code_verifier from state or session
+                $codeVerifier = null;
+                if (!empty($data['state'])) {
+                    $decodedState = json_decode(base64_decode($data['state']), true);
+                    if (!empty($decodedState['verifier'])) {
+                        $codeVerifier = $decodedState['verifier'];
+                    }
+                }
+                if (!$codeVerifier && $request->hasSession()) {
+                    $codeVerifier = $request->session()->get('google_code_verifier');
+                }
+
                 $postParams = [
                     'code'          => $code,
                     'client_id'     => $googleClientId,
                     'redirect_uri'  => $redirectUri,
                     'grant_type'    => 'authorization_code',
                 ];
+
+                if (!empty($codeVerifier)) {
+                    $postParams['code_verifier'] = $codeVerifier;
+                }
 
                 if (!empty($googleClientSecret)) {
                     $postParams['client_secret'] = $googleClientSecret;
