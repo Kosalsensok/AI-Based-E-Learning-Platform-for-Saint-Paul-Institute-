@@ -298,13 +298,13 @@ const onResetPassword = () => {
       <div class="absolute -bottom-32 -right-32 w-[600px] h-[600px] bg-indigo-500/25 dark:bg-indigo-600/30 rounded-full blur-[140px] animate-float-reverse"></div>
     </div>
 
-    <!-- Master Centered Forgot Password Card (Clean & Premium Layout) -->
+    <!-- Master Centered Forgot Password Card (Clean & 100% Production Ready Layout) -->
     <div class="max-w-md w-full p-[1px] rounded-3xl bg-gradient-to-b from-blue-500/40 via-indigo-500/20 to-purple-500/30 dark:from-blue-500/30 dark:via-slate-800/40 dark:to-indigo-500/20 shadow-2xl shadow-slate-900/10 dark:shadow-black/60 relative z-10 my-auto transition-all">
       <div class="w-full bg-white/95 dark:bg-[#0E172E]/95 backdrop-blur-2xl rounded-[23px] p-6 sm:p-8 flex flex-col justify-center relative z-20 space-y-5 transition-colors">
         
-        <!-- Header with Logo & Brand Name -->
+        <!-- Header Logo & Title -->
         <div class="text-center pb-0 relative">
-          <div class="flex flex-col items-center justify-center gap-1.5">
+          <div class="flex flex-col items-center justify-center gap-2">
             <div class="relative group">
               <div class="absolute -inset-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full blur opacity-35 group-hover:opacity-65 transition duration-300"></div>
               <img
@@ -318,34 +318,17 @@ const onResetPassword = () => {
               />
             </div>
             <div>
-              <h1 class="text-xl font-black tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 dark:from-blue-400 dark:via-indigo-300 dark:to-cyan-300 bg-clip-text text-transparent">
-                {{ t('forgot_banner_title', 'កំណត់ពាក្យសម្ងាត់ឡើងវិញ') }}
+              <h1 class="text-xl sm:text-2xl font-black tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 dark:from-blue-400 dark:via-indigo-300 dark:to-cyan-300 bg-clip-text text-transparent">
+                {{ t('forgot_banner_title', 'Reset Your Password') }}
               </h1>
               <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1 tracking-wide">
-                {{ step === 1 ? t('forgot_step1_sub', 'ជំហានទី ១៖ បញ្ចូលគណនីដើម្បីទទួលលេខកូដ OTP') : t('forgot_step2_sub', 'ជំហានទី ២៖ ផ្ទៀងផ្ទាត់ OTP និងបង្កើតពាក្យសម្ងាត់ថ្មី') }}
+                {{ step === 1 ? t('forgot_step1_sub', 'Step 1: Enter your account to receive OTP code') : t('forgot_step2_sub', 'Step 2: Verify OTP and set a new password') }}
               </p>
             </div>
           </div>
         </div>
 
         <div class="space-y-4">
-
-          <!-- Clean Step Progress Bar -->
-          <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/60 text-xs select-none">
-            <div class="flex items-center gap-2">
-              <span :class="['w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white transition-colors shadow-xs', step === 1 ? 'bg-blue-600 ring-2 ring-blue-500/30' : 'bg-emerald-500']">
-                <i v-if="step > 1" class="pi pi-check text-[9px]"></i>
-                <span v-else>1</span>
-              </span>
-              <span class="text-slate-800 dark:text-slate-200 font-bold text-xs">
-                {{ step === 1 ? t('forgot_step1_label', 'ជំហានទី ១ នៃ ២: ស្វែងរកគណនី') : t('forgot_step2_label', 'ជំហានទី ២ នៃ ២: ផ្ទៀងផ្ទាត់ OTP & ពាក្យសម្ងាត់ថ្មី') }}
-              </span>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <div :class="['w-7 h-1.5 rounded-full transition-all duration-300', step >= 1 ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-700']"></div>
-              <div :class="['w-7 h-1.5 rounded-full transition-all duration-300', step === 2 ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-700']"></div>
-            </div>
-          </div>
 
           <!-- STEP 1 FORM: REQUEST OTP -->
           <form v-if="step === 1" @submit.prevent="onRequestCode" class="space-y-4">
@@ -359,7 +342,7 @@ const onResetPassword = () => {
             <!-- Input Email / ID / Phone -->
             <div class="space-y-1.5">
               <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                <span>{{ t('forgot_input_email_label', 'គណនីរបស់អ្នក (ID / Email / ទូរស័ព្ទ)') }}</span>
+                <span>{{ t('forgot_input_email_label', 'Your Account (ID / Email / Phone)') }}</span>
               </label>
               <div class="relative group">
                 <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-400 group-focus-within:text-blue-600 dark:group-focus-within:text-sky-400 transition-colors">
@@ -370,8 +353,8 @@ const onResetPassword = () => {
                   type="text"
                   required
                   autocomplete="username"
-                  :placeholder="t('forgot_input_email_placeholder', 'ឧ. user@domain.com ឬ អត្តលេខ/ទូរស័ព្ទ')"
-                  class="h-11 w-full pl-10 pr-9 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-800/80 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-400 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 text-xs sm:text-sm font-medium shadow-xs"
+                  :placeholder="t('forgot_input_email_placeholder', 'e.g. user@domain.com or ID/Phone')"
+                  class="h-11 w-full pl-10 pr-9 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-400/20 outline-none transition duration-150 text-xs sm:text-sm font-medium shadow-xs"
                 />
                 <!-- Quick Clear Button -->
                 <button
@@ -394,7 +377,7 @@ const onResetPassword = () => {
             >
               <i v-if="requestForm.processing" class="pi pi-spin pi-spinner text-sm shrink-0"></i>
               <template v-else>
-                <span>{{ requestForm.processing ? t('forgot_btn_sending', 'កំពុងផ្ញើកូដ...') : t('forgot_btn_send_otp', 'ផ្ញើកូដ OTP') }}</span>
+                <span>{{ requestForm.processing ? t('forgot_btn_sending', 'Sending Code...') : t('forgot_btn_send_otp', 'Send OTP Code') }}</span>
                 <span class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center transition-all duration-300 group-hover:translate-x-1 group-hover:bg-white/30 shadow-xs shrink-0">
                   <svg class="w-3.5 h-3.5 fill-current text-white" viewBox="0 0 24 24">
                     <path d="M13.293 6.293a1 1 0 0 1 1.414 0l5 5a1 1 0 0 1 0 1.414l-5 5a1 1 0 0 1-1.414-1.414L16.586 13H5a1 1 0 1 1 0-2h11.586l-3.293-3.293a1 1 0 0 1 0-1.414z"/>
@@ -404,7 +387,7 @@ const onResetPassword = () => {
             </button>
           </form>
 
-          <!-- STEP 2 FORM: ENTER OTP & NEW PASSWORD (CLEAN PRODUCTION UI) -->
+          <!-- STEP 2 FORM: ENTER OTP & NEW PASSWORD (100% PRODUCTION READY) -->
           <form v-else @submit.prevent="onResetPassword" class="space-y-4">
 
             <!-- Error Alert -->
@@ -413,18 +396,22 @@ const onResetPassword = () => {
               <span class="leading-relaxed font-medium">{{ resetForm.errors.email || resetForm.errors.code || resetForm.errors.password }}</span>
             </div>
 
-            <!-- Clean Consolidated Telegram Banner -->
-            <div class="p-3.5 rounded-2xl bg-sky-500/10 border border-sky-500/25 text-sky-800 dark:text-sky-200 text-xs flex items-center justify-between gap-3 shadow-xs">
+            <!-- Enhanced Telegram Alert / Status Banner with Pulsing Icon -->
+            <div class="p-3.5 bg-sky-500/10 border border-sky-500/20 rounded-2xl flex items-center justify-between gap-3 shadow-xs">
               <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-sky-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-sky-500/20">
-                  <i class="pi pi-send text-base"></i>
+                <div class="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-500 text-white shadow-md shadow-sky-500/30">
+                  <i class="pi pi-send text-lg"></i>
+                  <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
+                  </span>
                 </div>
-                <div class="text-xs leading-relaxed">
-                  <p class="font-bold text-slate-800 dark:text-slate-100">
-                    {{ t('forgot_telegram_sent_title', 'ផ្ញើលេខ OTP រួចរាល់') }}
+                <div class="leading-tight">
+                  <p class="text-xs font-bold text-slate-800 dark:text-slate-100">
+                    {{ t('forgot_telegram_sent_title', 'OTP Sent Successfully') }}
                   </p>
-                  <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                    {{ t('forgot_telegram_sent_desc', 'សូមពិនិត្យមើលសារក្នុង Telegram Bot របស់អ្នក') }}
+                  <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
+                    {{ t('forgot_telegram_sent_desc', 'Please check messages in your Telegram Bot') }}
                   </p>
                 </div>
               </div>
@@ -433,10 +420,10 @@ const onResetPassword = () => {
                 :href="flashData.link_telegram_url || flashData.telegram_url || ('https://t.me/' + (flashData.telegram_bot_name || 'spi_elms_auth_bot'))"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="px-3.5 py-2 bg-sky-500 hover:bg-sky-600 active:scale-95 text-white text-xs font-semibold rounded-xl transition-all shadow-sm whitespace-nowrap inline-flex items-center gap-1.5 cursor-pointer shrink-0"
+                class="px-3.5 py-2 bg-sky-500 hover:bg-sky-600 active:scale-95 text-white text-xs font-semibold rounded-xl transition shadow-sm shadow-sky-500/20 whitespace-nowrap inline-flex items-center gap-1.5 cursor-pointer shrink-0"
               >
                 <i class="pi pi-telegram text-xs"></i>
-                <span>{{ t('forgot_telegram_open_btn', 'បើក Telegram') }}</span>
+                <span>{{ t('forgot_telegram_open_btn', 'Open Telegram') }}</span>
               </a>
             </div>
 
@@ -444,34 +431,32 @@ const onResetPassword = () => {
             <div class="space-y-1">
               <div class="flex items-center justify-between">
                 <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  <span>{{ t('forgot_account_label', 'គណនីរបស់អ្នក (ID / Email)') }}</span>
+                  <span>{{ t('forgot_account_label', 'Your Account (ID / Email)') }}</span>
                 </label>
                 <button
                   type="button"
                   @click="step = 1"
                   class="text-[11px] font-bold text-blue-600 dark:text-sky-400 hover:underline cursor-pointer"
                 >
-                  {{ t('forgot_change_account', 'ប្តូរគណនី') }}
+                  {{ t('forgot_change_account', 'Change Account') }}
                 </button>
               </div>
               <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-400">
-                  <i class="pi pi-user text-sm"></i>
-                </div>
+                <i class="pi pi-user absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                 <input
                   v-model="resetForm.email"
                   type="text"
                   required
                   readonly
-                  class="h-11 w-full pl-10 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-slate-100/90 dark:bg-slate-900/80 text-slate-600 dark:text-slate-300 transition text-xs sm:text-sm font-medium cursor-not-allowed"
+                  class="h-11 w-full pl-10 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-slate-100/90 dark:bg-slate-900/80 text-slate-600 dark:text-slate-300 transition text-xs sm:text-sm font-semibold cursor-not-allowed"
                 />
               </div>
             </div>
 
-            <!-- 6-Digit OTP Code Inputs (Clean 11x12 Grid) -->
+            <!-- 6-Digit OTP Code Inputs (Focus Ring & Smooth Interaction) -->
             <div class="space-y-1.5">
               <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                <span>{{ t('forgot_otp_label', 'លេខកូដ OTP (៦ ខ្ទង់)') }}</span>
+                <span>{{ t('forgot_otp_label', 'OTP Verification Code (6 Digits)') }}</span>
               </label>
               <div class="grid grid-cols-6 gap-2" @paste="handleCodePaste">
                 <input
@@ -484,7 +469,7 @@ const onResetPassword = () => {
                   inputmode="numeric"
                   @input="handleCodeInput(idx, $event)"
                   @keydown="handleCodeKeyDown(idx, $event)"
-                  class="w-full h-12 text-center text-lg font-bold font-mono rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition shadow-xs"
+                  class="w-full h-11 sm:h-12 text-center text-lg font-bold font-mono rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-400/20 outline-none transition duration-150 shadow-xs"
                 />
               </div>
             </div>
@@ -492,25 +477,23 @@ const onResetPassword = () => {
             <!-- New Password Input -->
             <div class="space-y-1.5">
               <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                <span>{{ t('forgot_new_password_label', 'ពាក្យសម្ងាត់ថ្មី') }}</span>
+                <span>{{ t('forgot_new_password_label', 'New Password') }}</span>
               </label>
               <div class="relative group">
-                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-400 group-focus-within:text-blue-600 dark:group-focus-within:text-sky-400 transition-colors">
-                  <i class="pi pi-lock text-sm"></i>
-                </div>
+                <i class="pi pi-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-400 group-focus-within:text-blue-600 dark:group-focus-within:text-sky-400 transition-colors text-sm"></i>
                 <input
                   v-model="resetForm.password"
                   :type="showPassword ? 'text' : 'password'"
                   required
                   autocomplete="new-password"
                   :placeholder="t('login_input_password_placeholder', '••••••••••••••••')"
-                  class="h-11 w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all duration-200 text-xs sm:text-sm font-medium shadow-xs"
+                  class="h-11 w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-400/20 outline-none transition duration-150 text-xs sm:text-sm font-medium shadow-xs"
                 />
                 <!-- Eye Toggle Button -->
                 <button
                   type="button"
                   @click="showPassword = !showPassword"
-                  class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg cursor-pointer"
+                  class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors p-1 rounded-lg cursor-pointer"
                   :title="showPassword ? 'Hide password' : 'Show password'"
                 >
                   <i :class="['pi text-sm transition-transform duration-200 hover:scale-110', showPassword ? 'pi-eye-slash text-blue-600 dark:text-sky-400' : 'pi-eye']"></i>
@@ -521,32 +504,30 @@ const onResetPassword = () => {
             <!-- Confirm Password Input -->
             <div class="space-y-1.5">
               <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                <span>{{ t('forgot_confirm_password_label', 'ផ្ទៀងផ្ទាត់ពាក្យសម្ងាត់ថ្មី') }}</span>
+                <span>{{ t('forgot_confirm_password_label', 'Confirm New Password') }}</span>
               </label>
               <div class="relative group">
-                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-400 group-focus-within:text-blue-600 dark:group-focus-within:text-sky-400 transition-colors">
-                  <i class="pi pi-lock text-sm"></i>
-                </div>
+                <i class="pi pi-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-400 group-focus-within:text-blue-600 dark:group-focus-within:text-sky-400 transition-colors text-sm"></i>
                 <input
                   v-model="resetForm.password_confirmation"
                   :type="showConfirmPassword ? 'text' : 'password'"
                   required
                   autocomplete="new-password"
                   :placeholder="t('login_input_password_placeholder', '••••••••••••••••')"
-                  class="h-11 w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all duration-200 text-xs sm:text-sm font-medium shadow-xs"
+                  class="h-11 w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-400/20 outline-none transition duration-150 text-xs sm:text-sm font-medium shadow-xs"
                 />
                 <!-- Eye Toggle Button -->
                 <button
                   type="button"
                   @click="showConfirmPassword = !showConfirmPassword"
-                  class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg cursor-pointer"
+                  class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors p-1 rounded-lg cursor-pointer"
                   :title="showConfirmPassword ? 'Hide password' : 'Show password'"
                 >
                   <i :class="['pi text-sm transition-transform duration-200 hover:scale-110', showConfirmPassword ? 'pi-eye-slash text-blue-600 dark:text-sky-400' : 'pi-eye']"></i>
                 </button>
               </div>
               <span v-if="resetForm.password && resetForm.password_confirmation && resetForm.password !== resetForm.password_confirmation" class="text-[11px] text-rose-600 dark:text-rose-400 block font-semibold inline-flex items-center gap-1">
-                <i class="pi pi-exclamation-triangle shrink-0"></i> <span>{{ t('forgot_pwd_mismatch', 'ពាក្យសម្ងាត់មិនត្រូវគ្នាទេ') }}</span>
+                <i class="pi pi-exclamation-triangle shrink-0"></i> <span>{{ t('forgot_pwd_mismatch', 'Passwords do not match') }}</span>
               </span>
             </div>
 
@@ -554,37 +535,25 @@ const onResetPassword = () => {
             <button
               type="submit"
               :disabled="resetForm.processing || (resetForm.password !== resetForm.password_confirmation && resetForm.password_confirmation.length > 0)"
-              class="w-full py-3 mt-2 bg-emerald-600 hover:bg-emerald-500 active:scale-[0.99] text-white font-semibold text-sm rounded-xl shadow-lg shadow-emerald-600/25 hover:shadow-emerald-600/35 transition-all duration-200 inline-flex items-center justify-center gap-2.5 disabled:opacity-50 cursor-pointer focus:outline-none focus:ring-4 focus:ring-emerald-500/20"
+              class="w-full py-3 mt-2 bg-emerald-600 hover:bg-emerald-500 active:scale-[0.99] text-white font-bold text-xs sm:text-sm rounded-xl shadow-lg shadow-emerald-600/25 hover:shadow-emerald-600/35 transition-all duration-200 inline-flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer focus:outline-none focus:ring-4 focus:ring-emerald-500/20"
             >
               <i v-if="resetForm.processing" class="pi pi-spin pi-spinner text-sm shrink-0"></i>
               <template v-else>
-                <span>{{ resetForm.processing ? t('forgot_btn_updating', 'កំពុងផ្លាស់ប្តូរ...') : t('forgot_btn_reset', 'ផ្លាស់ប្តូរពាក្យសម្ងាត់ & ចូលប្រព័ន្ធ') }}</span>
-                <span class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-xs shrink-0">
-                  <svg class="w-3.5 h-3.5 fill-current text-white" viewBox="0 0 24 24">
-                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                  </svg>
-                </span>
+                <span>{{ resetForm.processing ? t('forgot_btn_updating', 'Updating Password...') : t('forgot_btn_reset', 'Reset Password & Login') }}</span>
+                <i class="pi pi-check-circle text-sm"></i>
               </template>
             </button>
           </form>
 
           <!-- Navigation Footer: Back to Sign In & Register -->
-          <div class="pt-4 pb-1 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs font-medium">
-            <Link href="/login" class="group text-blue-600 dark:text-sky-400 hover:text-blue-700 dark:hover:text-sky-300 font-bold inline-flex items-center gap-2 transition-all duration-150 active:scale-95 outline-none focus:outline-none select-none">
-              <span class="w-6 h-6 rounded-full bg-blue-500/10 dark:bg-sky-500/20 border border-blue-500/20 dark:border-sky-400/30 flex items-center justify-center text-blue-600 dark:text-sky-400 group-hover:bg-blue-600 group-hover:text-white dark:group-hover:bg-sky-400 dark:group-hover:text-slate-950 transition-all duration-300 group-hover:-translate-x-1 shadow-2xs shrink-0">
-                <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                  <path d="M10.707 17.707a1 1 0 0 1-1.414 0l-5-5a1 1 0 0 1 0-1.414l5-5a1 1 0 0 1 1.414 1.414L7.414 11H19a1 1 0 1 1 0 2H7.414l3.293 3.293a1 1 0 0 1 0 1.414z"/>
-                </svg>
-              </span>
-              <span>{{ t('forgot_back_to_login', 'ត្រឡប់ទៅទំព័រចូល') }}</span>
+          <div class="pt-4 pb-1 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-medium">
+            <Link href="/login" class="group text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-medium inline-flex items-center gap-1.5 transition-all duration-150 active:scale-95 outline-none focus:outline-none select-none">
+              <i class="pi pi-arrow-left text-[10px] transition-transform duration-200 group-hover:-translate-x-0.5"></i>
+              <span>{{ t('forgot_back_to_login', 'Back to Sign In') }}</span>
             </Link>
-            <Link href="/register" class="group text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-sky-400 font-bold inline-flex items-center gap-2 transition-all duration-150 active:scale-95 outline-none focus:outline-none select-none">
-              <span>{{ t('forgot_register_now', 'ចុះឈ្មោះគណនីថ្មី') }}</span>
-              <span class="w-6 h-6 rounded-full bg-slate-200/80 dark:bg-slate-800 border border-slate-300/80 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-300 group-hover:bg-blue-600 group-hover:text-white dark:group-hover:bg-sky-400 dark:group-hover:text-slate-950 group-hover:border-blue-600 dark:group-hover:border-sky-400 transition-all duration-300 group-hover:translate-x-1 shadow-2xs shrink-0">
-                <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                  <path d="M13.293 6.293a1 1 0 0 1 1.414 0l5 5a1 1 0 0 1 0 1.414l-5 5a1 1 0 0 1-1.414-1.414L16.586 13H5a1 1 0 1 1 0-2h11.586l-3.293-3.293a1 1 0 0 1 0-1.414z"/>
-                </svg>
-              </span>
+            <Link href="/register" class="group text-blue-600 dark:text-sky-400 hover:text-blue-700 dark:hover:text-sky-300 font-semibold inline-flex items-center gap-1.5 transition-all duration-150 active:scale-95 outline-none focus:outline-none select-none">
+              <span>{{ t('forgot_register_now', 'Register Account') }}</span>
+              <i class="pi pi-arrow-right text-[10px] transition-transform duration-200 group-hover:translate-x-0.5"></i>
             </Link>
           </div>
 
