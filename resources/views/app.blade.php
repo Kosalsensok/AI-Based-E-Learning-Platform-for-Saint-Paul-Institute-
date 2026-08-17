@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="km" class="dark" style="color-scheme: dark;">
+<html lang="km" class="dark" style="color-scheme: dark; background-color: #0b132b;">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover">
@@ -14,9 +14,11 @@
                 if (storedTheme === 'dark' || (!storedTheme && prefersDark) || storedTheme === null) {
                     document.documentElement.classList.add('dark');
                     document.documentElement.style.colorScheme = 'dark';
+                    document.documentElement.style.backgroundColor = '#0b132b';
                 } else {
                     document.documentElement.classList.remove('dark');
                     document.documentElement.style.colorScheme = 'light';
+                    document.documentElement.style.backgroundColor = '#f8fafc';
                 }
             } catch (e) {
                 document.documentElement.classList.add('dark');
@@ -31,24 +33,34 @@
             -webkit-text-size-adjust: 100%;
             text-rendering: optimizeLegibility;
         }
+        html.dark {
+            background-color: #0b132b !important;
+            color: #f8fafc !important;
+        }
         html:not(.dark) {
-            background-color: #f8fafc;
-            color-scheme: light;
+            background-color: #f8fafc !important;
+            color: #0f172a !important;
         }
         body {
             margin: 0;
             padding: 0;
             min-height: 100vh;
             overflow-x: hidden;
-            background-color: transparent;
+            background-color: #0b132b;
+        }
+        html:not(.dark) body {
+            background-color: #f8fafc;
         }
         [v-cloak] { display: none !important; }
     </style>
 
-    <!-- Preconnect & Asynchronous Font Loading (font-display: swap) -->
+    <!-- Preconnect & Preload Asynchronous Font Loading (font-display: swap) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Inter:wght@300;400;500;600;700;800&family=Kantumruy+Pro:ital,wght@0,300..700;1,300..700&family=Noto+Sans+Khmer:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Inter:wght@300;400;500;600;700;800&family=Kantumruy+Pro:ital,wght@0,300..700;1,300..700&family=Noto+Sans+Khmer:wght@400;500;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+        <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Inter:wght@300;400;500;600;700;800&family=Kantumruy+Pro:ital,wght@0,300..700;1,300..700&family=Noto+Sans+Khmer:wght@400;500;600;700&display=swap" rel="stylesheet">
+    </noscript>
 
     <!-- Favicon Links for Google Search, Mobile, and Desktop Browsers -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -121,7 +133,7 @@
     @vite('resources/js/app.ts')
     @inertiaHead
 </head>
-<body class="font-sans antialiased bg-slate-900 text-slate-100 min-h-screen">
+<body class="font-sans antialiased bg-[#0b132b] text-slate-100 min-h-screen" style="background-color: #0b132b; color: #f8fafc;">
     @inertia
 </body>
 </html>
