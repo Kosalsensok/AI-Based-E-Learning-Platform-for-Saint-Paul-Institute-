@@ -112,7 +112,7 @@ class ClerkAuthController extends Controller
                 // Attempt direct Google TokenInfo verification if network allows
                 $googleVerified = false;
                 try {
-                    $verifyResponse = \Illuminate\Support\Facades\Http::timeout(3)
+                    $verifyResponse = \Illuminate\Support\Facades\Http::timeout(10)
                         ->get("https://oauth2.googleapis.com/tokeninfo?id_token={$rawToken}");
                     
                     if ($verifyResponse->successful()) {
@@ -190,7 +190,7 @@ class ClerkAuthController extends Controller
                 ], 422);
             }
             return redirect()->route('login')->withErrors([
-                'email' => 'ទិន្នន័យផ្ទៀងផ្ទាត់ Google មិនត្រឹមត្រូវ។',
+                'email' => 'ការចូលប្រព័ន្ធតាមរយៈ Google បរាជ័យ! សូមព្យាយាមម្តងទៀត។',
             ]);
         }
 
@@ -203,32 +203,35 @@ class ClerkAuthController extends Controller
         $device = str_contains(strtolower($userAgent), 'mobile') ? 'Mobile' : 'Desktop';
         $browser = $this->getBrowserName($userAgent);
 
-        // 2. Find existing user by clerk_id, google_id, or email
+        // 2. Find existing user by email, google_id, or clerk_id
         $user = null;
 
-        if ($clerkId) {
-            $user = User::where('clerk_id', $clerkId)->first();
+        if ($email) {
+            $user = User::where('email', $email)->first();
         }
 
         if (!$user && $googleId) {
             $user = User::where('google_id', $googleId)->first();
         }
 
-        if (!$user && $email) {
-            $user = User::where('email', $email)->first();
+        if (!$user && $clerkId) {
+            $user = User::where('clerk_id', $clerkId)->first();
         }
 
         // 3. Update existing user or register new student user
         if ($user) {
             $updateData = [];
-            if ($clerkId && empty($user->clerk_id)) {
-                $updateData['clerk_id'] = $clerkId;
-            }
             if ($googleId && empty($user->google_id)) {
                 $updateData['google_id'] = $googleId;
             }
+            if ($clerkId && empty($user->clerk_id)) {
+                $updateData['clerk_id'] = $clerkId;
+            }
             if ($imageUrl && empty($user->avatar)) {
                 $updateData['avatar'] = $imageUrl;
+            }
+            if (empty($user->email_verified_at)) {
+                $updateData['email_verified_at'] = now();
             }
             if (!empty($updateData)) {
                 $user->update($updateData);
@@ -241,18 +244,19 @@ class ClerkAuthController extends Controller
             }
 
             $user = User::create([
-                'name' => $fullName,
-                'name_kh' => $fullName,
-                'email' => $email ?? "clerk_{$clerkId}@spi-elms.edu.kh",
-                'password' => Hash::make(Str::random(32)),
-                'role' => 'student',
-                'student_code' => $studentCode,
-                'study_type' => 'on_campus',
-                'clerk_id' => $clerkId,
-                'google_id' => $googleId,
-                'avatar' => $imageUrl,
-                'is_active' => true,
-                'status' => 'active',
+                'name'              => $fullName,
+                'name_kh'           => $fullName,
+                'email'             => $email ?? "google_{$googleId}@spi-elms.edu.kh",
+                'password'          => Hash::make(Str::random(32)),
+                'role'              => 'student',
+                'student_code'      => $studentCode,
+                'study_type'        => 'on_campus',
+                'google_id'         => $googleId,
+                'clerk_id'          => $clerkId,
+                'avatar'            => $imageUrl,
+                'email_verified_at' => now(),
+                'is_active'         => true,
+                'status'            => 'active',
             ]);
         }
 
