@@ -55,41 +55,52 @@ class ClerkAuthController extends Controller
                 $googleClientSecret = config('services.google.client_secret') ?? env('GOOGLE_CLIENT_SECRET');
                 $redirectUri = config('services.google.redirect') ?? env('GOOGLE_REDIRECT_URI') ?? url('/auth/google/callback');
 
-                if ($googleClientId && $googleClientSecret) {
-                    $tokenResponse = \Illuminate\Support\Facades\Http::timeout(5)->asForm()->post('https://oauth2.googleapis.com/token', [
-                        'code'          => $code,
-                        'client_id'     => $googleClientId,
-                        'client_secret' => $googleClientSecret,
-                        'redirect_uri'  => $redirectUri,
-                        'grant_type'    => 'authorization_code',
-                    ]);
+                $postParams = [
+                    'code'          => $code,
+                    'client_id'     => $googleClientId,
+                    'redirect_uri'  => $redirectUri,
+                    'grant_type'    => 'authorization_code',
+                ];
 
-                    if ($tokenResponse->successful()) {
-                        $tokenData = $tokenResponse->json();
-                        $accessToken = $tokenData['access_token'] ?? null;
-                        $idToken = $tokenData['id_token'] ?? null;
+                if (!empty($googleClientSecret)) {
+                    $postParams['client_secret'] = $googleClientSecret;
+                }
 
-                        if ($idToken) {
-                            $data['credential'] = $idToken;
-                        }
+                $tokenResponse = \Illuminate\Support\Facades\Http::timeout(10)
+                    ->asForm()
+                    ->post('https://oauth2.googleapis.com/token', $postParams);
 
-                        if ($accessToken) {
-                            $userinfoResponse = \Illuminate\Support\Facades\Http::timeout(5)->withToken($accessToken)
-                                ->get('https://www.googleapis.com/oauth2/v3/userinfo');
-                            if ($userinfoResponse->successful()) {
-                                $userInfo = $userinfoResponse->json();
-                                $email = strtolower(trim($userInfo['email'] ?? ''));
-                                $googleId = $userInfo['sub'] ?? null;
-                                $firstName = $userInfo['given_name'] ?? '';
-                                $lastName = $userInfo['family_name'] ?? '';
-                                $fullName = $userInfo['name'] ?? trim($firstName . ' ' . $lastName);
-                                $imageUrl = $userInfo['picture'] ?? null;
-                            }
+                Log::info('Google Token Exchange Response Status: ' . $tokenResponse->status());
+
+                if ($tokenResponse->successful()) {
+                    $tokenData = $tokenResponse->json();
+                    $accessToken = $tokenData['access_token'] ?? null;
+                    $idToken = $tokenData['id_token'] ?? null;
+
+                    if ($idToken) {
+                        $data['credential'] = $idToken;
+                    }
+
+                    if ($accessToken) {
+                        $userinfoResponse = \Illuminate\Support\Facades\Http::timeout(10)
+                            ->withToken($accessToken)
+                            ->get('https://www.googleapis.com/oauth2/v3/userinfo');
+
+                        if ($userinfoResponse->successful()) {
+                            $userInfo = $userinfoResponse->json();
+                            $email = strtolower(trim($userInfo['email'] ?? ''));
+                            $googleId = $userInfo['sub'] ?? null;
+                            $firstName = $userInfo['given_name'] ?? '';
+                            $lastName = $userInfo['family_name'] ?? '';
+                            $fullName = $userInfo['name'] ?? trim($firstName . ' ' . $lastName);
+                            $imageUrl = $userInfo['picture'] ?? null;
                         }
                     }
+                } else {
+                    Log::error('Google Token Exchange Error: ' . $tokenResponse->body());
                 }
             } catch (\Throwable $tokenEx) {
-                Log::warning('Google OAuth Code exchange failed: ' . $tokenEx->getMessage());
+                Log::error('Google OAuth Code exchange failed: ' . $tokenEx->getMessage());
             }
         }
 
@@ -318,6 +329,9 @@ class ClerkAuthController extends Controller
             $request->session()->regenerate();
         }
         Auth::login($user, true);
+        if ($request->hasSession()) {
+            $request->session()->save();
+        }
 
         $redirectUrl = match ($user->role) {
             'admin' => '/admin/dashboard',
@@ -340,7 +354,7 @@ class ClerkAuthController extends Controller
             ]);
         }
 
-        return redirect()->intended($redirectUrl);
+        return redirect()->to($redirectUrl);
     }
 
     private function getBrowserName($userAgent)
