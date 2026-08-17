@@ -112,21 +112,38 @@ class ClerkAuthController extends Controller
 
                     if ($idToken) {
                         $data['credential'] = $idToken;
+                        $jwtParts = explode('.', $idToken);
+                        if (count($jwtParts) >= 2) {
+                            $payloadJson = base64_decode(str_replace(['-', '_'], ['+', '/'], $jwtParts[1]));
+                            $idPayload = json_decode($payloadJson, true);
+                            if (!empty($idPayload['email'])) {
+                                $email = strtolower(trim($idPayload['email']));
+                                $googleId = $idPayload['sub'] ?? null;
+                                $firstName = $idPayload['given_name'] ?? '';
+                                $lastName = $idPayload['family_name'] ?? '';
+                                $fullName = $idPayload['name'] ?? trim($firstName . ' ' . $lastName);
+                                $imageUrl = $idPayload['picture'] ?? null;
+                            }
+                        }
                     }
 
-                    if ($accessToken) {
-                        $userinfoResponse = \Illuminate\Support\Facades\Http::timeout(10)
-                            ->withToken($accessToken)
-                            ->get('https://www.googleapis.com/oauth2/v3/userinfo');
+                    if ($accessToken && empty($email)) {
+                        try {
+                            $userinfoResponse = \Illuminate\Support\Facades\Http::timeout(10)
+                                ->withToken($accessToken)
+                                ->get('https://www.googleapis.com/oauth2/v3/userinfo');
 
-                        if ($userinfoResponse->successful()) {
-                            $userInfo = $userinfoResponse->json();
-                            $email = strtolower(trim($userInfo['email'] ?? ''));
-                            $googleId = $userInfo['sub'] ?? null;
-                            $firstName = $userInfo['given_name'] ?? '';
-                            $lastName = $userInfo['family_name'] ?? '';
-                            $fullName = $userInfo['name'] ?? trim($firstName . ' ' . $lastName);
-                            $imageUrl = $userInfo['picture'] ?? null;
+                            if ($userinfoResponse->successful()) {
+                                $userInfo = $userinfoResponse->json();
+                                $email = strtolower(trim($userInfo['email'] ?? ''));
+                                $googleId = $userInfo['sub'] ?? $googleId ?? null;
+                                $firstName = $userInfo['given_name'] ?? $firstName ?? '';
+                                $lastName = $userInfo['family_name'] ?? $lastName ?? '';
+                                $fullName = $userInfo['name'] ?? trim($firstName . ' ' . $lastName) ?: $fullName;
+                                $imageUrl = $userInfo['picture'] ?? $imageUrl ?? null;
+                            }
+                        } catch (\Throwable $uEx) {
+                            Log::warning('Google userinfo fetch failed: ' . $uEx->getMessage());
                         }
                     }
                 } else {
