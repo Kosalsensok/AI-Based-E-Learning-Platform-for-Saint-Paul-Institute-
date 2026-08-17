@@ -57,6 +57,19 @@ class HandleInertiaRequests extends Middleware
                 'app_id' => config('services.clerk.app_id') ?? env('CLERK_APP_ID', 'app_3HuqsrwyUIBYDv90aKgOiwfsKkx'),
                 'is_configured' => !empty(config('services.clerk.publishable_key') ?? env('VITE_CLERK_PUBLISHABLE_KEY')),
             ],
+            'flash' => [
+                'success'           => fn () => $request->session()->get('success'),
+                'error'             => fn () => $request->session()->get('error'),
+                'status'            => fn () => $request->session()->get('status'),
+                'message'           => fn () => $request->session()->get('message'),
+                'sent_to_telegram'  => fn () => $request->session()->get('sent_to_telegram'),
+                'has_telegram'      => fn () => $request->session()->get('has_telegram'),
+                'link_telegram_url' => fn () => $request->session()->get('link_telegram_url') ?? $request->session()->get('telegram_url'),
+                'telegram_url'      => fn () => $request->session()->get('link_telegram_url') ?? $request->session()->get('telegram_url'),
+                'telegram_bot_name' => fn () => $request->session()->get('telegram_bot_name'),
+                'demo_code'         => fn () => $request->session()->get('demo_code'),
+                'reset_user'        => fn () => $request->session()->get('reset_user'),
+            ],
         ];
     }
 }

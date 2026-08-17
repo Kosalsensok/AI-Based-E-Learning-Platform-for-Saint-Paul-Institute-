@@ -7,7 +7,6 @@ use App\Models\User;
 use App\Services\TelegramService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 
 class PasswordResetLinkController extends Controller
@@ -29,7 +28,7 @@ class PasswordResetLinkController extends Controller
 
         if (empty($input)) {
             $msg = 'សូមបញ្ចូលអាសយដ្ឋានអ៊ីមែល, ID, ឬលេខទូរស័ព្ទ។';
-            if ($request->wantsJson() || $request->is('api/*') || $request->ajax()) {
+            if ($request->is('api/*') || (!$request->header('X-Inertia') && $request->wantsJson())) {
                 return response()->json(['success' => false, 'message' => $msg], 422);
             }
             return back()->withErrors(['email' => $msg]);
@@ -48,7 +47,7 @@ class PasswordResetLinkController extends Controller
 
         if (!$user) {
             $msg = 'រកមិនឃើញគណនីដែលប្រើព័ត៌មាននេះទេ!';
-            if ($request->wantsJson() || $request->is('api/*') || $request->ajax()) {
+            if ($request->is('api/*') || (!$request->header('X-Inertia') && $request->wantsJson())) {
                 return response()->json(['success' => false, 'message' => $msg], 404);
             }
             return back()->withErrors(['email' => $msg]);
@@ -102,13 +101,14 @@ class PasswordResetLinkController extends Controller
                 ? "លេខកូដ OTP ត្រូវបានផ្ញើទៅកាន់ Telegram របស់អ្នក។"
                 : "លេខកូដផ្ទៀងផ្ទាត់ 6 ខ្ទង់ត្រូវបានបង្កើតរួចរាល់ហើយ!");
 
-        if ($request->wantsJson() || $request->is('api/*') || $request->ajax()) {
+        if ($request->is('api/*') || (!$request->header('X-Inertia') && $request->wantsJson())) {
             return response()->json([
                 'success'           => true,
                 'message'           => $statusMsg,
                 'sent_to_telegram'  => $sentDirectly,
                 'has_telegram'      => $hasTelegram,
                 'link_telegram_url' => $linkTelegramUrl,
+                'telegram_url'      => $linkTelegramUrl,
                 'telegram_bot_name' => $botUsername,
                 'demo_code'         => $code,
                 'user'              => [
@@ -120,11 +120,14 @@ class PasswordResetLinkController extends Controller
         }
 
         return back()->with([
+            'success'           => true,
             'status'            => $statusMsg,
+            'message'           => $statusMsg,
             'demo_code'         => $code,
             'has_telegram'      => $hasTelegram,
             'sent_to_telegram'  => $sentDirectly,
             'telegram_bot_name' => $botUsername,
+            'telegram_url'      => $linkTelegramUrl,
             'link_telegram_url' => $linkTelegramUrl,
             'reset_user'        => [
                 'id'           => $user->id,
@@ -148,7 +151,7 @@ class PasswordResetLinkController extends Controller
 
         if (empty($input) || empty($code) || empty($password)) {
             $msg = 'សូមបញ្ចូលព័ត៌មានឱ្យបានគ្រប់ជ្រុងជ្រោយ (អ៊ីមែល/ID, លេខកូដ OTP, និងពាក្យសម្ងាត់ថ្មី)។';
-            if ($request->wantsJson() || $request->is('api/*') || $request->ajax()) {
+            if ($request->is('api/*') || (!$request->header('X-Inertia') && $request->wantsJson())) {
                 return response()->json(['success' => false, 'message' => $msg], 422);
             }
             return back()->withErrors(['email' => $msg]);
@@ -156,7 +159,7 @@ class PasswordResetLinkController extends Controller
 
         if (strlen($password) < 8) {
             $msg = 'ពាក្យសម្ងាត់ត្រូវមានយ៉ាងតិច 8 តួអក្សរ។';
-            if ($request->wantsJson() || $request->is('api/*') || $request->ajax()) {
+            if ($request->is('api/*') || (!$request->header('X-Inertia') && $request->wantsJson())) {
                 return response()->json(['success' => false, 'message' => $msg], 422);
             }
             return back()->withErrors(['password' => $msg]);
@@ -164,7 +167,7 @@ class PasswordResetLinkController extends Controller
 
         if ($request->has('password_confirmation') && $password !== $passwordConfirmation) {
             $msg = 'ការបញ្ជាក់ពាក្យសម្ងាត់មិនត្រូវគ្នាទេ។';
-            if ($request->wantsJson() || $request->is('api/*') || $request->ajax()) {
+            if ($request->is('api/*') || (!$request->header('X-Inertia') && $request->wantsJson())) {
                 return response()->json(['success' => false, 'message' => $msg], 422);
             }
             return back()->withErrors(['password' => $msg]);
@@ -183,7 +186,7 @@ class PasswordResetLinkController extends Controller
 
         if (!$user) {
             $msg = 'រកមិនឃើញគណនីនេះទេ។';
-            if ($request->wantsJson() || $request->is('api/*') || $request->ajax()) {
+            if ($request->is('api/*') || (!$request->header('X-Inertia') && $request->wantsJson())) {
                 return response()->json(['success' => false, 'message' => $msg], 404);
             }
             return back()->withErrors(['email' => $msg]);
@@ -211,7 +214,7 @@ class PasswordResetLinkController extends Controller
 
         if (!$isValidOtp) {
             $msg = 'លេខកូដ OTP មិនត្រឹមត្រូវ ឬផុតសុពលភាព (៥ នាទី)!';
-            if ($request->wantsJson() || $request->is('api/*') || $request->ajax()) {
+            if ($request->is('api/*') || (!$request->header('X-Inertia') && $request->wantsJson())) {
                 return response()->json(['success' => false, 'message' => $msg], 400);
             }
             return back()->withErrors(['code' => $msg]);
@@ -239,7 +242,7 @@ class PasswordResetLinkController extends Controller
 
         $successMsg = 'ផ្លាស់ប្តូរលេខសម្ងាត់ជោគជ័យ! លោកអ្នកអាច Login បាន។';
 
-        if ($request->wantsJson() || $request->is('api/*') || $request->ajax()) {
+        if ($request->is('api/*') || (!$request->header('X-Inertia') && $request->wantsJson())) {
             return response()->json([
                 'success'  => true,
                 'message'  => $successMsg,

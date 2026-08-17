@@ -69,13 +69,21 @@ const handleClickOutside = (e: MouseEvent) => {
   }
 }
 
+const flashData = computed(() => {
+  const p = page.props as any
+  return {
+    ...p,
+    ...(p.flash || {}),
+  }
+})
+
 onMounted(() => {
   initTheme()
   document.addEventListener('click', handleClickOutside)
-  if (props.status || page.props.status) {
+  if (props.status || page.props.status || (page.props as any).flash?.status) {
     showSuccessModal.value = true
     successTitle.value = t('forgot_modal_success_title', 'ផ្ញើកូដជោគជ័យ!')
-    successMessage.value = props.status || (page.props.status as string)
+    successMessage.value = props.status || (page.props.status as string) || (page.props as any).flash?.status
     setTimeout(() => {
       showSuccessModal.value = false
     }, 4000)
@@ -105,6 +113,15 @@ const digitInputs = ref<HTMLInputElement[]>([])
 
 const clearEmail = () => {
   requestForm.email = ''
+}
+
+const fillDemoCode = (code: string) => {
+  if (!code) return
+  const digits = String(code).split('').slice(0, 6)
+  digits.forEach((digit, i) => {
+    if (i < 6) codeDigits.value[i] = digit
+  })
+  resetForm.code = codeDigits.value.join('')
 }
 
 const handleCodeInput = (index: number, e: Event) => {
@@ -154,12 +171,18 @@ const onRequestCode = () => {
   showErrorModal.value = false
   showSuccessModal.value = false
   requestForm.post('/forgot-password', {
+    preserveScroll: true,
     onSuccess: (pageRes: any) => {
       resetForm.email = requestForm.email
       step.value = 2
       showSuccessModal.value = true
+      const flash = (pageRes?.props as any)?.flash || (pageRes?.props as any) || {}
       successTitle.value = t('forgot_modal_success_title', 'ផ្ញើកូដជោគជ័យ!')
-      successMessage.value = (pageRes?.props?.status as string) || props.status || (page?.props?.status as string) || t('forgot_modal_success_msg', 'កូដផ្ទៀងផ្ទាត់ 6 ខ្ទង់ ត្រូវបានផ្ញើទៅកាន់ព័ត៌មានរបស់អ្នករួចរាល់ហើយ!')
+      successMessage.value = flash.status || flash.message || props.status || t('forgot_modal_success_msg', 'កូដផ្ទៀងផ្ទាត់ 6 ខ្ទង់ ត្រូវបានផ្ញើទៅកាន់ព័ត៌មានរបស់អ្នករួចរាល់ហើយ!')
+
+      if (flash.demo_code) {
+        fillDemoCode(flash.demo_code)
+      }
       setTimeout(() => {
         showSuccessModal.value = false
       }, 4000)
@@ -179,6 +202,7 @@ const onResetPassword = () => {
   showErrorModal.value = false
   showSuccessModal.value = false
   resetForm.post('/reset-password', {
+    preserveScroll: true,
     onFinish: () => resetForm.reset('password', 'password_confirmation'),
     onError: (errors) => {
       showErrorModal.value = true
@@ -209,6 +233,10 @@ const onResetPassword = () => {
           <img
             :src="languages.find(l => l.code === currentLang)?.flagUrl || '/images/flags/km.svg'"
             :alt="currentLang"
+            width="16"
+            height="16"
+            loading="eager"
+            decoding="async"
             class="w-4 h-4 rounded-full object-cover shrink-0 ring-1 ring-slate-300 dark:ring-slate-600"
           />
           <span class="text-[11px] font-bold tracking-wide">
@@ -243,7 +271,7 @@ const onResetPassword = () => {
               ]"
             >
               <span class="flex items-center gap-2.5">
-                <img :src="lang.flagUrl" :alt="lang.name" class="w-4 h-4 rounded-full object-cover shrink-0 shadow-xs" />
+                <img :src="lang.flagUrl" :alt="lang.name" width="16" height="16" loading="eager" decoding="async" class="w-4 h-4 rounded-full object-cover shrink-0 shadow-xs" />
                 <span>{{ lang.name }}</span>
               </span>
               <i v-if="currentLang === lang.code" class="pi pi-check text-xs text-blue-600 dark:text-blue-400 font-bold shrink-0"></i>
@@ -293,6 +321,10 @@ const onResetPassword = () => {
               <img
                 :src="logoUrl"
                 alt="Saint Paul Institute Logo"
+                width="56"
+                height="56"
+                fetchpriority="high"
+                decoding="async"
                 class="relative w-14 h-14 rounded-full shadow-lg object-contain ring-2 ring-blue-500/40 ring-offset-2 ring-offset-white dark:ring-offset-[#0E172E] bg-white p-0.5 transition-transform duration-300 group-hover:scale-105"
               />
             </div>
@@ -327,9 +359,9 @@ const onResetPassword = () => {
           </div>
         
           <!-- Status Message Banner -->
-          <div v-if="props.status || page.props.status" class="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-2.5 text-emerald-700 dark:text-emerald-300 text-xs flex items-start gap-2 shadow-xs">
+          <div v-if="props.status || page.props.status || flashData.status" class="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-2.5 text-emerald-700 dark:text-emerald-300 text-xs flex items-start gap-2 shadow-xs">
             <i class="pi pi-check-circle text-sm text-emerald-500 shrink-0 mt-0.5"></i>
-            <span class="leading-tight font-medium text-[11px]">{{ props.status || page.props.status }}</span>
+            <span class="leading-tight font-medium text-[11px]">{{ props.status || page.props.status || flashData.status }}</span>
           </div>
 
           <!-- STEP 1 FORM: REQUEST OTP -->
@@ -399,38 +431,60 @@ const onResetPassword = () => {
             </div>
 
             <!-- Telegram OTP Delivery Indicator Banner -->
-            <div class="p-3 rounded-2xl bg-sky-500/10 border border-sky-500/30 text-sky-700 dark:text-sky-300 text-xs flex items-center justify-between gap-3 shadow-xs">
+            <div class="p-3.5 rounded-2xl bg-sky-500/10 border border-sky-500/30 text-sky-700 dark:text-sky-300 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
               <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-xl bg-sky-500/20 flex items-center justify-center text-sky-500 shrink-0">
-                  <i class="pi pi-telegram text-base"></i>
+                <div class="w-9 h-9 rounded-xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-500 shrink-0">
+                  <i class="pi pi-send text-base"></i>
                 </div>
                 <div class="flex flex-col text-left">
-                  <span class="font-bold text-[11px] text-slate-800 dark:text-slate-100">
-                    {{ (page.props as any).sent_to_telegram ? 'OTP បានផ្ញើទៅ Telegram' : 'លេខកូដផ្ទៀងផ្ទាត់ OTP' }}
+                  <span class="font-bold text-xs text-slate-800 dark:text-slate-100">
+                    {{ flashData.sent_to_telegram ? 'OTP បានផ្ញើទៅ Telegram' : 'លេខកូដផ្ទៀងផ្ទាត់ OTP' }}
                   </span>
-                  <span class="text-[10px] text-slate-500 dark:text-slate-400">
-                    {{ (page.props as any).sent_to_telegram ? 'សូមបើកមើលសារពី Telegram Bot របស់អ្នក' : 'បញ្ចូលកូដ 6 ខ្ទង់ដើម្បីប្តូរពាក្យសម្ងាត់' }}
+                  <span class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
+                    {{ flashData.sent_to_telegram ? 'សូមបើកមើលសារពី Telegram Bot របស់អ្នក' : 'បញ្ចូលកូដ 6 ខ្ទង់ដើម្បីប្តូរពាក្យសម្ងាត់' }}
                   </span>
                 </div>
               </div>
 
+              <!-- Direct Telegram Bot Button -->
               <a
-                v-if="(page.props as any).link_telegram_url || (page.props as any).telegram_bot_name"
-                :href="(page.props as any).link_telegram_url || ('https://t.me/' + ((page.props as any).telegram_bot_name || 'spi_elms_auth_bot'))"
+                v-if="flashData.link_telegram_url || flashData.telegram_url || flashData.telegram_bot_name"
+                :href="flashData.link_telegram_url || flashData.telegram_url || ('https://t.me/' + (flashData.telegram_bot_name || 'spi_elms_auth_bot'))"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="px-2.5 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-600 active:scale-95 text-white font-bold text-[10px] inline-flex items-center gap-1 transition-all shadow-xs shrink-0 cursor-pointer"
+                class="px-3.5 py-2 rounded-xl bg-sky-500 hover:bg-sky-600 active:scale-95 text-white font-bold text-xs inline-flex items-center justify-center gap-1.5 transition-all shadow-sm shadow-sky-500/20 shrink-0 cursor-pointer"
               >
-                <i class="pi pi-external-link text-[9px]"></i>
-                <span>បើក Bot</span>
+                <i class="pi pi-telegram text-sm"></i>
+                <span>បើក Telegram Bot</span>
               </a>
             </div>
 
-            <!-- Account Identifier Readonly Input -->
+            <!-- Demo Code Quick Auto-fill Banner (If available) -->
+            <div v-if="flashData.demo_code" class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs flex items-center justify-between gap-2 shadow-2xs">
+              <span class="font-medium text-[11px]">Demo OTP: <strong class="font-mono font-bold text-xs text-amber-600 dark:text-amber-300">{{ flashData.demo_code }}</strong></span>
+              <button
+                type="button"
+                @click="fillDemoCode(flashData.demo_code)"
+                class="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 active:scale-95 text-amber-800 dark:text-amber-200 font-bold text-[10px] cursor-pointer transition-colors"
+              >
+                បំពេញលេខកូដ
+              </button>
+            </div>
+
+            <!-- Account Identifier Readonly Input & Change Option -->
             <div class="space-y-1">
-              <label class="block text-xs font-bold text-slate-900 dark:text-slate-100">
-                <span>{{ t('forgot_account_label', 'Account Identifier') }}</span>
-              </label>
+              <div class="flex items-center justify-between">
+                <label class="block text-xs font-bold text-slate-900 dark:text-slate-100">
+                  <span>{{ t('forgot_account_label', 'Account Identifier') }}</span>
+                </label>
+                <button
+                  type="button"
+                  @click="step = 1"
+                  class="text-[10px] font-bold text-blue-600 dark:text-sky-400 hover:underline cursor-pointer"
+                >
+                  ប្តូរគណនី
+                </button>
+              </div>
               <div class="relative">
                 <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-300">
                   <i class="pi pi-user text-sm"></i>
