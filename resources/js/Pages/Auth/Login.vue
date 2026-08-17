@@ -468,6 +468,7 @@ const checkClerkOAuthCallback = async () => {
   }
 }
 
+const showGoogleModal = ref(false)
 const isGoogleVerifying = ref(false)
 const googleErrorMessage = ref<string | null>(null)
 
