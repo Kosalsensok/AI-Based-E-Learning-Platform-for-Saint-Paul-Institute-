@@ -20,8 +20,8 @@ class ClerkAuthController extends Controller
      */
     public function redirectToGoogle(Request $request)
     {
-        $googleClientId = config('services.google.client_id') ?? env('GOOGLE_CLIENT_ID') ?? '8828915669-google-spi.apps.googleusercontent.com';
-        $redirectUri = url('/auth/google/callback');
+        $googleClientId = config('services.google.client_id') ?? env('GOOGLE_CLIENT_ID') ?? '234152985184-d4ak67ites7cm3bqjdukukosiumsukog.apps.googleusercontent.com';
+        $redirectUri = config('services.google.redirect') ?? env('GOOGLE_REDIRECT_URI') ?? url('/auth/google/callback');
 
         $state = Str::random(40);
         $request->session()->put('google_oauth_state', $state);
@@ -51,9 +51,9 @@ class ClerkAuthController extends Controller
         if (!empty($data['code'])) {
             try {
                 $code = $data['code'];
-                $googleClientId = config('services.google.client_id') ?? env('GOOGLE_CLIENT_ID');
+                $googleClientId = config('services.google.client_id') ?? env('GOOGLE_CLIENT_ID') ?? '234152985184-d4ak67ites7cm3bqjdukukosiumsukog.apps.googleusercontent.com';
                 $googleClientSecret = config('services.google.client_secret') ?? env('GOOGLE_CLIENT_SECRET');
-                $redirectUri = url('/auth/google/callback');
+                $redirectUri = config('services.google.redirect') ?? env('GOOGLE_REDIRECT_URI') ?? url('/auth/google/callback');
 
                 if ($googleClientId && $googleClientSecret) {
                     $tokenResponse = \Illuminate\Support\Facades\Http::timeout(5)->asForm()->post('https://oauth2.googleapis.com/token', [

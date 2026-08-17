@@ -46,6 +46,12 @@ return [
         'api_key' => env('CLOUDCONVERT_API_KEY'),
     ],
 
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID', '234152985184-d4ak67ites7cm3bqjdukukosiumsukog.apps.googleusercontent.com'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI', 'https://spilms.tech/auth/google/callback'),
+    ],
+
     'clerk' => [
         'publishable_key' => env('VITE_CLERK_PUBLISHABLE_KEY'),
         'secret_key' => env('CLERK_SECRET_KEY'),
