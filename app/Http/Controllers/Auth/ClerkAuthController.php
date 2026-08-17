@@ -16,11 +16,82 @@ use Illuminate\Support\Str;
 class ClerkAuthController extends Controller
 {
     /**
+     * Redirect directly to Google OAuth Consent Screen (Full Page Redirect).
+     */
+    public function redirectToGoogle(Request $request)
+    {
+        $googleClientId = config('services.google.client_id') ?? env('GOOGLE_CLIENT_ID') ?? '8828915669-google-spi.apps.googleusercontent.com';
+        $redirectUri = url('/auth/google/callback');
+
+        $state = Str::random(40);
+        $request->session()->put('google_oauth_state', $state);
+
+        $params = http_build_query([
+            'client_id'              => $googleClientId,
+            'redirect_uri'           => $redirectUri,
+            'response_type'          => 'code',
+            'scope'                  => 'openid email profile',
+            'access_type'            => 'offline',
+            'prompt'                 => 'select_account',
+            'state'                  => $state,
+            'include_granted_scopes' => 'true',
+        ]);
+
+        return redirect("https://accounts.google.com/o/oauth2/v2/auth?{$params}");
+    }
+
+    /**
      * Handle incoming Clerk / Google OAuth callback (POST JSON / GET redirect)
      */
     public function handleCallback(Request $request, TelegramService $telegramService)
     {
         $data = $request->isMethod('post') ? $request->all() : $request->query();
+
+        // 0. Authorization code exchange for standard Google OAuth redirect
+        if (!empty($data['code'])) {
+            try {
+                $code = $data['code'];
+                $googleClientId = config('services.google.client_id') ?? env('GOOGLE_CLIENT_ID');
+                $googleClientSecret = config('services.google.client_secret') ?? env('GOOGLE_CLIENT_SECRET');
+                $redirectUri = url('/auth/google/callback');
+
+                if ($googleClientId && $googleClientSecret) {
+                    $tokenResponse = \Illuminate\Support\Facades\Http::timeout(5)->asForm()->post('https://oauth2.googleapis.com/token', [
+                        'code'          => $code,
+                        'client_id'     => $googleClientId,
+                        'client_secret' => $googleClientSecret,
+                        'redirect_uri'  => $redirectUri,
+                        'grant_type'    => 'authorization_code',
+                    ]);
+
+                    if ($tokenResponse->successful()) {
+                        $tokenData = $tokenResponse->json();
+                        $accessToken = $tokenData['access_token'] ?? null;
+                        $idToken = $tokenData['id_token'] ?? null;
+
+                        if ($idToken) {
+                            $data['credential'] = $idToken;
+                        }
+
+                        if ($accessToken) {
+                            $userinfoResponse = \Illuminate\Support\Facades\Http::timeout(5)->withToken($accessToken)
+                                ->get('https://www.googleapis.com/oauth2/v3/userinfo');
+                            if ($userinfoResponse->successful()) {
+                                $userInfo = $userinfoResponse->json();
+                                $email = strtolower(trim($userInfo['email'] ?? ''));
+                                $googleId = $userInfo['sub'] ?? null;
+                                $firstName = $userInfo['given_name'] ?? '';
+                                $lastName = $userInfo['family_name'] ?? '';
+                                $fullName = $userInfo['name'] ?? trim($firstName . ' ' . $lastName);
+                                $imageUrl = $userInfo['picture'] ?? null;
+                            }
+                        }
+                    }
+                }
+            } catch (\Throwable $tokenEx) {
+                Log::warning('Google OAuth Code exchange failed: ' . $tokenEx->getMessage());
+            }
+        }
 
         // 0. Rigorous Google Identity Services (GIS) / OAuth 2.0 JWT Token Verification
         if (!empty($data['credential'])) {

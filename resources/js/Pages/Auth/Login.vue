@@ -469,105 +469,26 @@ const checkClerkOAuthCallback = async () => {
   }
 }
 
-const showGoogleModal = ref(false)
 const isGoogleVerifying = ref(false)
 const googleErrorMessage = ref<string | null>(null)
-const googleOAuthStep = ref<'choose' | 'consent' | 'custom_input'>('choose')
 
-interface GoogleAccount {
-  name: string
-  email: string
-  avatar: string
-  initial: string
-  color: string
-}
-
-const availableGoogleAccounts = ref<GoogleAccount[]>([
-  {
-    name: 'Hack king',
-    email: 'hackingwifi831@gmail.com',
-    avatar: '',
-    initial: 'H',
-    color: 'bg-[#7E57C2]',
-  },
-  {
-    name: 'Dara Sok',
-    email: 'student.spi@gmail.com',
-    avatar: '',
-    initial: 'D',
-    color: 'bg-[#00897B]',
-  },
-])
-
-const selectedGoogleAccount = ref<GoogleAccount>(availableGoogleAccounts.value[0])
-const customGoogleEmail = ref('')
-const selectingAccountEmail = ref<string | null>(null)
-
-const openGoogleLogin = () => {
-  showGoogleModal.value = true
-  googleOAuthStep.value = 'choose'
-  googleErrorMessage.value = null
-  isGoogleVerifying.value = false
-  selectingAccountEmail.value = null
-}
-
-const closeGoogleModal = () => {
-  if (isGoogleVerifying.value) return
-  showGoogleModal.value = false
-  googleOAuthStep.value = 'choose'
-  selectingAccountEmail.value = null
-}
-
-const selectGoogleAccount = (acc: GoogleAccount) => {
-  if (selectingAccountEmail.value) return
-  selectingAccountEmail.value = acc.email
-  setTimeout(() => {
-    selectedGoogleAccount.value = acc
-    googleOAuthStep.value = 'consent'
-    googleErrorMessage.value = null
-    selectingAccountEmail.value = null
-  }, 220)
-}
-
-const goToUseAnotherAccount = () => {
-  customGoogleEmail.value = ''
-  googleOAuthStep.value = 'custom_input'
-  googleErrorMessage.value = null
-}
-
-const handleCustomGoogleSubmit = () => {
-  const email = customGoogleEmail.value.trim().toLowerCase()
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (!email || !emailRegex.test(email)) {
-    googleErrorMessage.value = 'សូមបញ្ចូលអាសយដ្ឋាន Gmail ឱ្យបានត្រឹមត្រូវ (Enter valid email, e.g. name@gmail.com)'
-    return
+const redirectToGoogleOAuth = async () => {
+  isGoogleVerifying.value = true
+  try {
+    const clerk = await initClerk()
+    if (clerk && typeof clerk.authenticateWithRedirect === 'function') {
+      await clerk.authenticateWithRedirect({
+        strategy: 'oauth_google',
+        redirectUrl: window.location.origin + '/auth/google/callback',
+        redirectUrlComplete: '/student/dashboard',
+      })
+      return
+    }
+  } catch (e) {
+    console.warn('Clerk redirect fallback to server-side Google OAuth:', e)
   }
-  const namePart = email.split('@')[0].replace(/[._-]/g, ' ')
-  const formattedName = namePart.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
-  const newAcc: GoogleAccount = {
-    name: formattedName || 'Google User',
-    email: email,
-    avatar: '',
-    initial: (formattedName || 'G').charAt(0).toUpperCase(),
-    color: 'bg-[#1E88E5]',
-  }
-  selectedGoogleAccount.value = newAcc
-  googleOAuthStep.value = 'consent'
-  googleErrorMessage.value = null
-}
-
-const confirmGoogleOAuthConsent = () => {
-  const acc = selectedGoogleAccount.value
-  const googleUser = {
-    id: `google_${Date.now()}`,
-    google_id: `google_${Math.abs(acc.email.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a }, 0))}`,
-    clerk_id: `clerk_user_${Date.now()}`,
-    email: acc.email,
-    first_name: acc.name.split(' ')[0] || 'Google',
-    last_name: acc.name.split(' ').slice(1).join(' ') || 'User',
-    image_url: acc.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(acc.name)}`,
-  }
-  handleGoogleAuthSuccess(googleUser)
+  // Direct Server-Side Google OAuth Full Page Redirect
+  window.location.href = '/auth/google/redirect'
 }
 
 const handleSocialLogin = (provider: string) => {
@@ -577,7 +498,7 @@ const handleSocialLogin = (provider: string) => {
   }
 
   if (provider === 'Google') {
-    openGoogleLogin()
+    redirectToGoogleOAuth()
     return
   }
 
@@ -1045,13 +966,12 @@ onMounted(() => {
               </div>
 
               <div class="grid grid-cols-2 gap-2.5">
-                <button
-                  type="button"
-                  @click="handleSocialLogin('Google')"
-                  class="h-10.5 py-2 px-3 bg-white dark:bg-slate-800/80 hover:bg-slate-50/90 dark:hover:bg-slate-700/60 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white transition-all duration-150 flex items-center justify-center gap-2 hover:shadow-xs active:scale-98 shadow-2xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-600"
+                <a
+                  href="/auth/google/redirect"
+                  class="h-10.5 py-2 px-3 bg-white dark:bg-slate-800/80 hover:bg-slate-50/90 dark:hover:bg-slate-700/60 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white transition-all duration-150 flex items-center justify-center gap-2 hover:shadow-xs active:scale-98 shadow-2xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-600 select-none"
                 >
                   <i class="pi pi-google text-rose-500 text-sm"></i> <span>Google</span>
-                </button>
+                </a>
                 <button
                   type="button"
                   @click="handleSocialLogin('Telegram')"
@@ -1189,263 +1109,6 @@ onMounted(() => {
             >
               {{ t('login_modal_close', 'យល់ព្រម') }}
             </button>
-          </div>
-        </div>
-      </Transition>
-
-      <!-- Official Google Sign-In Window (Single-Column Focused Layout: 480px) -->
-      <Transition
-        enter-active-class="transition duration-300 ease-out"
-        enter-from-class="opacity-0 scale-95"
-        enter-to-class="opacity-100 scale-100"
-        leave-active-class="transition duration-200 ease-in"
-        leave-from-class="opacity-100 scale-100"
-        leave-to-class="opacity-0 scale-95"
-      >
-        <div v-if="showGoogleModal" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md select-none overflow-y-auto font-sans">
-          
-          <div class="max-w-[480px] w-full bg-[#131314] rounded-[28px] border border-[#3c4043] text-white p-6 sm:p-8 shadow-2xl shadow-black/80 relative space-y-5">
-            
-            <!-- Top Google Header (Clean & Minimal) -->
-            <div class="flex items-center justify-between border-b border-[#2d3135] pb-3.5">
-              <div class="flex items-center gap-2.5">
-                <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-                </svg>
-                <span class="text-xs font-semibold text-slate-300">Sign in with Google</span>
-              </div>
-
-              <button
-                type="button"
-                @click="closeGoogleModal"
-                :disabled="isGoogleVerifying"
-                class="w-7 h-7 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition-all cursor-pointer disabled:opacity-40"
-                title="Close"
-              >
-                <i class="pi pi-times text-xs"></i>
-              </button>
-            </div>
-
-            <!-- Error Banner -->
-            <div v-if="googleErrorMessage" class="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-2.5">
-              <i class="pi pi-exclamation-triangle text-rose-400 shrink-0 mt-0.5 text-sm"></i>
-              <div class="leading-relaxed font-medium">
-                {{ googleErrorMessage }}
-              </div>
-            </div>
-
-            <!-- Header Branding, Domain Badge & Title (Centered & Balanced) -->
-            <div class="text-center space-y-2.5 pt-1">
-              <div class="inline-flex items-center justify-center p-2 rounded-2xl bg-blue-600/15 border border-blue-500/30 shadow-md shadow-blue-500/10">
-                <img :src="logoUrl" alt="SPI Logo" class="w-9 h-9 object-contain" />
-              </div>
-
-              <!-- Domain Security Badge Placed Under Logo -->
-              <div class="flex items-center justify-center">
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[11px] font-medium tracking-wide shadow-2xs">
-                  <i class="pi pi-lock text-[10px]"></i>
-                  <span>spi-elms.edu.kh</span>
-                </span>
-              </div>
-
-              <!-- STEP 1 Title -->
-              <div v-if="googleOAuthStep === 'choose'">
-                <h2 class="text-2xl font-bold tracking-tight text-white">
-                  Choose an account
-                </h2>
-                <p class="text-xs text-slate-400 mt-1">
-                  to continue to <span class="text-blue-400 font-semibold">SPI AI-ELMS</span>
-                </p>
-              </div>
-
-              <!-- STEP 2 Title -->
-              <div v-else-if="googleOAuthStep === 'consent'">
-                <h2 class="text-2xl font-bold tracking-tight text-white">
-                  Sign in to SPI AI-ELMS
-                </h2>
-                <p class="text-xs text-slate-400 mt-1">
-                  Confirm your authentication details below
-                </p>
-              </div>
-
-              <!-- STEP 3 Title -->
-              <div v-else-if="googleOAuthStep === 'custom_input'">
-                <h2 class="text-2xl font-bold tracking-tight text-white">
-                  Sign in with Google
-                </h2>
-                <p class="text-xs text-slate-400 mt-1">
-                  Enter your Google Account email
-                </p>
-              </div>
-            </div>
-
-            <!-- STEP 1 VIEW: Account Selection (Card Layout with Hover Border & Click Feedback) -->
-            <div v-if="googleOAuthStep === 'choose'" class="space-y-2.5 pt-1">
-              <div class="space-y-2">
-                <div
-                  v-for="(acc, idx) in availableGoogleAccounts"
-                  :key="idx"
-                  @click="selectGoogleAccount(acc)"
-                  class="flex items-center justify-between p-3.5 rounded-2xl bg-[#1e1f20]/80 hover:bg-[#282a2d] border border-[#3c4043]/70 hover:border-[#4285F4] hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-200 cursor-pointer shadow-xs active:scale-[0.99] group"
-                >
-                  <div class="flex items-center gap-3.5">
-                    <div :class="['w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm text-white shrink-0 shadow-md ring-2 ring-white/10', acc.color]">
-                      {{ acc.initial }}
-                    </div>
-                    <div class="flex flex-col text-left">
-                      <span class="text-sm font-semibold text-white group-hover:text-[#4285F4] transition-colors">{{ acc.name }}</span>
-                      <span class="text-xs text-[#9AA0A6] font-mono">{{ acc.email }}</span>
-                    </div>
-                  </div>
-
-                  <!-- Right Icon / Loading Spinner -->
-                  <div class="flex items-center">
-                    <span v-if="selectingAccountEmail === acc.email" class="w-4 h-4 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin"></span>
-                    <i v-else class="pi pi-chevron-right text-xs text-slate-500 group-hover:text-[#4285F4] group-hover:translate-x-0.5 transition-all"></i>
-                  </div>
-                </div>
-
-                <!-- Use Another Account Card -->
-                <div
-                  @click="goToUseAnotherAccount"
-                  class="flex items-center justify-between p-3.5 rounded-2xl bg-[#1e1f20]/50 hover:bg-[#282a2d] border border-dashed border-[#3c4043] hover:border-slate-400 transition-all duration-200 cursor-pointer shadow-xs active:scale-[0.99] group"
-                >
-                  <div class="flex items-center gap-3.5">
-                    <div class="w-10 h-10 rounded-full bg-slate-800 group-hover:bg-slate-700 flex items-center justify-center text-slate-300 shrink-0">
-                      <i class="pi pi-user-plus text-sm"></i>
-                    </div>
-                    <span class="text-sm font-medium text-slate-200 group-hover:text-white">Use another account</span>
-                  </div>
-
-                  <i class="pi pi-chevron-right text-xs text-slate-500 group-hover:text-slate-300 group-hover:translate-x-0.5 transition-all"></i>
-                </div>
-              </div>
-
-              <p class="text-[11px] text-slate-400 text-center pt-3 leading-relaxed">
-                Before using this app, you can review spi-elms.edu.kh's
-                <a href="#" class="text-blue-400 hover:underline font-medium">Privacy Policy</a> and
-                <a href="#" class="text-blue-400 hover:underline font-medium">Terms of Service</a>.
-              </p>
-            </div>
-
-            <!-- STEP 2 VIEW: Permission & Continue -->
-            <div v-else-if="googleOAuthStep === 'consent'" class="space-y-4 pt-1">
-              
-              <!-- Selected Account Card with Switch Option -->
-              <div class="flex items-center justify-between p-3 rounded-2xl bg-[#1e1f20] border border-[#3c4043]">
-                <div class="flex items-center gap-3">
-                  <div :class="['w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0', selectedGoogleAccount.color]">
-                    {{ selectedGoogleAccount.initial }}
-                  </div>
-                  <div class="flex flex-col text-left">
-                    <span class="text-xs font-bold text-white">{{ selectedGoogleAccount.name }}</span>
-                    <span class="text-[11px] text-[#9AA0A6] font-mono">{{ selectedGoogleAccount.email }}</span>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  @click="googleOAuthStep = 'choose'"
-                  class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-blue-400 text-[11px] font-semibold transition-colors cursor-pointer"
-                >
-                  Change
-                </button>
-              </div>
-
-              <!-- Info Access Disclosure Box -->
-              <div class="p-4 rounded-2xl bg-[#1e1f20]/60 border border-[#3c4043]/60 space-y-3">
-                <p class="text-xs font-semibold text-slate-200">
-                  Google will allow SPI AI-ELMS to access:
-                </p>
-
-                <div class="space-y-2.5">
-                  <div class="flex items-center gap-2.5 text-xs text-slate-300">
-                    <i class="pi pi-check-circle text-emerald-400 text-sm"></i>
-                    <span>Name, email address, and profile picture</span>
-                  </div>
-                  <div class="flex items-center gap-2.5 text-xs text-slate-300">
-                    <i class="pi pi-shield text-blue-400 text-sm"></i>
-                    <span>Secure SSL Authentication for E-Learning System</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Action Buttons -->
-              <div class="flex items-center justify-end gap-3 pt-2">
-                <button
-                  type="button"
-                  @click="closeGoogleModal"
-                  :disabled="isGoogleVerifying"
-                  class="px-5 py-2.5 rounded-full border border-slate-600 hover:bg-slate-800 text-slate-300 text-xs font-semibold transition-all cursor-pointer disabled:opacity-40"
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="button"
-                  @click="confirmGoogleOAuthConsent"
-                  :disabled="isGoogleVerifying"
-                  class="px-7 py-2.5 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-95 text-white text-xs font-bold transition-all shadow-lg shadow-blue-500/25 flex items-center gap-2 cursor-pointer disabled:opacity-50"
-                >
-                  <span v-if="isGoogleVerifying" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                  <span>{{ isGoogleVerifying ? 'Signing in...' : 'Continue' }}</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- STEP 3 VIEW: Custom Gmail Input -->
-            <div v-else-if="googleOAuthStep === 'custom_input'" class="space-y-4 pt-1">
-              <div class="space-y-2">
-                <label class="block text-xs font-medium text-slate-300">Enter your Google Email</label>
-                <input
-                  v-model="customGoogleEmail"
-                  type="email"
-                  placeholder="name@gmail.com"
-                  @keyup.enter="handleCustomGoogleSubmit"
-                  autofocus
-                  class="w-full h-11 px-4 rounded-xl bg-[#1e1f20] border border-slate-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-sm text-white placeholder-slate-500 outline-none font-mono"
-                />
-                <p class="text-[11px] text-slate-400">
-                  Type any valid Gmail address (e.g. <span class="text-blue-400 font-mono">student@gmail.com</span>).
-                </p>
-              </div>
-
-              <div class="flex items-center justify-between pt-2">
-                <button
-                  type="button"
-                  @click="googleOAuthStep = 'choose'"
-                  class="text-xs font-semibold text-blue-400 hover:underline cursor-pointer"
-                >
-                  Back
-                </button>
-
-                <button
-                  type="button"
-                  @click="handleCustomGoogleSubmit"
-                  class="px-6 py-2.5 rounded-full bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all shadow-md cursor-pointer"
-                >
-                  Next
-                </button>
-              </div>
-            </div>
-
-            <!-- Modal Bottom Bar (Language & Links) -->
-            <div class="pt-4 border-t border-[#2d3135] flex items-center justify-between text-[11px] text-slate-400">
-              <div class="flex items-center gap-1.5 hover:text-slate-200 cursor-pointer">
-                <span>English (United States)</span>
-                <i class="pi pi-chevron-down text-[9px]"></i>
-              </div>
-
-              <div class="flex items-center gap-4">
-                <a href="#" class="hover:text-slate-200">Help</a>
-                <a href="#" class="hover:text-slate-200">Privacy</a>
-                <a href="#" class="hover:text-slate-200">Terms</a>
-              </div>
-            </div>
-
           </div>
         </div>
       </Transition>
