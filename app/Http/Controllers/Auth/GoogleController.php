@@ -178,6 +178,36 @@ class GoogleController extends Controller
                 $request->session()->save();
             }
 
+            // Record AuthLog
+            try {
+                $ip = $request->ip();
+                $userAgent = $request->userAgent() ?? '';
+                $device = str_contains(strtolower($userAgent), 'mobile') ? 'Mobile' : 'Desktop';
+
+                AuthLog::create([
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'ip_address' => $ip,
+                    'user_agent' => $userAgent,
+                    'device' => $device,
+                    'browser' => 'Google Chrome',
+                    'status' => 'success',
+                ]);
+
+                $telegramService->sendMessage(
+                    "<b>🔓 GOOGLE OAUTH LOGIN SUCCESSFUL</b>\n" .
+                    "----------------------------------------\n" .
+                    "👤 <b>Name:</b> {$user->name}\n" .
+                    "📧 <b>Email:</b> {$user->email}\n" .
+                    "🎓 <b>Role:</b> " . strtoupper($user->role) . "\n" .
+                    "🌐 <b>IP Address:</b> {$ip}\n" .
+                    "📱 <b>Device:</b> {$device}\n" .
+                    "⏰ <b>Time:</b> " . now()->format('Y-m-d H:i:s') . "\n"
+                );
+            } catch (\Throwable $logEx) {
+                Log::warning('Google login log / telegram warning: ' . $logEx->getMessage());
+            }
+
             $redirectUrl = match ($user->role) {
                 'admin' => '/admin/dashboard',
                 'teacher' => '/teacher/dashboard',
