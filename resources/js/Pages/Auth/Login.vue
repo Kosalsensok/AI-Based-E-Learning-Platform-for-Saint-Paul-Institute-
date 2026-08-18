@@ -268,6 +268,29 @@ const authLoadingSubtitle = ref('')
 const isGoogleLoading = ref(false)
 const isTelegramLoading = ref(false)
 
+let activePopup: Window | null = null
+let popupCheckTimer: any = null
+
+const stopPopupTracking = () => {
+  if (popupCheckTimer) {
+    clearInterval(popupCheckTimer)
+    popupCheckTimer = null
+  }
+  activePopup = null
+}
+
+const checkPopupClosed = () => {
+  if (activePopup && activePopup.closed) {
+    stopPopupTracking()
+    // User closed the popup (clicked X) without completing authentication
+    if (!isAuthenticating.value || (!authLoadingTitle.value.includes('ផ្ទៀងផ្ទាត់') && !authLoadingTitle.value.includes('Verifying'))) {
+      isTelegramLoading.value = false
+      isGoogleLoading.value = false
+      isAuthenticating.value = false
+    }
+  }
+}
+
 const handleTelegramPostMessage = (event: MessageEvent) => {
   const origin = event.origin || ''
   const isAllowedOrigin = origin.includes('telegram.org') || origin.includes('spilms.tech') || (typeof window !== 'undefined' && origin === window.location.origin)
@@ -277,6 +300,7 @@ const handleTelegramPostMessage = (event: MessageEvent) => {
     try {
       const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data
       if (data.event === 'auth_result') {
+        stopPopupTracking()
         if (data.result === false) {
           // User clicked DECLINE on Telegram popup
           isAuthenticating.value = false
@@ -303,6 +327,8 @@ const handleTelegramPostMessage = (event: MessageEvent) => {
 const redirectToTelegramOAuth = () => {
   if (typeof window === 'undefined') return
   isTelegramLoading.value = true
+  stopPopupTracking()
+
   const url = getTelegramOAuthUrl()
   const width = 550
   const height = 650
@@ -323,6 +349,9 @@ const redirectToTelegramOAuth = () => {
     setTimeout(() => {
       window.location.assign(url)
     }, 250)
+  } else {
+    activePopup = popup
+    popupCheckTimer = setInterval(checkPopupClosed, 300)
   }
 }
 
@@ -537,6 +566,15 @@ onMounted(() => {
     // Listen for Telegram OAuth PostMessage events (DECLINE or ACCEPT from popup)
     window.addEventListener('message', handleTelegramPostMessage)
 
+    // Reset loading state if user closes popup (X) and returns to main window
+    window.addEventListener('focus', checkPopupClosed)
+    window.addEventListener('pageshow', () => {
+      stopPopupTracking()
+      isAuthenticating.value = false
+      isGoogleLoading.value = false
+      isTelegramLoading.value = false
+    })
+
     // 1. Check for Telegram OAuth URL fragment (#tgAuthResult=...)
     if (window.location.hash && window.location.hash.includes('tgAuthResult=')) {
       try {
@@ -593,6 +631,14 @@ onMounted(() => {
       } catch (_) {}
       handleTelegramAuthSuccess(tgUser)
     }
+  }
+})
+
+onUnmounted(() => {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('message', handleTelegramPostMessage)
+    window.removeEventListener('focus', checkPopupClosed)
+    stopPopupTracking()
   }
 })
 </script>
