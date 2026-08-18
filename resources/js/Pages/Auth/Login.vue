@@ -262,7 +262,11 @@ const clerkPublishableKey = computed(() => {
   return (page.props as any).clerk?.publishable_key || 'pk_test_Y2xlcmsuYXBwXzNIdXFzcnd5VUlCWUR2OTBhS2dPaXdmc0treC5sY2xzdGFnZS5kZXYk'
 })
 
-const isTelegramLoggingIn = ref(false)
+const isAuthenticating = ref(false)
+const authLoadingTitle = ref('')
+const authLoadingSubtitle = ref('')
+const isGoogleLoading = ref(false)
+const isTelegramLoading = ref(false)
 
 const handleTelegramPostMessage = (event: MessageEvent) => {
   const origin = event.origin || ''
@@ -275,7 +279,8 @@ const handleTelegramPostMessage = (event: MessageEvent) => {
       if (data.event === 'auth_result') {
         if (data.result === false) {
           // User clicked DECLINE on Telegram popup
-          isTelegramLoggingIn.value = false
+          isAuthenticating.value = false
+          isTelegramLoading.value = false
           oauthNotice.value = {
             type: 'warning',
             message: currentLang.value === 'km'
@@ -284,7 +289,10 @@ const handleTelegramPostMessage = (event: MessageEvent) => {
           }
         } else if (data.result && (data.result.id || typeof data.result === 'object')) {
           // User clicked ACCEPT on Telegram popup
-          isTelegramLoggingIn.value = true
+          isAuthenticating.value = true
+          isTelegramLoading.value = true
+          authLoadingTitle.value = currentLang.value === 'km' ? 'កំពុងផ្ទៀងផ្ទាត់ Telegram...' : 'Verifying Telegram Account...'
+          authLoadingSubtitle.value = currentLang.value === 'km' ? 'សូមរង់ចាំមួយភ្លែត ប្រព័ន្ធកំពុងរៀបចំ Dashboard ជូនលោកអ្នក' : 'Please wait a moment while setting up your dashboard...'
           handleTelegramAuthSuccess(data.result)
         }
       }
@@ -294,6 +302,7 @@ const handleTelegramPostMessage = (event: MessageEvent) => {
 
 const redirectToTelegramOAuth = () => {
   if (typeof window === 'undefined') return
+  isTelegramLoading.value = true
   const url = getTelegramOAuthUrl()
   const width = 550
   const height = 650
@@ -308,12 +317,21 @@ const redirectToTelegramOAuth = () => {
 
   if (!popup || popup.closed || typeof popup.closed === 'undefined') {
     // If popup was blocked by browser, fallback to direct page navigation
-    window.location.assign(url)
+    isAuthenticating.value = true
+    authLoadingTitle.value = currentLang.value === 'km' ? 'កំពុងតភ្ជាប់ទៅកាន់ Telegram...' : 'Connecting to Telegram...'
+    authLoadingSubtitle.value = currentLang.value === 'km' ? 'សូមរង់ចាំមួយភ្លែត ប្រព័ន្ធកំពុងនាំអ្នកទៅកាន់ Telegram Login' : 'Please wait a moment while redirecting to Telegram...'
+    setTimeout(() => {
+      window.location.assign(url)
+    }, 250)
   }
 }
 
 const handleTelegramAuthSuccess = async (tgUser: any) => {
-  isTelegramLoggingIn.value = true
+  isAuthenticating.value = true
+  isTelegramLoading.value = true
+  authLoadingTitle.value = currentLang.value === 'km' ? 'កំពុងផ្ទៀងផ្ទាត់ Telegram...' : 'Verifying Telegram Account...'
+  authLoadingSubtitle.value = currentLang.value === 'km' ? 'សូមរង់ចាំមួយភ្លែត ប្រព័ន្ធកំពុងរៀបចំ Dashboard ជូនលោកអ្នក' : 'Please wait a moment while setting up your dashboard...'
+
   try {
     const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || ''
     const response = await fetch('/auth/telegram', {
@@ -354,7 +372,8 @@ const handleTelegramAuthSuccess = async (tgUser: any) => {
       document.body.appendChild(form)
       form.submit()
     } catch (_) {
-      isTelegramLoggingIn.value = false
+      isAuthenticating.value = false
+      isTelegramLoading.value = false
       oauthNotice.value = {
         type: 'error',
         message: currentLang.value === 'km' ? 'មានបញ្ហាក្នុងការតភ្ជាប់ទៅកាន់ម៉ាស៊ីនបម្រើ។ សូមព្យាយាមម្តងទៀត!' : 'Connection error. Please try again!'
@@ -364,6 +383,10 @@ const handleTelegramAuthSuccess = async (tgUser: any) => {
 }
 
 const handleGoogleAuthSuccess = async (googleUser: any) => {
+  isAuthenticating.value = true
+  isGoogleLoading.value = true
+  authLoadingTitle.value = currentLang.value === 'km' ? 'កំពុងផ្ទៀងផ្ទាត់គណនី Google...' : 'Verifying Google Account...'
+  authLoadingSubtitle.value = currentLang.value === 'km' ? 'សូមរង់ចាំមួយភ្លែត ប្រព័ន្ធកំពុងរៀបចំ Dashboard ជូនលោកអ្នក' : 'Please wait a moment while setting up your dashboard...'
   isGoogleVerifying.value = true
   googleErrorMessage.value = null
 
@@ -468,12 +491,15 @@ const checkClerkOAuthCallback = async () => {
   }
 }
 
-const showGoogleModal = ref(false)
-const isGoogleVerifying = ref(false)
-const googleErrorMessage = ref<string | null>(null)
-
 const redirectToGoogleOAuth = () => {
-  window.location.assign('/auth/google/redirect')
+  isGoogleLoading.value = true
+  isAuthenticating.value = true
+  authLoadingTitle.value = currentLang.value === 'km' ? 'កំពុងតភ្ជាប់ទៅកាន់ Google...' : 'Connecting to Google...'
+  authLoadingSubtitle.value = currentLang.value === 'km' ? 'សូមរង់ចាំមួយភ្លែត ប្រព័ន្ធកំពុងនាំអ្នកទៅកាន់ផ្ទាំង Google Sign-In' : 'Please wait a moment while redirecting to Google Sign-In...'
+
+  setTimeout(() => {
+    window.location.assign('/auth/google/redirect')
+  }, 350)
 }
 
 const handleSocialLogin = (provider: string) => {
@@ -659,11 +685,11 @@ onMounted(() => {
     </div>
 
     <!-- Master Centered Login Card (Clean & Focused) -->
-    <div :class="['w-full p-[1px] rounded-3xl bg-gradient-to-b from-blue-500/40 via-indigo-500/20 to-purple-500/30 dark:from-blue-500/30 dark:via-slate-800/40 dark:to-indigo-500/20 shadow-2xl shadow-slate-900/10 dark:shadow-black/60 relative z-10 my-auto transition-all duration-300', isTelegramLoggingIn ? 'max-w-sm' : 'max-w-md']">
-      <div :class="['w-full bg-white/95 dark:bg-[#0E172E]/95 backdrop-blur-2xl rounded-[23px] flex flex-col justify-center relative z-20 transition-all duration-300 font-[\'Kantumruy_Pro\',sans-serif]', isTelegramLoggingIn ? 'p-8 items-center text-center' : 'p-6 sm:p-8 space-y-4']">
+    <div :class="['w-full p-[1px] rounded-3xl bg-gradient-to-b from-blue-500/40 via-indigo-500/20 to-purple-500/30 dark:from-blue-500/30 dark:via-slate-800/40 dark:to-indigo-500/20 shadow-2xl shadow-slate-900/10 dark:shadow-black/60 relative z-10 my-auto transition-all duration-300', isAuthenticating ? 'max-w-sm' : 'max-w-md']">
+      <div :class="['w-full bg-white/95 dark:bg-[#0E172E]/95 backdrop-blur-2xl rounded-[23px] flex flex-col justify-center relative z-20 transition-all duration-300 font-[\'Kantumruy_Pro\',sans-serif]', isAuthenticating ? 'p-8 items-center text-center' : 'p-6 sm:p-8 space-y-4']">
         
         <!-- Header with Logo & Brand Name -->
-        <div v-if="!isTelegramLoggingIn" class="w-full space-y-4">
+        <div v-if="!isAuthenticating" class="w-full space-y-4">
           <div class="text-center pb-1 relative">
             <div class="flex flex-col items-center justify-center gap-1.5">
               <div class="relative group">
@@ -951,19 +977,35 @@ onMounted(() => {
               </div>
 
               <div class="grid grid-cols-2 gap-2.5">
-                <a
-                  href="/auth/google/redirect"
-                  @click="redirectToGoogleOAuth"
-                  class="h-10.5 py-2 px-3 bg-white dark:bg-slate-800/80 hover:bg-slate-50/90 dark:hover:bg-slate-700/60 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white transition-all duration-150 flex items-center justify-center gap-2 hover:shadow-xs active:scale-98 shadow-2xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-600 select-none"
-                >
-                  <i class="pi pi-google text-rose-500 text-sm"></i> <span>Google</span>
-                </a>
                 <button
                   type="button"
-                  @click="handleSocialLogin('Telegram')"
-                  class="h-10.5 py-2 px-3 bg-white dark:bg-slate-800/80 hover:bg-slate-50/90 dark:hover:bg-slate-700/60 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white transition-all duration-150 flex items-center justify-center gap-2 hover:shadow-xs active:scale-98 shadow-2xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-600 select-none"
+                  :disabled="isAuthenticating"
+                  @click="redirectToGoogleOAuth"
+                  class="h-10.5 py-2 px-3 bg-white dark:bg-slate-800/80 hover:bg-slate-50/90 dark:hover:bg-slate-700/60 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white transition-all duration-150 flex items-center justify-center gap-2 hover:shadow-xs active:scale-98 shadow-2xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-600 select-none disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  <i class="pi pi-telegram text-sky-500 text-sm"></i> <span>Telegram</span>
+                  <template v-if="isGoogleLoading">
+                    <i class="pi pi-spin pi-spinner text-rose-500 text-sm"></i>
+                    <span>{{ currentLang === 'km' ? 'កំពុងភ្ជាប់...' : 'Connecting...' }}</span>
+                  </template>
+                  <template v-else>
+                    <i class="pi pi-google text-rose-500 text-sm"></i>
+                    <span>Google</span>
+                  </template>
+                </button>
+                <button
+                  type="button"
+                  :disabled="isAuthenticating"
+                  @click="redirectToTelegramOAuth"
+                  class="h-10.5 py-2 px-3 bg-white dark:bg-slate-800/80 hover:bg-slate-50/90 dark:hover:bg-slate-700/60 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white transition-all duration-150 flex items-center justify-center gap-2 hover:shadow-xs active:scale-98 shadow-2xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-600 select-none disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <template v-if="isTelegramLoading">
+                    <i class="pi pi-spin pi-spinner text-sky-500 text-sm"></i>
+                    <span>{{ currentLang === 'km' ? 'កំពុងភ្ជាប់...' : 'Connecting...' }}</span>
+                  </template>
+                  <template v-else>
+                    <i class="pi pi-telegram text-sky-500 text-sm"></i>
+                    <span>Telegram</span>
+                  </template>
                 </button>
               </div>
             </div>
@@ -993,11 +1035,11 @@ onMounted(() => {
         </div>
 
         <!-- ២. ផ្ទាំង LOADING (បង្ហាញតែពេលកំពុង Authenticate ជំនួស Form ខាងលើ) -->
-        <div v-else class="w-full flex flex-col items-center justify-center text-center animate-fade-in select-none">
+        <div v-else class="w-full flex flex-col items-center justify-center text-center animate-fade-in select-none py-2">
           
           <!-- Logo E-LMS with Soft Glow -->
-          <div class="relative mb-5">
-            <div class="absolute -inset-1.5 bg-gradient-to-r from-blue-500 to-sky-400 rounded-full blur-md opacity-40 animate-pulse"></div>
+          <div class="relative mb-4">
+            <div class="absolute -inset-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-sky-400 rounded-full blur-md opacity-40 animate-pulse"></div>
             <div class="relative w-18 h-18 rounded-full p-1 bg-white dark:bg-slate-800 shadow-md">
               <img 
                 :src="logoUrl" 
@@ -1007,16 +1049,19 @@ onMounted(() => {
             </div>
           </div>
 
-          <!-- ចំណងជើងច្បាស់ៗ -->
-          <h3 class="text-lg font-bold text-slate-800 dark:text-white tracking-wide mb-1.5">
-            កំពុងរៀបចំ Dashboard របស់អ្នក...
-          </h3>
-          <p class="text-xs text-slate-500 dark:text-slate-400 font-medium mb-6">
-            សូមរង់ចាំមួយភ្លែត ប្រព័ន្ធកំពុងផ្ទៀងផ្ទាត់គណនី
+          <!-- Spinner & Title -->
+          <div class="flex items-center justify-center gap-2 mb-1.5">
+            <i class="pi pi-spin pi-spinner text-sm text-blue-600 dark:text-sky-400"></i>
+            <h3 class="text-base font-bold text-slate-800 dark:text-white tracking-wide">
+              {{ authLoadingTitle || (currentLang === 'km' ? 'កំពុងរៀបចំ Dashboard របស់អ្នក...' : 'Setting up your dashboard...') }}
+            </h3>
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 font-medium mb-6 max-w-xs leading-relaxed">
+            {{ authLoadingSubtitle || (currentLang === 'km' ? 'សូមរង់ចាំមួយភ្លែត ប្រព័ន្ធកំពុងដំណើរការផ្ទៀងផ្ទាត់' : 'Please wait a moment while verifying your account') }}
           </p>
 
           <!-- Modern Loading Progress Bar -->
-          <div class="w-48 bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden p-0.5 border border-slate-200/80 dark:border-slate-700">
+          <div class="w-52 bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden p-0.5 border border-slate-200/80 dark:border-slate-700">
             <div class="bg-gradient-to-r from-blue-600 via-sky-400 to-teal-400 h-full rounded-full animate-indeterminate"></div>
           </div>
 
