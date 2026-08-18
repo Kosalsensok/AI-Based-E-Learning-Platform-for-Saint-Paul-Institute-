@@ -25,6 +25,10 @@ try {
 } catch (e) {}
 
 if (typeof window !== 'undefined') {
+  window.addEventListener('vite:preloadError', () => {
+    window.location.reload()
+  })
+
   window.addEventListener('online', () => {
     try {
       flushQueue()
@@ -34,8 +38,21 @@ if (typeof window !== 'undefined') {
 
 createInertiaApp({
   title: (t) => t ? `${t} - E-LMS` : 'E-LMS',
-  resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`,
-    import.meta.glob<DefineComponent>('./Pages/**/*.vue')),
+  resolve: async (name) => {
+    try {
+      return await resolvePageComponent(
+        `./Pages/${name}.vue`,
+        import.meta.glob<DefineComponent>('./Pages/**/*.vue')
+      )
+    } catch (err: any) {
+      console.error('Failed to load page chunk:', err)
+      if (typeof window !== 'undefined' && !sessionStorage.getItem('chunk_reload_attempted')) {
+        sessionStorage.setItem('chunk_reload_attempted', '1')
+        window.location.reload()
+      }
+      throw err
+    }
+  },
   setup({ el, App, props, plugin }) {
     createApp({ render: () => h(App, props) })
       .use(plugin)

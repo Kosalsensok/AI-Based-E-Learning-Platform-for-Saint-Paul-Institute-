@@ -130,6 +130,17 @@
     <script async crossorigin="anonymous" data-clerk-publishable-key="{{ config('services.clerk.publishable_key') ?? env('VITE_CLERK_PUBLISHABLE_KEY') }}" src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js" type="text/javascript"></script>
     @endif
 
+    <script>
+        window.addEventListener('unhandledrejection', function(e) {
+            if (e.reason && (String(e.reason).includes('Failed to fetch dynamically imported module') || String(e.reason).includes('Importing a module script failed'))) {
+                if (!sessionStorage.getItem('chunk_reload')) {
+                    sessionStorage.setItem('chunk_reload', '1');
+                    window.location.reload();
+                }
+            }
+        });
+    </script>
+
     @vite('resources/js/app.ts')
     @inertiaHead
 </head>
