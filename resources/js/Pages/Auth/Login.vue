@@ -5,9 +5,6 @@ import { i18n, type LanguageCode } from '../../Services/i18n'
 import AuthAnimatedBackground from '../../Components/AuthAnimatedBackground.vue'
 
 const logoUrl = '/images/logo.png'
-const aiBgUrl = '/images/login-ai-illustration.png'
-const successSvgUrl = '/images/sign-in-successful.svg'
-const errorSvgUrl = '/images/forget-password-animation.svg'
 
 const props = defineProps<{
   status?: string
@@ -32,8 +29,8 @@ const showErrorModal = ref(false)
 const statusMessage = ref<string | null>(null)
 
 const languages = [
-  { code: 'km' as LanguageCode, name: 'ភាសាខ្មែរ', label: 'ខ្មែរ', short: 'KH', flagUrl: '/images/flags/km.svg' },
-  { code: 'en' as LanguageCode, name: 'English', label: 'English', short: 'EN', flagUrl: '/images/flags/en.svg' },
+  { code: 'km' as LanguageCode, name: 'ភាសាខ្មែរ', label: 'ខ្មែរ', short: 'KH', flag: '🇰🇭', flagUrl: '/images/flags/km.svg' },
+  { code: 'en' as LanguageCode, name: 'English', label: 'English', short: 'EN', flag: '🇬🇧', flagUrl: '/images/flags/en.svg' },
 ]
 
 const currentLang = computed(() => i18n.locale.value)
@@ -47,12 +44,18 @@ const t = (key: string, defaultText?: string) => {
   return i18n.t(key, defaultText)
 }
 
+const roles = computed(() => [
+  { id: 'student', label: t('login_tab_student', 'និស្សិត'), icon: '🎓' },
+  { id: 'teacher', label: t('login_tab_teacher', 'សាស្ត្រាចារ្យ'), icon: '👨‍🏫' },
+  { id: 'admin', label: t('login_tab_admin', 'រដ្ឋបាល'), icon: '🛡️' }
+])
+
 const identityLabel = computed(() => {
-  return t(`login_input_identity_label_${form.role}`, form.role === 'teacher' ? 'Teacher ID, Email or Phone' : form.role === 'admin' ? 'Admin ID, Email or Phone' : 'Student ID, Email or Phone')
+  return t(`login_input_identity_label_${form.role}`, form.role === 'teacher' ? 'អត្តលេខ អ៊ីមែល ឬ លេខទូរស័ព្ទ' : form.role === 'admin' ? 'អត្តលេខ អ៊ីមែល ឬ លេខទូរស័ព្ទ' : 'អត្តលេខ អ៊ីមែល ឬ លេខទូរស័ព្ទ')
 })
 
 const identityPlaceholder = computed(() => {
-  return t(`login_input_identity_placeholder_${form.role}`, form.role === 'teacher' ? 'Teacher ID, email or phone' : form.role === 'admin' ? 'Admin ID, email or phone' : 'Student ID, email or phone')
+  return t(`login_input_identity_placeholder_${form.role}`, form.role === 'teacher' ? 'អត្តលេខ អ៊ីមែល ឬទូរស័ព្ទ' : form.role === 'admin' ? 'អត្តលេខ អ៊ីមែល ឬទូរស័ព្ទ' : 'អត្តលេខ អ៊ីមែល ឬទូរស័ព្ទ')
 })
 
 const initTheme = () => {
@@ -100,8 +103,6 @@ const handleClickOutside = (e: MouseEvent) => {
     }
   } catch (e) {}
 }
-
-
 
 const clearEmail = () => {
   form.email = ''
@@ -213,8 +214,6 @@ const getTelegramOAuthUrl = () => {
   return 'https://oauth.telegram.org/auth?bot_id=8828915669&origin=https%3A%2F%2Fspilms.tech&return_to=https%3A%2F%2Fspilms.tech%2Fauth%2Ftelegram%2Fcallback&request_access=write'
 }
 
-
-
 const isAuthenticating = ref(false)
 const authLoadingTitle = ref('')
 const authLoadingSubtitle = ref('')
@@ -235,7 +234,6 @@ const stopPopupTracking = () => {
 const checkPopupClosed = () => {
   if (activePopup && activePopup.closed) {
     stopPopupTracking()
-    // User closed the popup (clicked X) without completing authentication
     if (!isAuthenticating.value || (!authLoadingTitle.value.includes('ផ្ទៀងផ្ទាត់') && !authLoadingTitle.value.includes('Verifying'))) {
       isTelegramLoading.value = false
       isGoogleLoading.value = false
@@ -255,7 +253,6 @@ const handleTelegramPostMessage = (event: MessageEvent) => {
       if (data.event === 'auth_result') {
         stopPopupTracking()
         if (data.result === false) {
-          // User clicked DECLINE on Telegram popup
           isAuthenticating.value = false
           isTelegramLoading.value = false
           oauthNotice.value = {
@@ -265,7 +262,6 @@ const handleTelegramPostMessage = (event: MessageEvent) => {
               : 'Login was cancelled. Please accept Telegram permissions to access your account.'
           }
         } else if (data.result && (data.result.id || typeof data.result === 'object')) {
-          // User clicked ACCEPT on Telegram popup
           isAuthenticating.value = true
           isTelegramLoading.value = true
           authLoadingTitle.value = currentLang.value === 'km' ? 'កំពុងផ្ទៀងផ្ទាត់ Telegram...' : 'Verifying Telegram Account...'
@@ -295,7 +291,6 @@ const redirectToTelegramOAuth = () => {
   )
 
   if (!popup || popup.closed || typeof popup.closed === 'undefined') {
-    // If popup was blocked by browser, fallback to direct page navigation
     isAuthenticating.value = true
     authLoadingTitle.value = currentLang.value === 'km' ? 'កំពុងតភ្ជាប់ទៅកាន់ Telegram...' : 'Connecting to Telegram...'
     authLoadingSubtitle.value = currentLang.value === 'km' ? 'សូមរង់ចាំមួយភ្លែត ប្រព័ន្ធកំពុងនាំអ្នកទៅកាន់ Telegram Login' : 'Please wait a moment while redirecting to Telegram...'
@@ -414,8 +409,6 @@ const handleGoogleAuthSuccess = async (googleUser: any) => {
   }
 }
 
-
-
 const redirectToGoogleOAuth = () => {
   isGoogleLoading.value = true
   isAuthenticating.value = true
@@ -425,25 +418,6 @@ const redirectToGoogleOAuth = () => {
   setTimeout(() => {
     window.location.assign('/auth/google/redirect')
   }, 350)
-}
-
-const handleSocialLogin = (provider: string) => {
-  if (provider === 'Telegram') {
-    redirectToTelegramOAuth()
-    return
-  }
-
-  if (provider === 'Google') {
-    redirectToGoogleOAuth()
-    return
-  }
-
-  socialNotice.value = currentLang.value === 'km'
-    ? `ការចូលប្រើតាមរយៈ ${provider} នឹងត្រូវបានតភ្ជាប់ក្នុងពេលឆាប់ៗនេះ។`
-    : `${provider} login integration will be available soon.`
-  setTimeout(() => {
-    socialNotice.value = null
-  }, 4000)
 }
 
 const oauthNotice = ref<{
@@ -461,7 +435,6 @@ onMounted(() => {
     window.addEventListener('keyup', handleKeyCheck)
     document.addEventListener('click', handleClickOutside)
 
-    // Register Telegram OAuth global callback
     ;(window as any).onTelegramAuth = (user: any) => {
       try {
         handleTelegramAuthSuccess(user)
@@ -479,10 +452,7 @@ onMounted(() => {
       }
     } catch (e) {}
 
-    // Listen for Telegram OAuth PostMessage events (DECLINE or ACCEPT from popup)
     window.addEventListener('message', handleTelegramPostMessage)
-
-    // Reset loading state if user closes popup (X) and returns to main window
     window.addEventListener('focus', checkPopupClosed)
     window.addEventListener('pageshow', () => {
       stopPopupTracking()
@@ -491,7 +461,6 @@ onMounted(() => {
       isTelegramLoading.value = false
     })
 
-    // 1. Check for Telegram OAuth URL fragment (#tgAuthResult=...)
     if (window.location.hash && window.location.hash.includes('tgAuthResult=')) {
       try {
         const hashStr = window.location.hash.substring(1)
@@ -513,7 +482,6 @@ onMounted(() => {
       }
     }
 
-    // 2. Check for query parameter errors and direct OAuth query returns
     const urlParams = new URLSearchParams(window.location.search)
     const err = urlParams.get('error')
     const status = urlParams.get('status')
@@ -566,46 +534,44 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-slate-100/90 dark:bg-[#070D1E] text-slate-900 dark:text-slate-100 p-4 sm:p-6 lg:p-8 relative font-sans overflow-x-hidden transition-colors duration-500">
+  <div class="lms-viewport">
     
-    <!-- Top-Right Fixed Floating Language & Theme Switchers (Generous 24px-32px Edge Spacing) -->
-    <div class="fixed top-6 right-6 sm:top-7 sm:right-7 lg:top-8 lg:right-8 z-50 flex items-center gap-3">
-      
-      <!-- Language Switcher Pill -->
+    <!-- Ambient Background Lighting & ThreeJS Layer -->
+    <div class="ambient-layer">
+      <AuthAnimatedBackground />
+      <div class="glow-orb orb-top"></div>
+      <div class="glow-orb orb-bottom"></div>
+    </div>
+
+    <!-- Header Tools (Safe Area Compliant) -->
+    <header class="lms-header">
+      <!-- Language Switcher Dropdown -->
       <div class="relative lang-switcher-container">
-        <button
-          type="button"
+        <button 
+          type="button" 
           @click.stop="isLangOpen = !isLangOpen"
-          class="group px-3.5 py-2 rounded-full bg-white/95 dark:bg-slate-800/90 backdrop-blur-md hover:bg-white dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition-all duration-200 border border-slate-300/90 dark:border-slate-700/60 shadow-md shadow-slate-900/5 dark:shadow-black/20 flex items-center gap-2 text-xs font-semibold cursor-pointer select-none hover:scale-105 active:scale-95 focus:outline-none"
-          :title="currentLang === 'km' ? 'ប្តូរភាសា / Change Language' : 'Change Language / ប្តូរភាសា'"
+          class="action-chip" 
+          aria-label="Language Selector"
         >
-          <img
-            :src="languages.find(l => l.code === currentLang)?.flagUrl || '/images/flags/km.svg'"
-            :alt="currentLang"
-            width="16"
-            height="16"
-            loading="eager"
-            decoding="async"
-            class="w-4 h-4 rounded-full object-cover shrink-0 ring-1 ring-slate-300 dark:ring-slate-600"
-          />
-          <span class="text-[11px] font-bold tracking-wide">
-            {{ currentLang === 'km' ? 'KH' : 'EN' }}
-          </span>
-          <i :class="['pi pi-chevron-down text-[10px] text-slate-500 dark:text-slate-400 transition-transform duration-200', isLangOpen ? 'rotate-180 text-blue-600' : '']"></i>
+          <span class="chip-flag">{{ currentLang === 'km' ? '🇰🇭' : '🇬🇧' }}</span>
+          <span class="chip-text">{{ currentLang === 'km' ? 'KH' : 'EN' }}</span>
+          <svg :class="['chip-arrow transition-transform duration-200', isLangOpen ? 'rotate-180 text-blue-400' : '']" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+          </svg>
         </button>
 
         <!-- Dropdown Menu -->
         <Transition
-          enter-active-class="transition duration-200 ease-out"
+          enter-active-class="transition duration-150 ease-out"
           enter-from-class="transform opacity-0 scale-95 -translate-y-1"
           enter-to-class="transform opacity-100 scale-100 translate-y-0"
-          leave-active-class="transition duration-150 ease-in"
+          leave-active-class="transition duration-100 ease-in"
           leave-from-class="transform opacity-100 scale-100 translate-y-0"
           leave-to-class="transform opacity-0 scale-95 -translate-y-1"
         >
           <div
             v-if="isLangOpen"
-            class="absolute right-0 mt-2 w-44 rounded-2xl bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-700/80 shadow-xl shadow-black/10 dark:shadow-black/40 py-1.5 z-50 overflow-hidden"
+            class="lang-dropdown"
           >
             <button
               v-for="lang in languages"
@@ -613,610 +579,743 @@ onUnmounted(() => {
               type="button"
               @click="selectLanguage(lang.code)"
               :class="[
-                'w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-semibold transition-colors cursor-pointer select-none',
-                currentLang === lang.code
-                  ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400'
-                  : 'text-slate-800 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60 hover:text-slate-950 dark:hover:text-white'
+                'lang-dropdown-item',
+                currentLang === lang.code ? 'lang-dropdown-item-active' : ''
               ]"
             >
-              <span class="flex items-center gap-2.5">
-                <img :src="lang.flagUrl" :alt="lang.name" width="16" height="16" loading="eager" decoding="async" class="w-4 h-4 rounded-full object-cover shrink-0 shadow-xs" />
+              <span class="flex items-center gap-2">
+                <span>{{ lang.flag }}</span>
                 <span>{{ lang.name }}</span>
               </span>
-              <i v-if="currentLang === lang.code" class="pi pi-check text-xs text-blue-600 dark:text-blue-400 font-bold shrink-0"></i>
+              <span v-if="currentLang === lang.code" class="text-blue-400 font-bold">✓</span>
             </button>
           </div>
         </Transition>
       </div>
 
-      <!-- Theme Switcher Pill -->
-      <button
-        type="button"
+      <!-- Theme Switcher -->
+      <button 
+        type="button" 
         @click="toggleTheme"
-        class="group px-3.5 py-2 rounded-full bg-white/95 dark:bg-slate-800/90 backdrop-blur-md hover:bg-white dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition-all duration-200 border border-slate-300/90 dark:border-slate-700/60 shadow-md shadow-slate-900/5 dark:shadow-black/20 flex items-center gap-2 text-xs font-semibold cursor-pointer select-none hover:scale-105 active:scale-95"
-        :title="isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+        :class="['action-chip', isDark ? 'text-amber-400' : 'text-indigo-400']" 
+        aria-label="Theme Selector"
       >
-        <div class="relative w-4 h-4 flex items-center justify-center">
-          <i :class="['pi text-xs transition-transform duration-300 group-hover:rotate-45', isDark ? 'pi-sun text-amber-500' : 'pi-moon text-indigo-500']"></i>
-        </div>
-        <span class="text-[11px] font-bold">{{ isDark ? t('theme_light', 'Light Mode') : t('theme_dark', 'Dark Mode') }}</span>
+        <svg v-if="isDark" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+        <svg v-else class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+        </svg>
+        <span class="chip-text">{{ isDark ? t('theme_light', 'ពន្លឺ') : t('theme_dark', 'ងងឹត') }}</span>
       </button>
-    </div>
+    </header>
 
-    <!-- Interactive 3D Three.js Animated AI Background & Ambient Glow -->
-    <div class="absolute inset-0 overflow-hidden pointer-events-none z-0 select-none">
-      <AuthAnimatedBackground />
-
-      <!-- Animated Aurora Gradient Wave -->
-      <div class="absolute -inset-[100%] opacity-40 dark:opacity-30 animate-aurora bg-gradient-to-r from-blue-600/30 via-indigo-500/30 via-purple-500/30 via-sky-400/30 to-blue-600/30 blur-3xl"></div>
-
-      <!-- Tech Dot Grid Matrix Overlay -->
-      <div class="absolute inset-0 bg-[radial-gradient(#3b82f6_1.2px,transparent_1.2px)] dark:bg-[radial-gradient(#38bdf8_1.2px,transparent_1.2px)] [background-size:32px_32px] opacity-30 dark:opacity-20"></div>
-
-      <!-- Glowing Animated Orbs -->
-      <div class="absolute -top-32 -left-32 w-[550px] h-[550px] bg-blue-500/25 dark:bg-blue-600/30 rounded-full blur-[130px] animate-float-slow"></div>
-      <div class="absolute -bottom-32 -right-32 w-[600px] h-[600px] bg-indigo-500/25 dark:bg-indigo-600/30 rounded-full blur-[140px] animate-float-reverse"></div>
-    </div>
-
-    <!-- Master Centered Login Card (Clean & Focused) -->
-    <div :class="['w-full p-[1px] rounded-3xl bg-gradient-to-b from-blue-500/40 via-indigo-500/20 to-purple-500/30 dark:from-blue-500/30 dark:via-slate-800/40 dark:to-indigo-500/20 shadow-2xl shadow-slate-900/10 dark:shadow-black/60 relative z-10 my-auto transition-all duration-300', isAuthenticating ? 'max-w-sm' : 'max-w-md']">
-      <div :class="['w-full bg-white/95 dark:bg-[#0E172E]/95 backdrop-blur-2xl rounded-[23px] flex flex-col justify-center relative z-20 transition-all duration-300 font-[\'Kantumruy_Pro\',sans-serif]', isAuthenticating ? 'p-8 items-center text-center' : 'p-6 sm:p-8 space-y-4']">
-        
-        <!-- Header with Logo & Brand Name -->
-        <div v-if="!isAuthenticating" class="w-full space-y-4">
-          <div class="text-center pb-1 relative">
-            <div class="flex flex-col items-center justify-center gap-1.5">
-              <div class="relative group">
-                <div class="absolute -inset-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full blur opacity-35 group-hover:opacity-65 transition duration-300"></div>
-                <img
-                  :src="logoUrl"
-                  alt="Saint Paul Institute Official Crest Logo"
-                  width="56"
-                  height="56"
-                  fetchpriority="high"
-                  decoding="async"
-                  class="relative w-14 h-14 rounded-full shadow-lg object-contain ring-2 ring-blue-500/40 ring-offset-2 ring-offset-white dark:ring-offset-[#0E172E] bg-white p-0.5 transition-transform duration-300 group-hover:scale-105"
-                />
-              </div>
-              <div>
-                <h1 class="text-xl font-black tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 dark:from-blue-400 dark:via-indigo-300 dark:to-cyan-300 bg-clip-text text-transparent">
-                  SPI AI-ELMS
-                </h1>
-                <div class="mt-0.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-200/60 dark:border-blue-800/40 text-[10px] font-bold text-blue-700 dark:text-blue-300 tracking-wide">
-                  <span>{{ t('login_subtitle', 'វិទ្យាស្ថាន សន្តប៉ូល') }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="space-y-3.5">
-          
-            <!-- OAuth Notification Banner (e.g., Decline / Cancel / Error) -->
-            <Transition
-              enter-active-class="transition duration-300 ease-out"
-              enter-from-class="opacity-0 -translate-y-2"
-              enter-to-class="opacity-100 translate-y-0"
-              leave-active-class="transition duration-200 ease-in"
-              leave-from-class="opacity-100 translate-y-0"
-              leave-to-class="opacity-0 -translate-y-2"
-            >
-              <div
-                v-if="oauthNotice"
-                :class="[
-                  'rounded-2xl p-3.5 text-xs flex items-start justify-between gap-3 shadow-md transition-all border',
-                  oauthNotice.type === 'warning'
-                    ? 'bg-amber-500/15 border-amber-500/30 text-amber-300'
-                    : 'bg-rose-500/15 border-rose-500/30 text-rose-300'
-                ]"
-              >
-                <div class="flex items-start gap-2.5">
-                  <i
-                    :class="[
-                      'shrink-0 text-sm mt-0.5',
-                      oauthNotice.type === 'warning' ? 'pi pi-exclamation-triangle text-amber-400' : 'pi pi-times-circle text-rose-400'
-                    ]"
-                  ></i>
-                  <span class="font-medium text-[11px] leading-relaxed">{{ oauthNotice.message }}</span>
-                </div>
-                <button
-                  type="button"
-                  @click="oauthNotice = null"
-                  class="text-slate-400 hover:text-white p-0.5 rounded-full hover:bg-white/10 transition-colors shrink-0 cursor-pointer"
-                  title="Close"
-                >
-                  <i class="pi pi-times text-[10px]"></i>
-                </button>
-              </div>
-            </Transition>
-
-            <!-- Error Banner -->
-            <div v-if="form.errors.email" class="bg-rose-500/10 border border-rose-500/30 rounded-xl p-2.5 text-rose-600 dark:text-rose-300 text-xs flex items-start gap-2 shadow-sm animate-shake">
-              <i class="pi pi-exclamation-circle text-sm text-rose-500 shrink-0 mt-0.5"></i>
-              <span class="leading-tight font-medium">{{ form.errors.email }}</span>
-            </div>
-
-            <!-- Social Notice Toast -->
-            <div v-if="socialNotice" class="bg-blue-500/10 border border-blue-500/30 rounded-xl p-2.5 text-blue-700 dark:text-blue-300 text-xs flex items-center gap-2 transition-all">
-              <i class="pi pi-info-circle text-blue-500 text-sm shrink-0"></i>
-              <span class="font-medium text-[11px]">{{ socialNotice }}</span>
-            </div>
-
-            <!-- Caps Lock Alert -->
-            <div v-if="capsLockOn" class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-2 text-amber-700 dark:text-amber-300 text-xs flex items-center gap-2 animate-bounce">
-              <i class="pi pi-exclamation-triangle text-amber-500 text-sm shrink-0"></i>
-              <span class="text-[11px] font-semibold">{{ t('login_caps_lock_active', 'Caps Lock is ON') }}</span>
-            </div>
-
-            <!-- OAuth Decline / Warning Notice Banner -->
-            <div
-              v-if="oauthNotice"
-              :class="[
-                'p-3 rounded-xl border flex items-center justify-between gap-2.5 text-xs font-semibold shadow-xs animate-in fade-in slide-in-from-top-2 duration-200',
-                oauthNotice.type === 'warning'
-                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-300'
-                  : 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-300'
-              ]"
-            >
-              <div class="flex items-center gap-2">
-                <i :class="oauthNotice.type === 'warning' ? 'pi pi-exclamation-triangle text-amber-500 text-sm shrink-0' : 'pi pi-times-circle text-rose-500 text-sm shrink-0'"></i>
-                <span>{{ oauthNotice.message }}</span>
-              </div>
-              <button type="button" @click="oauthNotice = null" class="opacity-70 hover:opacity-100 cursor-pointer p-0.5">
-                <i class="pi pi-times text-xs"></i>
-              </button>
-            </div>
-
-            <!-- Role Selection Segmented Tabs (Attractive Soft Pastel Blue Active State) -->
-            <div class="p-1 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 grid grid-cols-3 gap-1">
-              <!-- Student Tab -->
-              <button
-                type="button"
-                @click="form.role = 'student'"
-                :class="[
-                  'flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer select-none',
-                  form.role === 'student'
-                    ? 'bg-blue-500/80 text-white shadow-xs shadow-blue-500/20 border border-blue-400/30'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60'
-                ]"
-              >
-                <i class="pi pi-graduation-cap text-xs"></i>
-                <span>{{ t('login_tab_student', 'Student') }}</span>
-              </button>
-
-              <!-- Teacher Tab -->
-              <button
-                type="button"
-                @click="form.role = 'teacher'"
-                :class="[
-                  'flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer select-none',
-                  form.role === 'teacher'
-                    ? 'bg-blue-500/80 text-white shadow-xs shadow-blue-500/20 border border-blue-400/30'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60'
-                ]"
-              >
-                <i class="pi pi-book text-xs"></i>
-                <span>{{ t('login_tab_teacher', 'Teacher') }}</span>
-              </button>
-
-              <!-- Admin Tab -->
-              <button
-                type="button"
-                @click="form.role = 'admin'"
-                :class="[
-                  'flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer select-none',
-                  form.role === 'admin'
-                    ? 'bg-blue-500/80 text-white shadow-xs shadow-blue-500/20 border border-blue-400/30'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60'
-                ]"
-              >
-                <i class="pi pi-shield text-xs"></i>
-                <span>{{ t('login_tab_admin', 'Admin') }}</span>
-              </button>
-            </div>
-
-            <!-- Main Login Form -->
-            <form @submit.prevent="submit" class="space-y-3.5">
-              
-              <!-- Email / ID / Phone Input with High-Contrast Readable Placeholder -->
-              <div class="space-y-1">
-                <label class="block text-xs font-bold text-slate-800 dark:text-slate-100 transition-colors">
-                  <span>{{ identityLabel }}</span>
-                </label>
-                <div class="relative group">
-                  <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-300 group-focus-within:text-blue-600 dark:group-focus-within:text-sky-400 transition-colors">
-                    <i class="pi pi-id-card text-sm"></i>
-                  </div>
-                  <input
-                    v-model="form.email"
-                    type="text"
-                    required
-                    autocomplete="username"
-                    :placeholder="identityPlaceholder"
-                    class="h-11 w-full pl-10 pr-9 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-800/80 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-300 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-xs sm:text-sm font-medium shadow-2xs"
-                  />
-                  <!-- Quick Clear Button -->
-                  <button
-                    v-if="form.email"
-                    type="button"
-                    @click="clearEmail"
-                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer"
-                    title="Clear"
-                  >
-                    <i class="pi pi-times-circle text-xs"></i>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Password Input with Eye Toggle -->
-              <div class="space-y-1">
-                <label class="block text-xs font-bold text-slate-800 dark:text-slate-100">
-                  <span>{{ t('login_input_password_label', 'Password') }}</span>
-                </label>
-                <div class="relative group">
-                  <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-300 group-focus-within:text-blue-600 dark:group-focus-within:text-sky-400 transition-colors">
-                    <i class="pi pi-lock text-sm"></i>
-                  </div>
-                  <input
-                    v-model="form.password"
-                    :type="showPassword ? 'text' : 'password'"
-                    required
-                    autocomplete="current-password"
-                    :placeholder="t('login_input_password_placeholder', '••••••••••••••••')"
-                    class="h-11 w-full pl-10 pr-10 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-800/80 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-300 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-xs sm:text-sm font-medium shadow-2xs"
-                  />
-                  <!-- Clean Eye Icon Toggle with Hover Feedback -->
-                  <button
-                    type="button"
-                    @click="showPassword = !showPassword"
-                    class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg cursor-pointer"
-                    :title="showPassword ? 'Hide password' : 'Show password'"
-                  >
-                    <i :class="['pi text-sm transition-transform duration-200 hover:scale-110', showPassword ? 'pi-eye-slash text-blue-600 dark:text-sky-400' : 'pi-eye']"></i>
-                  </button>
-                </div>
-                <span v-if="form.errors.password" class="text-[10px] text-rose-600 dark:text-rose-400 block font-semibold">{{ form.errors.password }}</span>
-              </div>
-
-              <!-- Ergonomic Row: Checkbox + High Contrast Forgot Password -->
-              <div class="flex items-center justify-between text-xs pt-0.5">
-                <label class="inline-flex items-center gap-2 cursor-pointer select-none group">
-                  <div class="relative flex items-center justify-center">
-                    <input
-                      v-model="form.remember"
-                      type="checkbox"
-                      class="sr-only"
-                    />
-                    <!-- Standard Box with crisp outline -->
-                    <div
-                      :class="[
-                        'w-4 h-4 rounded-[4px] border-2 transition-all duration-200 flex items-center justify-center shadow-xs select-none',
-                        form.remember
-                          ? 'bg-blue-600 border-blue-600 text-white shadow-xs shadow-blue-500/30'
-                          : 'bg-white dark:bg-slate-900/90 border-slate-400 dark:border-slate-500 group-hover:border-blue-600 dark:group-hover:border-blue-400'
-                      ]"
-                    >
-                      <svg
-                        :class="[
-                          'w-3 h-3 text-white transition-all duration-150',
-                          form.remember ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
-                        ]"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        stroke-width="3.5"
-                      >
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
-                      </svg>
-                    </div>
-                  </div>
-                  <span class="text-slate-800 dark:text-slate-100 group-hover:text-slate-950 dark:group-hover:text-white font-bold text-[11px] sm:text-xs transition-colors">
-                    {{ t('login_remember_me', 'Remember me') }}
-                  </span>
-                </label>
-
-                <Link
-                  href="/forgot-password"
-                  class="text-xs font-bold text-blue-600 dark:text-sky-400 hover:text-blue-700 dark:hover:text-sky-300 hover:underline px-1.5 py-0.5 rounded transition-all duration-150 active:scale-95 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none select-none inline-flex items-center gap-1"
-                >
-                  <span>{{ t('login_forgot_password', 'Forgot Password?') }}</span>
-                </Link>
-              </div>
-
-              <!-- Primary Sign In Button (Matching Soft Blue Active Tab Aesthetic) -->
-              <button
-                type="submit"
-                :disabled="isSubmitting || form.processing"
-                class="h-11 group w-full py-2.5 px-5 bg-blue-500/85 hover:bg-blue-500 border border-blue-400/30 active:scale-[0.99] text-white font-bold rounded-xl shadow-sm shadow-blue-500/20 hover:shadow-md hover:shadow-blue-500/30 transition-all duration-200 inline-flex items-center justify-center gap-2.5 disabled:opacity-50 text-xs sm:text-sm font-bold tracking-wide cursor-pointer focus:outline-none focus:ring-4 focus:ring-blue-500/20"
-              >
-                <i v-if="isSubmitting || form.processing" class="pi pi-spin pi-spinner text-sm shrink-0"></i>
-                <template v-else>
-                  <span>{{ isSubmitting || form.processing ? t('login_btn_submitting', 'Signing In...') : t('login_btn_submit', 'Sign In') }}</span>
-                  <span class="w-6 h-6 rounded-full bg-white/20 dark:bg-white/15 flex items-center justify-center transition-all duration-300 group-hover:translate-x-1 group-hover:bg-white/30 group-hover:scale-110 shadow-2xs shrink-0">
-                    <svg class="w-3.5 h-3.5 fill-current text-white" viewBox="0 0 24 24">
-                      <path d="M13.293 6.293a1 1 0 0 1 1.414 0l5 5a1 1 0 0 1 0 1.414l-5 5a1 1 0 0 1-1.414-1.414L16.586 13H5a1 1 0 1 1 0-2h11.586l-3.293-3.293a1 1 0 0 1 0-1.414z"/>
-                    </svg>
-                  </span>
-                </template>
-              </button>
-            </form>
-
-            <!-- Social Logins Section (Crisp High-Contrast Divider & Interactive Hover States) -->
-            <div class="space-y-2 pt-0.5">
-              <div class="flex items-center my-3.5 text-slate-400 dark:text-slate-500">
-                <div class="flex-grow border-t border-slate-300 dark:border-slate-600"></div>
-                <span class="px-4 text-xs font-bold text-slate-500 dark:text-slate-300 select-none tracking-wider">
-                  {{ t('login_or', 'OR') }}
-                </span>
-                <div class="flex-grow border-t border-slate-300 dark:border-slate-600"></div>
-              </div>
-
-              <div class="grid grid-cols-2 gap-2.5">
-                <button
-                  type="button"
-                  :disabled="isAuthenticating"
-                  @click="redirectToGoogleOAuth"
-                  class="h-10.5 py-2 px-3 bg-white dark:bg-slate-800/80 hover:bg-slate-50/90 dark:hover:bg-slate-700/60 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white transition-all duration-150 flex items-center justify-center gap-2 hover:shadow-xs active:scale-98 shadow-2xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-600 select-none disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  <template v-if="isGoogleLoading">
-                    <i class="pi pi-spin pi-spinner text-rose-500 text-sm"></i>
-                    <span>{{ currentLang === 'km' ? 'កំពុងភ្ជាប់...' : 'Connecting...' }}</span>
-                  </template>
-                  <template v-else>
-                    <i class="pi pi-google text-rose-500 text-sm"></i>
-                    <span>Google</span>
-                  </template>
-                </button>
-                <button
-                  type="button"
-                  :disabled="isAuthenticating"
-                  @click="redirectToTelegramOAuth"
-                  class="h-10.5 py-2 px-3 bg-white dark:bg-slate-800/80 hover:bg-slate-50/90 dark:hover:bg-slate-700/60 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white transition-all duration-150 flex items-center justify-center gap-2 hover:shadow-xs active:scale-98 shadow-2xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-600 select-none disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  <template v-if="isTelegramLoading">
-                    <i class="pi pi-spin pi-spinner text-sky-500 text-sm"></i>
-                    <span>{{ currentLang === 'km' ? 'កំពុងភ្ជាប់...' : 'Connecting...' }}</span>
-                  </template>
-                  <template v-else>
-                    <i class="pi pi-telegram text-sky-500 text-sm"></i>
-                    <span>Telegram</span>
-                  </template>
-                </button>
-              </div>
-            </div>
-
-            <!-- Registration Callout Footer (High Contrast in Dark Mode) -->
-            <div class="pt-2.5 border-t border-slate-200 dark:border-slate-800/80 text-center text-xs">
-              <p class="font-medium text-[11px] text-slate-700 dark:text-slate-200 flex items-center justify-center gap-1.5">
-                <span>{{ t('login_dont_have_account', 'Do not have an account?') }}</span>
-                <Link href="/register" class="group font-bold text-blue-600 dark:text-sky-400 hover:text-blue-700 dark:hover:text-sky-300 transition-all duration-150 active:scale-95 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none select-none inline-flex items-center gap-1.5">
-                  <span>{{ t('login_register_now', 'Register Account') }}</span>
-                  <span class="w-6 h-6 rounded-full bg-blue-500/10 dark:bg-sky-500/20 border border-blue-500/20 dark:border-sky-400/30 flex items-center justify-center text-blue-600 dark:text-sky-400 group-hover:bg-blue-600 group-hover:text-white dark:group-hover:bg-sky-400 dark:group-hover:text-slate-950 transition-all duration-300 group-hover:translate-x-1 shadow-2xs shrink-0">
-                    <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                      <path d="M13.293 6.293a1 1 0 0 1 1.414 0l5 5a1 1 0 0 1 0 1.414l-5 5a1 1 0 0 1-1.414-1.414L16.586 13H5a1 1 0 1 1 0-2h11.586l-3.293-3.293a1 1 0 0 1 0-1.414z"/>
-                    </svg>
-                  </span>
-                </Link>
-              </p>
-            </div>
-
-            <!-- Privacy & Terms Legal Footer -->
-            <div class="mt-2.5 pt-2 flex items-center justify-center gap-3 text-[11px] text-slate-500 dark:text-slate-400 select-none">
-              <Link href="/privacy" class="hover:text-blue-600 dark:hover:text-sky-400 hover:underline transition-colors">{{ t('privacy_policy', 'Privacy Policy') }}</Link>
-              <span>•</span>
-              <Link href="/terms" class="hover:text-blue-600 dark:hover:text-sky-400 hover:underline transition-colors">{{ t('terms_of_service', 'Terms of Service') }}</Link>
-            </div>
+    <!-- Main Container Card -->
+    <main class="lms-main">
+      
+      <!-- Brand & Institute Header -->
+      <div v-if="!isAuthenticating" class="branding-group">
+        <div class="logo-badge">
+          <div class="logo-box">
+            <img :src="logoUrl" alt="Saint Paul Institute Logo" class="w-10 h-10 object-contain rounded-full bg-white p-0.5" />
           </div>
         </div>
-
-        <!-- ២. ផ្ទាំង LOADING (បង្ហាញតែពេលកំពុង Authenticate ជំនួស Form ខាងលើ) -->
-        <div v-else class="w-full flex flex-col items-center justify-center text-center animate-fade-in select-none py-2">
-          
-          <!-- Logo E-LMS with Soft Glow -->
-          <div class="relative mb-4">
-            <div class="absolute -inset-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-sky-400 rounded-full blur-md opacity-40 animate-pulse"></div>
-            <div class="relative w-18 h-18 rounded-full p-1 bg-white dark:bg-slate-800 shadow-md">
-              <img 
-                :src="logoUrl" 
-                alt="E-LMS Logo" 
-                class="w-full h-full object-cover rounded-full"
-              />
-            </div>
-          </div>
-
-          <!-- Spinner & Title -->
-          <div class="flex items-center justify-center gap-2 mb-1.5">
-            <i class="pi pi-spin pi-spinner text-sm text-blue-600 dark:text-sky-400"></i>
-            <h3 class="text-base font-bold text-slate-800 dark:text-white tracking-wide">
-              {{ authLoadingTitle || (currentLang === 'km' ? 'កំពុងរៀបចំ Dashboard របស់អ្នក...' : 'Setting up your dashboard...') }}
-            </h3>
-          </div>
-          <p class="text-xs text-slate-500 dark:text-slate-400 font-medium mb-6 max-w-xs leading-relaxed">
-            {{ authLoadingSubtitle || (currentLang === 'km' ? 'សូមរង់ចាំមួយភ្លែត ប្រព័ន្ធកំពុងដំណើរការផ្ទៀងផ្ទាត់' : 'Please wait a moment while verifying your account') }}
-          </p>
-
-          <!-- Modern Loading Progress Bar -->
-          <div class="w-52 bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden p-0.5 border border-slate-200/80 dark:border-slate-700">
-            <div class="bg-gradient-to-r from-blue-600 via-sky-400 to-teal-400 h-full rounded-full animate-indeterminate"></div>
-          </div>
-
-        </div>
+        <div class="institute-badge">
+          {{ t('login_subtitle', 'វិទ្យាស្ថាន សន្តប៉ូល') }}
         </div>
       </div>
 
-      <!-- Compact Success Alert Modal (Checkmark Icon) -->
-      <Transition
-        enter-active-class="transition duration-300 ease-out"
-        enter-from-class="opacity-0 scale-90 translate-y-2"
-        enter-to-class="opacity-100 scale-100 translate-y-0"
-        leave-active-class="transition duration-200 ease-in"
-        leave-from-class="opacity-100 scale-100 translate-y-0"
-        leave-to-class="opacity-0 scale-90 translate-y-2"
-      >
-        <div v-if="showSuccessModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm select-none">
-          <div class="max-w-xs w-full bg-white dark:bg-[#0E172E] rounded-3xl p-6 shadow-2xl border border-emerald-500/30 text-center flex flex-col items-center space-y-3.5 transform transition-all">
-            <!-- Icon with glowing ring -->
-            <div class="relative flex items-center justify-center">
-              <div class="absolute -inset-2 bg-gradient-to-r from-emerald-500/30 to-teal-500/30 rounded-full blur-md animate-pulse"></div>
-              <div class="relative w-14 h-14 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-lg shadow-emerald-500/25 ring-4 ring-white dark:ring-[#0E172E]">
-                <svg class="w-7 h-7 text-white stroke-current" fill="none" viewBox="0 0 24 24" stroke-width="3">
-                  <path stroke-linecap="round" stroke-linejoin="round" class="checkmark-path" d="M4.5 12.75l6 6 9-13.5"/>
-                </svg>
-              </div>
+      <!-- Auth Glassmorphic Card -->
+      <div class="auth-card">
+        
+        <!-- Standard Login Flow -->
+        <div v-if="!isAuthenticating">
+          
+          <!-- OAuth Notification Banner -->
+          <div
+            v-if="oauthNotice"
+            :class="[
+              'oauth-notice-banner',
+              oauthNotice.type === 'warning' ? 'oauth-notice-warning' : 'oauth-notice-error'
+            ]"
+          >
+            <div class="flex items-center gap-2">
+              <span class="text-xs">{{ oauthNotice.type === 'warning' ? '⚠️' : '❌' }}</span>
+              <span>{{ oauthNotice.message }}</span>
             </div>
-            
-            <div class="space-y-1">
-              <h3 class="text-base font-extrabold text-slate-900 dark:text-white">
-                {{ statusMessage ? t('login_modal_status_title', 'ជូនដំណឹង') : t('login_modal_success_title', 'ចូលប្រើប្រាស់ជោគជ័យ!') }}
-              </h3>
-              <p class="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-                {{ statusMessage || t('login_modal_success_msg', 'កំពុងបញ្ជូនអ្នកទៅកាន់ទំព័រដើម...') }}
-              </p>
-            </div>
+            <button type="button" @click="oauthNotice = null" class="opacity-70 hover:opacity-100 p-0.5 cursor-pointer">✕</button>
+          </div>
 
-            <!-- Action Button: Login Now or Got It -->
-            <button
-              v-if="statusMessage"
+          <!-- Error Alert Banner -->
+          <div v-if="form.errors.email" class="form-error-banner">
+            <span>⚠️</span>
+            <span>{{ form.errors.email }}</span>
+          </div>
+
+          <!-- Caps Lock Alert -->
+          <div v-if="capsLockOn" class="caps-lock-banner">
+            <span>🔒</span>
+            <span>{{ t('login_caps_lock_active', 'Caps Lock is ON') }}</span>
+          </div>
+
+          <!-- Multi-Role Switcher Tabs -->
+          <div class="role-switcher" role="tablist">
+            <button 
+              v-for="role in roles" 
+              :key="role.id"
               type="button"
-              @click="showSuccessModal = false"
-              class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs sm:text-sm font-bold shadow-lg shadow-emerald-600/25 transition-all duration-150 cursor-pointer select-none"
+              role="tab"
+              :aria-selected="form.role === role.id"
+              @click="form.role = role.id"
+              :class="['role-btn', { 'role-btn-active': form.role === role.id }]"
             >
-              {{ t('login_modal_btn_login_now', 'ចូលប្រព័ន្ធឥឡូវនេះ (Login)') }}
+              <span class="role-icon">{{ role.icon }}</span>
+              <span class="role-title">{{ role.label }}</span>
             </button>
           </div>
-        </div>
-      </Transition>
 
-      <!-- Compact Error Alert Modal (Question Mark Icon) -->
-      <Transition
-        enter-active-class="transition duration-300 ease-out"
-        enter-from-class="opacity-0 scale-90 translate-y-2"
-        enter-to-class="opacity-100 scale-100 translate-y-0"
-        leave-active-class="transition duration-200 ease-in"
-        leave-from-class="opacity-100 scale-100 translate-y-0"
-        leave-to-class="opacity-0 scale-90 translate-y-2"
-      >
-        <div v-if="showErrorModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm select-none">
-          <div class="max-w-xs w-full bg-white dark:bg-[#0E172E] rounded-3xl p-6 shadow-2xl border border-rose-500/30 text-center flex flex-col items-center space-y-3.5 transform transition-all">
-            <!-- Icon with glowing ring -->
-            <div class="relative flex items-center justify-center">
-              <div class="absolute -inset-2 bg-gradient-to-r from-rose-500/30 to-amber-500/30 rounded-full blur-md animate-pulse"></div>
-              <div class="relative w-14 h-14 rounded-full bg-gradient-to-br from-amber-500 via-rose-500 to-rose-600 text-white flex items-center justify-center shadow-lg shadow-rose-500/25 ring-4 ring-white dark:ring-[#0E172E]">
-                <span class="text-3xl font-black font-sans leading-none">?</span>
+          <!-- Inputs Form -->
+          <form @submit.prevent="submit" class="auth-form" autocomplete="on">
+            
+            <!-- Identity Input -->
+            <div class="form-field">
+              <label for="identity-input" class="input-label">{{ identityLabel }}</label>
+              <div class="input-container">
+                <span class="input-prefix-icon">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </span>
+                <input 
+                  id="identity-input"
+                  v-model="form.email"
+                  type="text" 
+                  autocomplete="username"
+                  :placeholder="identityPlaceholder" 
+                  class="text-input"
+                  required
+                />
+                <button 
+                  v-if="form.email"
+                  type="button" 
+                  @click="clearEmail"
+                  class="input-suffix-btn"
+                  title="Clear"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
             </div>
-            
-            <div class="space-y-1">
-              <h3 class="text-base font-extrabold text-slate-900 dark:text-white">
-                {{ t('login_modal_error_title', 'ព័ត៌មានមិនត្រឹមត្រូវ') }}
-              </h3>
-              <p class="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-                {{ errorMessage || form.errors.email || t('login_modal_error_msg', 'សូមពិនិត្យមើលអ៊ីមែល ឬពាក្យសម្ងាត់របស់អ្នកឡើងវិញ!') }}
-              </p>
+
+            <!-- Password Input -->
+            <div class="form-field">
+              <div class="flex items-center justify-between">
+                <label for="password-input" class="input-label">{{ t('login_input_password_label', 'ពាក្យសម្ងាត់') }}</label>
+                <Link href="/forgot-password" class="forgot-pwd-link">{{ t('login_forgot_password', 'ភ្លេចពាក្យសម្ងាត់?') }}</Link>
+              </div>
+              <div class="input-container">
+                <span class="input-prefix-icon">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </span>
+                <input 
+                  id="password-input"
+                  v-model="form.password"
+                  :type="showPassword ? 'text' : 'password'"
+                  autocomplete="current-password"
+                  placeholder="••••••••••••" 
+                  class="text-input has-suffix"
+                  required
+                />
+                <button 
+                  type="button" 
+                  @click="showPassword = !showPassword"
+                  class="input-suffix-btn"
+                  aria-label="Toggle Password Visibility"
+                >
+                  <svg v-if="!showPassword" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  <svg v-else class="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                  </svg>
+                </button>
+              </div>
+              <span v-if="form.errors.password" class="text-[10px] text-rose-400 block font-semibold mt-0.5">{{ form.errors.password }}</span>
             </div>
 
-            <button
-              type="button"
-              @click="showErrorModal = false"
-              class="w-full py-2 px-4 rounded-xl bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-800/40 text-rose-700 dark:text-rose-300 text-xs font-bold transition-all duration-150 cursor-pointer active:scale-95"
+            <!-- Remember Me Checkbox -->
+            <div class="flex items-center gap-2">
+              <input 
+                id="remember-device"
+                type="checkbox" 
+                v-model="form.remember" 
+                class="checkbox-custom"
+              />
+              <label for="remember-device" class="text-xs text-slate-400 cursor-pointer select-none">
+                {{ t('login_remember_me', 'ចងចាំការចូលប្រើលើឧបករណ៍នេះ') }}
+              </label>
+            </div>
+
+            <!-- Submit Button -->
+            <button 
+              type="submit" 
+              :disabled="isSubmitting || form.processing"
+              class="submit-button"
             >
-              {{ t('login_modal_close', 'យល់ព្រម') }}
+              <span>{{ isSubmitting || form.processing ? t('login_btn_submitting', 'កំពុងផ្ទៀងផ្ទាត់...') : t('login_btn_submit', 'ចូលប្រព័ន្ធ') }}</span>
+              <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </button>
+          </form>
+
+          <!-- Divider Line -->
+          <div class="or-separator">
+            <span>{{ t('login_or', 'ឬ') }}</span>
+          </div>
+
+          <!-- Social SSO Authentication -->
+          <div class="sso-grid">
+            <button 
+              type="button" 
+              :disabled="isAuthenticating"
+              @click="redirectToGoogleOAuth"
+              class="sso-provider-btn"
+            >
+              <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"/>
+                <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/>
+                <path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12.3 0 15.1s.7 5.4 1.9 7.8l3.7-3.1z"/>
+                <path fill="#34A853" d="M12 23.5c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16.7C3.7 20.4 7.5 23.5 12 23.5z"/>
+              </svg>
+              <span>Google</span>
+            </button>
+            
+            <button 
+              type="button" 
+              :disabled="isAuthenticating"
+              @click="redirectToTelegramOAuth"
+              class="sso-provider-btn"
+            >
+              <svg class="w-4 h-4 text-sky-400 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.52 2.77-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
+              </svg>
+              <span>Telegram</span>
             </button>
           </div>
-        </div>
-      </Transition>
 
-    </div>
-  </template>
+          <!-- Register Callout -->
+          <div class="register-callout">
+            <p class="text-xs text-slate-400 flex items-center justify-center gap-1.5">
+              <span>{{ t('login_dont_have_account', 'មិនទាន់មានគណនី?') }}</span>
+              <Link href="/register" class="font-bold text-blue-400 hover:underline">
+                {{ t('login_register_now', 'ចុះឈ្មោះគណនីថ្មី') }}
+              </Link>
+            </p>
+          </div>
+
+        </div>
+
+        <!-- Authenticating / Loading State -->
+        <div v-else class="auth-loading-state">
+          <div class="logo-box mx-auto mb-3">
+            <img :src="logoUrl" alt="E-LMS Logo" class="w-10 h-10 object-contain rounded-full bg-white p-0.5" />
+          </div>
+          <h3 class="text-sm font-bold text-slate-100 mb-1">
+            {{ authLoadingTitle || (currentLang === 'km' ? 'កំពុងរៀបចំ Dashboard របស់អ្នក...' : 'Setting up your dashboard...') }}
+          </h3>
+          <p class="text-xs text-slate-400 font-medium mb-4 max-w-xs leading-relaxed">
+            {{ authLoadingSubtitle || (currentLang === 'km' ? 'សូមរង់ចាំមួយភ្លែត ប្រព័ន្ធកំពុងដំណើរការផ្ទៀងផ្ទាត់' : 'Please wait a moment while verifying your account') }}
+          </p>
+          <div class="loading-progress-track">
+            <div class="loading-progress-bar"></div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- Footer Copyright Note & Links -->
+    <footer class="lms-footer">
+      <div class="footer-links">
+        <Link href="/privacy" class="hover:text-blue-400 hover:underline">{{ t('privacy_policy', 'គោលការណ៍ឯកជនភាព') }}</Link>
+        <span>•</span>
+        <Link href="/terms" class="hover:text-blue-400 hover:underline">{{ t('terms_of_service', 'លក្ខខណ្ឌប្រើប្រាស់') }}</Link>
+      </div>
+      <p class="mt-1">© 2026 E-LMS • {{ t('login_subtitle', 'វិទ្យាស្ថាន សន្តប៉ូល') }}</p>
+    </footer>
+
+    <!-- Compact Success Alert Modal -->
+    <Transition
+      enter-active-class="transition duration-300 ease-out"
+      enter-from-class="opacity-0 scale-90"
+      enter-to-class="opacity-100 scale-100"
+      leave-active-class="transition duration-200 ease-in"
+      leave-from-class="opacity-100 scale-100"
+      leave-to-class="opacity-0 scale-90"
+    >
+      <div v-if="showSuccessModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm select-none">
+        <div class="max-w-xs w-full bg-[#0E172E] rounded-3xl p-5 shadow-2xl border border-emerald-500/30 text-center flex flex-col items-center space-y-3">
+          <div class="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center ring-2 ring-emerald-500/40 text-xl font-bold">
+            ✓
+          </div>
+          <div class="space-y-1">
+            <h3 class="text-sm font-extrabold text-white">
+              {{ statusMessage ? t('login_modal_status_title', 'ជូនដំណឹង') : t('login_modal_success_title', 'ចូលប្រើប្រាស់ជោគជ័យ!') }}
+            </h3>
+            <p class="text-xs text-slate-300 font-medium leading-relaxed">
+              {{ statusMessage || t('login_modal_success_msg', 'កំពុងបញ្ជូនអ្នកទៅកាន់ទំព័រដើម...') }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- Compact Error Alert Modal -->
+    <Transition
+      enter-active-class="transition duration-300 ease-out"
+      enter-from-class="opacity-0 scale-90"
+      enter-to-class="opacity-100 scale-100"
+      leave-active-class="transition duration-200 ease-in"
+      leave-from-class="opacity-100 scale-100"
+      leave-to-class="opacity-0 scale-90"
+    >
+      <div v-if="showErrorModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm select-none">
+        <div class="max-w-xs w-full bg-[#0E172E] rounded-3xl p-5 shadow-2xl border border-rose-500/30 text-center flex flex-col items-center space-y-3">
+          <div class="w-12 h-12 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center ring-2 ring-rose-500/40 text-xl font-bold">
+            !
+          </div>
+          <div class="space-y-1">
+            <h3 class="text-sm font-extrabold text-white">
+              {{ t('login_modal_error_title', 'ព័ត៌មានមិនត្រឹមត្រូវ') }}
+            </h3>
+            <p class="text-xs text-slate-300 font-medium leading-relaxed">
+              {{ errorMessage || form.errors.email || t('login_modal_error_msg', 'សូមពិនិត្យមើលអ៊ីមែល ឬពាក្យសម្ងាត់របស់អ្នកឡើងវិញ!') }}
+            </p>
+          </div>
+          <button
+            type="button"
+            @click="showErrorModal = false"
+            class="w-full py-2 px-4 rounded-xl bg-rose-950/60 hover:bg-rose-900 border border-rose-800/50 text-rose-200 text-xs font-bold transition cursor-pointer"
+          >
+            {{ t('login_modal_close', 'យល់ព្រម') }}
+          </button>
+        </div>
+      </div>
+    </Transition>
+
+  </div>
+</template>
 
 <style scoped>
-.checkmark-path {
-  stroke-dasharray: 50;
-  stroke-dashoffset: 50;
-  animation: checkmarkDraw 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+/* Base Universal Viewport Architecture */
+.lms-viewport {
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: #060b18;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: #f8fafc;
+  box-sizing: border-box;
+  position: relative;
+  overflow-x: hidden;
+  padding: calc(env(safe-area-inset-top, 16px) + 8px) calc(env(safe-area-inset-right, 16px) + 8px) calc(env(safe-area-inset-bottom, 16px) + 8px) calc(env(safe-area-inset-left, 16px) + 8px);
 }
 
-@keyframes checkmarkDraw {
-  0% {
-    stroke-dashoffset: 50;
-    opacity: 0;
-  }
-  100% {
-    stroke-dashoffset: 0;
-    opacity: 1;
-  }
+/* Ambient Backdrops */
+.ambient-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.glow-orb {
+  position: absolute;
+  width: 20rem;
+  height: 20rem;
+  border-radius: 9999px;
+  filter: blur(80px);
+  pointer-events: none;
+  opacity: 0.16;
+}
+.orb-top { top: -5rem; left: 50%; transform: translateX(-50%); background-color: #2563eb; }
+.orb-bottom { bottom: -5rem; right: -3rem; background-color: #4f46e5; }
+
+/* Top Header Bar */
+.lms-header {
+  width: 100%;
+  max-width: 410px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 30;
+}
+.action-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  background-color: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 0.15s ease;
+}
+.action-chip:active { transform: scale(0.96); }
+.chip-flag { font-size: 0.8125rem; }
+.chip-text { font-size: 0.75rem; font-weight: 600; }
+.chip-arrow { width: 0.75rem; height: 0.75rem; opacity: 0.7; }
+
+/* Language Dropdown */
+.lang-dropdown {
+  position: absolute;
+  left: 0;
+  margin-top: 0.375rem;
+  width: 10rem;
+  border-radius: 1rem;
+  background-color: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+  padding: 0.25rem 0;
+  z-index: 50;
+  overflow: hidden;
+}
+.lang-dropdown-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+.lang-dropdown-item:hover { background-color: rgba(255, 255, 255, 0.08); color: #ffffff; }
+.lang-dropdown-item-active { background-color: rgba(37, 99, 235, 0.2); color: #60a5fa; }
+
+/* Main Wrapper */
+.lms-main {
+  width: 100%;
+  max-width: 410px;
+  margin: auto;
+  z-index: 20;
+  padding: 0.5rem 0;
 }
 
-@keyframes floatSlow {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-22px) rotate(4deg); }
+/* Branding */
+.branding-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 0.875rem;
+}
+.logo-badge {
+  padding: 2px;
+  border-radius: 1.25rem;
+  background: linear-gradient(135deg, #2563eb, #6366f1);
+  box-shadow: 0 10px 24px -4px rgba(37, 99, 235, 0.3);
+  margin-bottom: 0.5rem;
+}
+.logo-box {
+  width: 3.5rem;
+  height: 3.5rem;
+  background-color: #0b1329;
+  border-radius: 1.15rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.institute-badge {
+  padding: 0.25rem 0.875rem;
+  border-radius: 9999px;
+  background-color: rgba(37, 99, 235, 0.12);
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  color: #93c5fd;
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 
-@keyframes floatReverse {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(22px) rotate(-4deg); }
+/* Glassmorphism Card */
+.auth-card {
+  background: linear-gradient(165deg, rgba(15, 23, 42, 0.75) 0%, rgba(10, 16, 31, 0.85) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.5rem;
+  padding: 1.25rem;
+  box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+@media (min-width: 640px) {
+  .auth-card { padding: 1.625rem; }
 }
 
-@keyframes spinSlow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+/* Notice & Alerts */
+.oauth-notice-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.oauth-notice-warning { background-color: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: #fcd34d; }
+.oauth-notice-error { background-color: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.3); color: #fda4af; }
+.form-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  background-color: rgba(244, 63, 94, 0.15);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  color: #fda4af;
+  font-size: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.caps-lock-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.75rem;
+  background-color: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #fcd34d;
+  font-size: 0.6875rem;
+  margin-bottom: 0.75rem;
 }
 
-@keyframes spinReverse {
-  from { transform: rotate(360deg); }
-  to { transform: rotate(0deg); }
+/* Role Selector Tabs */
+.role-switcher {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.25rem;
+  background-color: rgba(2, 6, 23, 0.7);
+  padding: 0.25rem;
+  border-radius: 0.875rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  margin-bottom: 1rem;
+}
+.role-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0.125rem;
+  border-radius: 0.625rem;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: all 0.2s ease;
+}
+.role-btn-active {
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+}
+.role-icon { font-size: 0.875rem; }
+.role-title { font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+
+/* Form Fields */
+.auth-form { display: flex; flex-direction: column; gap: 0.875rem; }
+.form-field { display: flex; flex-direction: column; gap: 0.3125rem; }
+.input-label { font-size: 0.75rem; font-weight: 600; color: #cbd5e1; }
+.forgot-pwd-link { font-size: 0.6875rem; color: #60a5fa; text-decoration: none; }
+.forgot-pwd-link:hover { text-decoration: underline; }
+
+.input-container { position: relative; display: flex; align-items: center; width: 100%; }
+.input-prefix-icon {
+  position: absolute;
+  left: 0.875rem;
+  color: #64748b;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+}
+.text-input {
+  width: 100%;
+  padding: 0.625rem 0.875rem 0.625rem 2.375rem;
+  background-color: rgba(2, 6, 23, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  color: #f8fafc;
+  outline: none;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  transition: all 0.2s ease;
+}
+.text-input:focus {
+  border-color: #3b82f6;
+  background-color: rgba(2, 6, 23, 0.85);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+.text-input.has-suffix { padding-right: 2.375rem; }
+.input-suffix-btn {
+  position: absolute;
+  right: 0.875rem;
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
 }
 
-@keyframes aurora {
-  0% { transform: translate(0%, 0%) rotate(0deg); }
-  50% { transform: translate(8%, 8%) rotate(180deg); }
-  100% { transform: translate(0%, 0%) rotate(360deg); }
+/* Checkbox */
+.checkbox-custom {
+  width: 0.95rem;
+  height: 0.95rem;
+  accent-color: #2563eb;
+  cursor: pointer;
 }
 
-.animate-float-slow {
-  animation: floatSlow 8s ease-in-out infinite;
+/* Primary Button */
+.submit-button {
+  margin-top: 0.25rem;
+  width: 100%;
+  padding: 0.6875rem;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 8px 20px -4px rgba(37, 99, 235, 0.4);
+  touch-action: manipulation;
+  transition: all 0.2s ease;
 }
-.animate-float-reverse {
-  animation: floatReverse 11s ease-in-out infinite;
+.submit-button:hover { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.submit-button:active { transform: scale(0.98); }
+.submit-button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Separator */
+.or-separator {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0.875rem 0;
 }
-.animate-spin-slow {
-  animation: spinSlow 30s linear infinite;
+.or-separator::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
 }
-.animate-spin-reverse {
-  animation: spinReverse 35s linear infinite;
-}
-.animate-aurora {
-  animation: aurora 25s linear infinite;
-}
-.animate-pulse-slow {
-  animation: pulse 5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+.or-separator span {
+  position: relative;
+  background-color: #0c1428;
+  padding: 0 0.625rem;
+  font-size: 0.6875rem;
+  color: #64748b;
+  text-transform: uppercase;
 }
 
-@keyframes indeterminate {
-  0% {
-    transform: translateX(-100%) scaleX(0.2);
-  }
-  50% {
-    transform: translateX(0%) scaleX(0.6);
-  }
-  100% {
-    transform: translateX(100%) scaleX(0.2);
-  }
+/* SSO Providers */
+.sso-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.625rem;
+}
+.sso-provider-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.5625rem;
+  background-color: rgba(2, 6, 23, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 0.75rem;
+  color: #e2e8f0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: all 0.15s ease;
+}
+.sso-provider-btn:hover { background-color: rgba(255, 255, 255, 0.05); }
+.sso-provider-btn:active { transform: scale(0.97); }
+
+/* Register Callout */
+.register-callout {
+  margin-top: 0.875rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  text-align: center;
 }
 
-.animate-indeterminate {
+/* Loading State */
+.auth-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1rem 0;
+}
+.loading-progress-track {
+  width: 12rem;
+  background-color: rgba(2, 6, 23, 0.7);
+  border-radius: 9999px;
+  height: 0.375rem;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.loading-progress-bar {
+  background: linear-gradient(90deg, #2563eb, #38bdf8, #2dd4bf);
+  height: 100%;
+  border-radius: 9999px;
   animation: indeterminate 1.2s infinite cubic-bezier(0.65, 0.815, 0.735, 0.395);
   transform-origin: 0% 50%;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.96) translateY(4px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+@keyframes indeterminate {
+  0% { transform: translateX(-100%) scaleX(0.2); }
+  50% { transform: translateX(0%) scaleX(0.6); }
+  100% { transform: translateX(100%) scaleX(0.2); }
 }
 
-.animate-fade-in {
-  animation: fadeIn 0.35s ease-out forwards;
+/* Footer */
+.lms-footer {
+  text-align: center;
+  font-size: 0.6875rem;
+  color: #64748b;
+  padding-top: 0.5rem;
+  z-index: 20;
+}
+.footer-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
 }
 </style>
-
-
-
