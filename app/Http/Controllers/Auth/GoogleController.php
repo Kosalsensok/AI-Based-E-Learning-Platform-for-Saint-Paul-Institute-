@@ -20,8 +20,13 @@ class GoogleController extends Controller
      */
     public function redirectToGoogle(Request $request)
     {
-        $clientId = config('services.google.client_id') ?? env('GOOGLE_CLIENT_ID');
-        $redirectUri = config('services.google.redirect') ?? env('GOOGLE_REDIRECT_URI') ?? url('/auth/google/callback');
+        $clientId = config('services.google.client_id') ?: env('GOOGLE_CLIENT_ID');
+        $redirectUri = config('services.google.redirect') ?: env('GOOGLE_REDIRECT_URI') ?: url('/auth/google/callback');
+
+        if (empty($clientId)) {
+            Log::error('Google OAuth Client ID is missing. Please set GOOGLE_CLIENT_ID in your environment.');
+            return redirect()->route('login')->withErrors(['email' => 'Google Login is currently not configured on this server (Missing GOOGLE_CLIENT_ID). Please check server environment settings.']);
+        }
 
         // PKCE
         $codeVerifier = Str::random(64);
@@ -65,9 +70,9 @@ class GoogleController extends Controller
         }
 
         try {
-            $clientId = config('services.google.client_id') ?? env('GOOGLE_CLIENT_ID');
-            $clientSecret = config('services.google.client_secret') ?? env('GOOGLE_CLIENT_SECRET');
-            $redirectUri = config('services.google.redirect') ?? env('GOOGLE_REDIRECT_URI') ?? url('/auth/google/callback');
+            $clientId = config('services.google.client_id') ?: env('GOOGLE_CLIENT_ID');
+            $clientSecret = config('services.google.client_secret') ?: env('GOOGLE_CLIENT_SECRET');
+            $redirectUri = config('services.google.redirect') ?: env('GOOGLE_REDIRECT_URI') ?: url('/auth/google/callback');
 
             // Extract code_verifier
             $codeVerifier = null;

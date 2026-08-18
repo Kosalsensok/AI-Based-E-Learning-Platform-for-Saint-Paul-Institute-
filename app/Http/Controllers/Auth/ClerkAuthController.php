@@ -6,10 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\AuthLog;
 use App\Models\User;
 use App\Services\TelegramService;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -20,8 +20,13 @@ class ClerkAuthController extends Controller
      */
     public function redirectToGoogle(Request $request)
     {
-        $googleClientId = config('services.google.client_id') ?? env('GOOGLE_CLIENT_ID');
-        $redirectUri = config('services.google.redirect') ?? env('GOOGLE_REDIRECT_URI') ?? url('/auth/google/callback');
+        $googleClientId = config('services.google.client_id') ?: env('GOOGLE_CLIENT_ID');
+        $redirectUri = config('services.google.redirect') ?: env('GOOGLE_REDIRECT_URI') ?: url('/auth/google/callback');
+
+        if (empty($googleClientId)) {
+            Log::error('Google OAuth Client ID is missing. Please set GOOGLE_CLIENT_ID in your environment.');
+            return redirect()->route('login')->withErrors(['email' => 'Google Login is currently not configured on this server (Missing GOOGLE_CLIENT_ID). Please check server environment settings.']);
+        }
 
         // Generate PKCE code verifier and code challenge (RFC 7636)
         $codeVerifier = Str::random(64);
@@ -68,9 +73,9 @@ class ClerkAuthController extends Controller
         if (!empty($data['code'])) {
             try {
                 $code = $data['code'];
-                $googleClientId = config('services.google.client_id') ?? env('GOOGLE_CLIENT_ID');
-                $googleClientSecret = config('services.google.client_secret') ?? env('GOOGLE_CLIENT_SECRET');
-                $redirectUri = config('services.google.redirect') ?? env('GOOGLE_REDIRECT_URI') ?? url('/auth/google/callback');
+                $googleClientId = config('services.google.client_id') ?: env('GOOGLE_CLIENT_ID');
+                $googleClientSecret = config('services.google.client_secret') ?: env('GOOGLE_CLIENT_SECRET');
+                $redirectUri = config('services.google.redirect') ?: env('GOOGLE_REDIRECT_URI') ?: url('/auth/google/callback');
 
                 // Extract code_verifier from state or session
                 $codeVerifier = null;
@@ -84,343 +89,223 @@ class ClerkAuthController extends Controller
                     $codeVerifier = $request->session()->get('google_code_verifier');
                 }
 
-                $postParams = [
-                    'code'          => $code,
-                    'client_id'     => $googleClientId,
-                    'redirect_uri'  => $redirectUri,
-                    'grant_type'    => 'authorization_code',
+                $postData = [
+                    'code' => $code,
+                    'client_id' => $googleClientId,
+                    'redirect_uri' => $redirectUri,
+                    'grant_type' => 'authorization_code',
                 ];
 
-                if (!empty($codeVerifier)) {
-                    $postParams['code_verifier'] = $codeVerifier;
+                if ($googleClientSecret) {
+                    $postData['client_secret'] = $googleClientSecret;
+                }
+                if ($codeVerifier) {
+                    $postData['code_verifier'] = $codeVerifier;
                 }
 
-                if (!empty($googleClientSecret)) {
-                    $postParams['client_secret'] = $googleClientSecret;
-                }
-
-                $tokenResponse = \Illuminate\Support\Facades\Http::timeout(10)
-                    ->asForm()
-                    ->post('https://oauth2.googleapis.com/token', $postParams);
-
-                Log::info('Google Token Exchange Response Status: ' . $tokenResponse->status());
+                $tokenResponse = Http::timeout(10)->asForm()->post('https://oauth2.googleapis.com/token', $postData);
 
                 if ($tokenResponse->successful()) {
-                    $tokenData = $tokenResponse->json();
-                    $accessToken = $tokenData['access_token'] ?? null;
-                    $idToken = $tokenData['id_token'] ?? null;
+                    $tokenJson = $tokenResponse->json();
+                    $idToken = $tokenJson['id_token'] ?? null;
+                    $accessToken = $tokenJson['access_token'] ?? null;
+
+                    $googleEmail = null;
+                    $googleName = null;
+                    $googleSub = null;
+                    $googlePicture = null;
 
                     if ($idToken) {
-                        $data['credential'] = $idToken;
-                        $jwtParts = explode('.', $idToken);
-                        if (count($jwtParts) >= 2) {
-                            $payloadJson = base64_decode(str_replace(['-', '_'], ['+', '/'], $jwtParts[1]));
-                            $idPayload = json_decode($payloadJson, true);
-                            if (!empty($idPayload['email'])) {
-                                $email = strtolower(trim($idPayload['email']));
-                                $googleId = $idPayload['sub'] ?? null;
-                                $firstName = $idPayload['given_name'] ?? '';
-                                $lastName = $idPayload['family_name'] ?? '';
-                                $fullName = $idPayload['name'] ?? trim($firstName . ' ' . $lastName);
-                                $imageUrl = $idPayload['picture'] ?? null;
-                            }
+                        $parts = explode('.', $idToken);
+                        if (count($parts) >= 2) {
+                            $payload = json_decode(base64_decode(str_replace(['-', '_'], ['+', '/'], $parts[1])), true);
+                            $googleEmail = $payload['email'] ?? null;
+                            $googleName = $payload['name'] ?? trim(($payload['given_name'] ?? '') . ' ' . ($payload['family_name'] ?? ''));
+                            $googleSub = $payload['sub'] ?? null;
+                            $googlePicture = $payload['picture'] ?? null;
                         }
                     }
 
-                    if ($accessToken && empty($email)) {
-                        try {
-                            $userinfoResponse = \Illuminate\Support\Facades\Http::timeout(10)
-                                ->withToken($accessToken)
-                                ->get('https://www.googleapis.com/oauth2/v3/userinfo');
-
-                            if ($userinfoResponse->successful()) {
-                                $userInfo = $userinfoResponse->json();
-                                $email = strtolower(trim($userInfo['email'] ?? ''));
-                                $googleId = $userInfo['sub'] ?? $googleId ?? null;
-                                $firstName = $userInfo['given_name'] ?? $firstName ?? '';
-                                $lastName = $userInfo['family_name'] ?? $lastName ?? '';
-                                $fullName = $userInfo['name'] ?? trim($firstName . ' ' . $lastName) ?: $fullName;
-                                $imageUrl = $userInfo['picture'] ?? $imageUrl ?? null;
-                            }
-                        } catch (\Throwable $uEx) {
-                            Log::warning('Google userinfo fetch failed: ' . $uEx->getMessage());
+                    if (empty($googleEmail) && $accessToken) {
+                        $userInfoRes = Http::timeout(10)->withToken($accessToken)->get('https://www.googleapis.com/oauth2/v3/userinfo');
+                        if ($userInfoRes->successful()) {
+                            $uInfo = $userInfoRes->json();
+                            $googleEmail = $uInfo['email'] ?? null;
+                            $googleName = $uInfo['name'] ?? $googleName;
+                            $googleSub = $uInfo['sub'] ?? $googleSub;
+                            $googlePicture = $uInfo['picture'] ?? $googlePicture;
                         }
+                    }
+
+                    if ($googleEmail) {
+                        $data = [
+                            'email' => $googleEmail,
+                            'name' => $googleName ?: 'Google User',
+                            'clerk_id' => $googleSub,
+                            'google_id' => $googleSub,
+                            'avatar' => $googlePicture,
+                            'first_name' => $googleName ?: 'Google User',
+                        ];
                     }
                 } else {
-                    Log::error('Google Token Exchange Error: ' . $tokenResponse->body());
+                    Log::error('ClerkAuthController: Direct Google token exchange error: ' . $tokenResponse->body());
                 }
             } catch (\Throwable $tokenEx) {
-                Log::error('Google OAuth Code exchange failed: ' . $tokenEx->getMessage());
+                Log::error('ClerkAuthController: Direct Google token exchange exception: ' . $tokenEx->getMessage());
             }
         }
 
-        // 0. Rigorous Google Identity Services (GIS) / OAuth 2.0 JWT Token Verification
-        if (!empty($data['credential'])) {
-            try {
-                $rawToken = (string) $data['credential'];
-                
-                // Attempt direct Google TokenInfo verification if network allows
-                $googleVerified = false;
-                try {
-                    $verifyResponse = \Illuminate\Support\Facades\Http::timeout(10)
-                        ->get("https://oauth2.googleapis.com/tokeninfo?id_token={$rawToken}");
-                    
-                    if ($verifyResponse->successful()) {
-                        $tokenInfo = $verifyResponse->json();
-                        if (!empty($tokenInfo['email'])) {
-                            $email = strtolower(trim($tokenInfo['email']));
-                            $googleId = $tokenInfo['sub'] ?? null;
-                            $firstName = $tokenInfo['given_name'] ?? '';
-                            $lastName = $tokenInfo['family_name'] ?? '';
-                            $fullName = $tokenInfo['name'] ?? trim($firstName . ' ' . $lastName);
-                            $imageUrl = $tokenInfo['picture'] ?? null;
-                            $googleVerified = true;
-                        }
-                    }
-                } catch (\Throwable $netEx) {
-                    Log::info('Google TokenInfo online check skipped/fallback to local JWT: ' . $netEx->getMessage());
-                }
+        // 1. Validate payload: Need at least email OR clerk_id
+        $email = $data['email'] ?? null;
+        $clerkId = $data['clerk_id'] ?? $data['id'] ?? null;
+        $googleId = $data['google_id'] ?? null;
+        $avatar = $data['avatar'] ?? $data['image_url'] ?? $data['picture'] ?? null;
+        $name = $data['name'] ?? trim(($data['first_name'] ?? '') . ' ' . ($data['last_name'] ?? ''));
 
-                // Fallback to local cryptographic payload decoding
-                if (!$googleVerified) {
-                    $jwtParts = explode('.', $rawToken);
-                    if (count($jwtParts) >= 2) {
-                        $payloadJson = base64_decode(str_replace(['-', '_'], ['+', '/'], $jwtParts[1]));
-                        $googlePayload = json_decode($payloadJson, true);
-                        if (!empty($googlePayload['email'])) {
-                            // Verify email_verified flag
-                            $isEmailVerified = $googlePayload['email_verified'] ?? true;
-                            if ($isEmailVerified === false || $isEmailVerified === 'false') {
-                                return response()->json([
-                                    'success' => false,
-                                    'message' => 'គណនី Google នេះមិនទាន់បាន Verify អ៊ីមែលនៅឡើយទេ (Email not verified by Google)',
-                                ], 422);
-                            }
-
-                            $email = strtolower(trim($googlePayload['email']));
-                            $googleId = $googlePayload['sub'] ?? null;
-                            $firstName = $googlePayload['given_name'] ?? '';
-                            $lastName = $googlePayload['family_name'] ?? '';
-                            $fullName = $googlePayload['name'] ?? trim($firstName . ' ' . $lastName);
-                            $imageUrl = $googlePayload['picture'] ?? null;
-                        }
-                    }
-                }
-            } catch (\Throwable $e) {
-                Log::warning('Google JWT Decode exception: ' . $e->getMessage());
-            }
-        }
-
-        // 1. Extract Clerk user information
-        $email = $email ?? $data['email'] ?? $data['email_address'] ?? null;
-        if ($email) {
-            $email = strtolower(trim($email));
-        }
-
-        // Strict Email Format Validation
-        if (!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'ទម្រង់អ៊ីមែលមិនត្រឹមត្រូវ (Invalid email format)',
-            ], 422);
-        }
-
-        $clerkId = $clerkId ?? $data['id'] ?? $data['clerk_id'] ?? null;
-        $firstName = $firstName ?? $data['first_name'] ?? $data['firstName'] ?? '';
-        $lastName = $lastName ?? $data['last_name'] ?? $data['lastName'] ?? '';
-        $fullName = $fullName ?? trim($firstName . ' ' . $lastName);
-        $imageUrl = $imageUrl ?? $data['image_url'] ?? $data['imageUrl'] ?? $data['photo_url'] ?? null;
-        $googleId = $googleId ?? $data['google_id'] ?? null;
-
-        if (empty($email) && empty($clerkId) && empty($googleId)) {
-            if ($request->wantsJson() || $request->isMethod('post')) {
+        if (empty($email) && empty($clerkId)) {
+            Log::warning('Clerk auth failed: missing email and clerk_id in payload', ['payload' => $data]);
+            if ($request->isMethod('post')) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'ទិន្នន័យ Google / Clerk មិនត្រឹមត្រូវ (Missing email or user ID)',
+                    'message' => 'Missing required authentication fields (email or clerk_id).'
                 ], 422);
             }
-            return redirect()->route('login')->withErrors([
-                'email' => 'ការចូលប្រព័ន្ធតាមរយៈ Google បរាជ័យ! សូមព្យាយាមម្តងទៀត។',
-            ]);
+            return redirect()->route('login')->withErrors(['email' => 'Google / Clerk authentication incomplete. Please try again.']);
         }
 
-        if (empty($fullName)) {
-            $fullName = explode('@', $email ?? 'Google User')[0];
-        }
+        try {
+            // 2. Find existing user by clerk_id, google_id, or email
+            $user = null;
 
-        $ip = $request->ip();
-        $userAgent = $request->userAgent() ?? '';
-        $device = str_contains(strtolower($userAgent), 'mobile') ? 'Mobile' : 'Desktop';
-        $browser = $this->getBrowserName($userAgent);
-
-        // 2. Find existing user by email, google_id, or clerk_id
-        $user = null;
-
-        if ($email) {
-            $user = User::where('email', $email)->first();
-        }
-
-        if (!$user && $googleId) {
-            $user = User::where('google_id', $googleId)->first();
-        }
-
-        if (!$user && $clerkId) {
-            $user = User::where('clerk_id', $clerkId)->first();
-        }
-
-        // 3. Update existing user or register new student user
-        if ($user) {
-            $updateData = [];
-            if ($googleId && empty($user->google_id)) {
-                $updateData['google_id'] = $googleId;
+            if ($clerkId) {
+                $user = User::where('clerk_id', $clerkId)->first();
             }
-            if ($clerkId && empty($user->clerk_id)) {
-                $updateData['clerk_id'] = $clerkId;
+
+            if (!$user && $googleId) {
+                $user = User::where('google_id', $googleId)->first();
             }
-            if ($imageUrl && empty($user->avatar)) {
-                $updateData['avatar'] = $imageUrl;
+
+            if (!$user && $email) {
+                $user = User::where('email', strtolower(trim($email)))->first();
             }
-            if (empty($user->email_verified_at)) {
-                $updateData['email_verified_at'] = now();
-            }
-            if (!empty($updateData)) {
-                $user->update($updateData);
-            }
-        } else {
-            // Generate unique student code
-            $studentCode = 'STU' . date('y') . rand(1000, 9999);
-            while (User::where('student_code', $studentCode)->exists()) {
+
+            // 3. Update existing user or create a new student account
+            if ($user) {
+                $updates = [];
+                if ($clerkId && empty($user->clerk_id)) {
+                    $updates['clerk_id'] = $clerkId;
+                }
+                if ($googleId && empty($user->google_id)) {
+                    $updates['google_id'] = $googleId;
+                }
+                if ($avatar && empty($user->avatar)) {
+                    $updates['avatar'] = $avatar;
+                }
+                if (empty($user->email_verified_at)) {
+                    $updates['email_verified_at'] = now();
+                }
+                if ($user->status !== 'active') {
+                    $updates['status'] = 'active';
+                    $updates['is_active'] = true;
+                }
+
+                if (!empty($updates)) {
+                    $user->update($updates);
+                }
+            } else {
+                // Auto-create new user with student role
                 $studentCode = 'STU' . date('y') . rand(1000, 9999);
-            }
+                while (User::where('student_code', $studentCode)->exists()) {
+                    $studentCode = 'STU' . date('y') . rand(1000, 9999);
+                }
 
-            $user = User::create([
-                'name'              => $fullName,
-                'name_kh'           => $fullName,
-                'email'             => $email ?? "google_{$googleId}@spi-elms.edu.kh",
-                'password'          => Hash::make(Str::random(32)),
-                'role'              => 'student',
-                'student_code'      => $studentCode,
-                'study_type'        => 'on_campus',
-                'google_id'         => $googleId,
-                'clerk_id'          => $clerkId,
-                'avatar'            => $imageUrl,
-                'email_verified_at' => now(),
-                'is_active'         => true,
-                'status'            => 'active',
-            ]);
-        }
-
-        // 4. Account Status Verification
-        if ($user->is_active === false || $user->status === 'inactive') {
-            $errMsg = 'គណនីរបស់អ្នកត្រូវបានបិទដំណើរការ។';
-            if ($request->wantsJson() || $request->isMethod('post')) {
-                return response()->json(['success' => false, 'message' => $errMsg], 403);
-            }
-            return redirect()->route('login')->withErrors(['email' => $errMsg]);
-        }
-
-        if ($user->status === 'suspended') {
-            $errMsg = 'គណនីរបស់អ្នកត្រូវបានព្យួរជាបណ្តោះអាសន្ន។';
-            if ($request->wantsJson() || $request->isMethod('post')) {
-                return response()->json(['success' => false, 'message' => $errMsg], 403);
-            }
-            return redirect()->route('login')->withErrors(['email' => $errMsg]);
-        }
-
-        // 5. Successful Authentication
-        $user->update([
-            'login_attempts' => 0,
-            'locked_until' => null,
-            'last_login_at' => now(),
-        ]);
-
-        AuthLog::create([
-            'user_id' => $user->id,
-            'email' => $user->email,
-            'ip_address' => $ip,
-            'user_agent' => $userAgent,
-            'device' => $device,
-            'browser' => $browser,
-            'status' => 'success',
-        ]);
-
-        // Security notification via Telegram
-        try {
-            $telegramService->sendMessage(
-                "<b>🔓 GOOGLE / CLERK OAUTH LOGIN SUCCESSFUL</b>\n" .
-                "----------------------------------------\n" .
-                "👤 <b>Name:</b> {$user->name}\n" .
-                "📧 <b>Email:</b> {$user->email}\n" .
-                "🌐 <b>Provider:</b> Google (Clerk)\n" .
-                "🎓 <b>Role:</b> " . strtoupper($user->role) . "\n" .
-                "🌐 <b>IP Address:</b> {$ip}\n" .
-                "📱 <b>Device:</b> {$device} ({$browser})\n" .
-                "⏰ <b>Time:</b> " . now()->format('Y-m-d H:i:s') . "\n"
-            );
-        } catch (\Throwable $e) {
-            Log::warning('Google login Telegram notify failed: ' . $e->getMessage());
-        }
-
-        // Generate JWT Token safely if configured
-        try {
-            if (config('jwt.secret')) {
-                $token = \Tymon\JWTAuth\Facades\JWTAuth::fromUser($user);
-                $payload = \Tymon\JWTAuth\Facades\JWTAuth::setToken($token)->getPayload();
-
-                \App\Models\JwtSession::create([
-                    'user_id' => $user->id,
-                    'token' => $token,
-                    'expires_at' => Carbon::createFromTimestamp($payload->get('exp')),
-                    'ip_address' => $ip,
-                    'user_agent' => $userAgent,
+                $user = User::create([
+                    'name' => !empty($name) ? $name : ($email ? explode('@', $email)[0] : 'Clerk User'),
+                    'name_kh' => !empty($name) ? $name : ($email ? explode('@', $email)[0] : 'Clerk User'),
+                    'email' => strtolower(trim($email ?: ($clerkId . '@clerk.user'))),
+                    'password' => Hash::make(Str::random(32)),
+                    'role' => 'student',
+                    'student_code' => $studentCode,
+                    'study_type' => 'on_campus',
+                    'clerk_id' => $clerkId,
+                    'google_id' => $googleId,
+                    'avatar' => $avatar,
+                    'email_verified_at' => now(),
+                    'is_active' => true,
+                    'status' => 'active',
                 ]);
             }
-        } catch (\Throwable $e) {
-            Log::warning('JWT token creation exception: ' . $e->getMessage());
-        }
 
-        if ($request->hasSession()) {
-            $request->session()->regenerate();
-        }
-        Auth::login($user, true);
-        if ($request->hasSession()) {
-            $request->session()->save();
-        }
+            // 4. Log user in via Laravel Auth
+            if ($request->hasSession()) {
+                $request->session()->regenerate();
+            }
+            Auth::login($user, true);
+            if ($request->hasSession()) {
+                $request->session()->save();
+            }
 
-        $redirectUrl = match ($user->role) {
-            'admin' => '/admin/dashboard',
-            'teacher' => '/teacher/dashboard',
-            default => '/student/dashboard',
-        };
+            // 5. Audit Log & Telegram Notification
+            try {
+                $ip = $request->ip();
+                $userAgent = $request->userAgent() ?? '';
+                $device = str_contains(strtolower($userAgent), 'mobile') ? 'Mobile' : 'Desktop';
 
-        if ($request->wantsJson() || $request->isMethod('post')) {
-            return response()->json([
-                'success' => true,
-                'message' => "ស្វាគមន៍ {$user->name}! Login តាម Google ជោគជ័យ។",
-                'redirect' => $redirectUrl,
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
+                AuthLog::create([
+                    'user_id' => $user->id,
                     'email' => $user->email,
-                    'role' => $user->role,
-                    'avatar' => $user->avatar,
-                ],
-            ]);
+                    'ip_address' => $ip,
+                    'user_agent' => $userAgent,
+                    'device' => $device,
+                    'browser' => 'Google/Clerk OAuth',
+                    'status' => 'success',
+                ]);
+
+                $authProvider = $googleId ? 'GOOGLE' : 'CLERK';
+                $telegramService->sendMessage(
+                    "<b>🔓 {$authProvider} OAUTH LOGIN SUCCESSFUL</b>\n" .
+                    "----------------------------------------\n" .
+                    "👤 <b>Name:</b> {$user->name}\n" .
+                    "📧 <b>Email:</b> {$user->email}\n" .
+                    "🎓 <b>Role:</b> " . strtoupper($user->role) . "\n" .
+                    "🌐 <b>IP Address:</b> {$ip}\n" .
+                    "📱 <b>Device:</b> {$device}\n" .
+                    "⏰ <b>Time:</b> " . now()->format('Y-m-d H:i:s') . "\n"
+                );
+            } catch (\Throwable $logEx) {
+                Log::warning('Clerk auth log warning: ' . $logEx->getMessage());
+            }
+
+            $redirectUrl = match ($user->role) {
+                'admin' => '/admin/dashboard',
+                'teacher' => '/teacher/dashboard',
+                default => '/student/dashboard',
+            };
+
+            if ($request->isMethod('post')) {
+                return response()->json([
+                    'success' => true,
+                    'redirect' => $redirectUrl,
+                    'user' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'role' => $user->role,
+                    ]
+                ]);
+            }
+
+            return redirect()->to($redirectUrl);
+
+        } catch (\Throwable $e) {
+            Log::error('Clerk Callback Auth Exception: ' . $e->getMessage(), ['exception' => $e]);
+            if ($request->isMethod('post')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Internal server error processing authentication: ' . $e->getMessage()
+                ], 500);
+            }
+            return redirect()->route('login')->withErrors(['email' => 'Server error during Google/Clerk login: ' . $e->getMessage()]);
         }
-
-        return redirect()->to($redirectUrl);
-    }
-
-    private function getBrowserName($userAgent)
-    {
-        if (str_contains($userAgent, 'Chrome'))
-            return 'Chrome';
-        if (str_contains($userAgent, 'Firefox'))
-            return 'Firefox';
-        if (str_contains($userAgent, 'Safari'))
-            return 'Safari';
-        if (str_contains($userAgent, 'Edge'))
-            return 'Edge';
-        return 'Unknown';
     }
 }
