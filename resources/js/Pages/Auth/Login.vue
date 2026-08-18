@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useForm, Link, router, usePage } from '@inertiajs/vue3'
 import { i18n, type LanguageCode } from '../../Services/i18n'
+import { useTheme, initTheme } from '../../composables/useTheme'
 
 const logoUrl = '/images/logo.png'
 
@@ -10,6 +11,8 @@ const props = defineProps<{
 }>()
 
 const page = usePage()
+
+const { isDark, toggleTheme } = useTheme()
 
 const form = useForm({
   email: '',
@@ -20,15 +23,14 @@ const form = useForm({
 
 const showPassword = ref(false)
 const capsLockOn = ref(false)
-const isDark = ref(true)
 const isLangOpen = ref(false)
 const showSuccessModal = ref(false)
 const showErrorModal = ref(false)
 const statusMessage = ref<string | null>(null)
 
 const languages = [
-  { code: 'km' as LanguageCode, name: 'ភាសាខ្មែរ', label: 'ខ្មែរ', short: 'KH', flag: '🇰🇭', flagUrl: '/images/flags/km.svg' },
-  { code: 'en' as LanguageCode, name: 'English', label: 'English', short: 'EN', flag: '🇬🇧', flagUrl: '/images/flags/en.svg' },
+  { code: 'km' as LanguageCode, name: 'ភាសាខ្មែរ', label: 'ខ្មែរ', short: 'KH', flagUrl: '/images/flags/km.svg' },
+  { code: 'en' as LanguageCode, name: 'English', label: 'English', short: 'EN', flagUrl: '/images/flags/en.svg' },
 ]
 
 const currentLang = computed(() => i18n.locale.value)
@@ -43,9 +45,9 @@ const t = (key: string, defaultText?: string) => {
 }
 
 const roles = computed(() => [
-  { id: 'student', label: t('login_tab_student', 'Student'), icon: '🎓' },
-  { id: 'teacher', label: t('login_tab_teacher', 'Teacher'), icon: '👨‍🏫' },
-  { id: 'admin', label: t('login_tab_admin', 'Admin'), icon: '🛡️' }
+  { id: 'student', label: t('login_tab_student', 'និស្សិត'), icon: '🎓' },
+  { id: 'teacher', label: t('login_tab_teacher', 'គ្រូបង្រៀន'), icon: '👨‍🏫' },
+  { id: 'admin', label: t('login_tab_admin', 'រដ្ឋបាល'), icon: '🛡️' }
 ])
 
 const identityLabel = computed(() => {
@@ -60,44 +62,13 @@ const identityLabel = computed(() => {
 
 const identityPlaceholder = computed(() => {
   if (form.role === 'teacher') {
-    return currentLang.value === 'km' ? 'អត្តលេខគ្រូ, អ៊ីមែល ឬទូរស័ព្ទ' : 'Teacher ID, email or phone'
+    return currentLang.value === 'km' ? 'បញ្ចូលអត្តលេខគ្រូ អ៊ីមែល ឬទូរស័ព្ទ...' : 'Enter Teacher ID, email or phone...'
   }
   if (form.role === 'admin') {
-    return currentLang.value === 'km' ? 'អត្តលេខរដ្ឋបាល, អ៊ីមែល ឬទូរស័ព្ទ' : 'Admin ID, email or phone'
+    return currentLang.value === 'km' ? 'បញ្ចូលអត្តលេខរដ្ឋបាល អ៊ីមែល ឬទូរស័ព្ទ...' : 'Enter Admin ID, email or phone...'
   }
-  return currentLang.value === 'km' ? 'អត្តលេខនិស្សិត, អ៊ីមែល ឬទូរស័ព្ទ' : 'Student ID, email or phone'
+  return currentLang.value === 'km' ? 'បញ្ចូលអត្តលេខនិស្សិត អ៊ីមែល ឬទូរស័ព្ទ...' : 'Enter Student ID, email or phone...'
 })
-
-const initTheme = () => {
-  try {
-    const saved = localStorage.getItem('theme')
-    if (saved) {
-      isDark.value = saved === 'dark'
-    } else {
-      isDark.value = true
-    }
-  } catch (e) {
-    isDark.value = true
-  }
-  applyTheme()
-}
-
-const toggleTheme = () => {
-  isDark.value = !isDark.value
-  try {
-    localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
-  } catch (e) {}
-  applyTheme()
-}
-
-const applyTheme = () => {
-  if (typeof document === 'undefined') return
-  if (isDark.value) {
-    document.documentElement.classList.add('dark')
-  } else {
-    document.documentElement.classList.remove('dark')
-  }
-}
 
 const handleKeyCheck = (e: KeyboardEvent) => {
   try {
@@ -544,7 +515,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="lms-auth-wrapper">
+  <div :class="['lms-auth-wrapper transition-colors duration-300', isDark ? 'theme-dark' : 'theme-light']">
     
     <!-- Ambient Dynamic Lighting -->
     <div class="ambient-glow orb-1"></div>
@@ -564,9 +535,13 @@ onUnmounted(() => {
           class="nav-pill-btn" 
           aria-label="Language Selector"
         >
-          <span class="text-xs">{{ currentLang === 'km' ? '🇰🇭' : '🇬🇧' }}</span>
+          <img 
+            :src="currentLang === 'km' ? '/images/flags/km.svg' : '/images/flags/en.svg'" 
+            :alt="currentLang"
+            class="w-4 h-4 rounded-full object-cover shrink-0 ring-1 ring-black/10 dark:ring-white/20"
+          />
           <span class="pill-text">{{ currentLang === 'km' ? 'KH' : 'EN' }}</span>
-          <svg :class="['w-3.5 h-3.5 opacity-60 transition-transform duration-200', isLangOpen ? 'rotate-180 text-blue-400' : '']" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg :class="['w-3.5 h-3.5 opacity-60 transition-transform duration-200', isLangOpen ? 'rotate-180 text-blue-500' : '']" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M19 9l-7 7-7-7" />
           </svg>
         </button>
@@ -595,10 +570,10 @@ onUnmounted(() => {
               ]"
             >
               <span class="flex items-center gap-2">
-                <span>{{ lang.flag }}</span>
+                <img :src="lang.flagUrl" :alt="lang.name" class="w-4 h-4 rounded-full object-cover shrink-0" />
                 <span>{{ lang.name }}</span>
               </span>
-              <span v-if="currentLang === lang.code" class="text-blue-400 font-bold">✓</span>
+              <span v-if="currentLang === lang.code" class="text-blue-500 font-bold">✓</span>
             </button>
           </div>
         </Transition>
@@ -608,16 +583,24 @@ onUnmounted(() => {
       <button 
         type="button" 
         @click="toggleTheme"
-        :class="['nav-pill-btn', isDark ? 'text-amber-400' : 'text-indigo-400']" 
+        class="nav-pill-btn" 
+        :title="isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
         aria-label="Toggle Theme"
       >
-        <svg v-if="isDark" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-        </svg>
-        <svg v-else class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-        </svg>
-        <span class="pill-text text-slate-200">{{ isDark ? (currentLang === 'km' ? 'ពន្លឺ' : 'Light Mode') : (currentLang === 'km' ? 'ងងឹត' : 'Dark Mode') }}</span>
+        <!-- If Dark, show Sun to switch to Light -->
+        <template v-if="isDark">
+          <svg class="w-3.5 h-3.5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          <span class="pill-text">{{ currentLang === 'km' ? 'ពន្លឺ' : 'Light Mode' }}</span>
+        </template>
+        <!-- If Light, show Moon to switch to Dark -->
+        <template v-else>
+          <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+          <span class="pill-text">{{ currentLang === 'km' ? 'ងងឹត' : 'Dark Mode' }}</span>
+        </template>
       </button>
     </header>
 
@@ -749,12 +732,12 @@ onUnmounted(() => {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                   </svg>
-                  <svg v-else class="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg v-else class="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
                   </svg>
                 </button>
               </div>
-              <span v-if="form.errors.password" class="text-[10px] text-rose-400 block font-semibold mt-0.5">{{ form.errors.password }}</span>
+              <span v-if="form.errors.password" class="text-[10px] text-rose-500 block font-semibold mt-0.5">{{ form.errors.password }}</span>
             </div>
 
             <!-- Remember Me -->
@@ -765,7 +748,7 @@ onUnmounted(() => {
                 v-model="form.remember" 
                 class="form-check-input"
               />
-              <label for="remember" class="text-xs text-slate-300 dark:text-slate-400 select-none cursor-pointer">
+              <label for="remember" class="text-xs form-check-label select-none cursor-pointer">
                 {{ t('login_remember_me', 'ចងចាំគណនីលើឧបករណ៍នេះ') }}
               </label>
             </div>
@@ -820,8 +803,8 @@ onUnmounted(() => {
 
           <!-- Registration Link -->
           <div class="text-center pt-2">
-            <span class="text-xs text-slate-400">{{ t('login_dont_have_account', 'មិនទាន់មានគណនី?') }} </span>
-            <Link href="/register" class="text-xs font-semibold text-blue-400 hover:text-blue-300 hover:underline transition">
+            <span class="text-xs form-subtext">{{ t('login_dont_have_account', 'មិនទាន់មានគណនី?') }} </span>
+            <Link href="/register" class="text-xs font-semibold text-blue-500 hover:text-blue-400 hover:underline transition">
               {{ t('login_register_now', 'ចុះឈ្មោះគណនីថ្មី') }}
             </Link>
           </div>
@@ -835,10 +818,10 @@ onUnmounted(() => {
               <img :src="logoUrl" alt="E-LMS Logo" class="w-10 h-10 object-contain rounded-full bg-white p-0.5" />
             </div>
           </div>
-          <h3 class="text-sm font-bold text-slate-100 mb-1">
+          <h3 class="text-sm font-bold auth-loading-title mb-1">
             {{ authLoadingTitle || (currentLang === 'km' ? 'កំពុងរៀបចំ Dashboard របស់អ្នក...' : 'Setting up your dashboard...') }}
           </h3>
-          <p class="text-xs text-slate-400 font-medium mb-4 max-w-xs leading-relaxed">
+          <p class="text-xs auth-loading-sub font-medium mb-4 max-w-xs leading-relaxed">
             {{ authLoadingSubtitle || (currentLang === 'km' ? 'សូមរង់ចាំមួយភ្លែត ប្រព័ន្ធកំពុងដំណើរការផ្ទៀងផ្ទាត់' : 'Please wait a moment while verifying your account') }}
           </p>
           <div class="loading-progress-track">
@@ -930,14 +913,219 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  background-color: #040914;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-  background-size: 24px 24px;
-  color: #f8fafc;
   box-sizing: border-box;
   position: relative;
   overflow-x: hidden;
   padding: calc(env(safe-area-inset-top, 16px) + 8px) calc(env(safe-area-inset-right, 16px) + 8px) calc(env(safe-area-inset-bottom, 16px) + 8px) calc(env(safe-area-inset-left, 16px) + 8px);
+}
+
+/* Theme: Dark */
+.theme-dark {
+  background-color: #040914;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: #f8fafc;
+}
+.theme-dark .nav-pill-btn {
+  background-color: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #f8fafc;
+}
+.theme-dark .lang-dropdown {
+  background-color: rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #f8fafc;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6);
+}
+.theme-dark .lang-dropdown-item {
+  color: #cbd5e1;
+}
+.theme-dark .lang-dropdown-item:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+.theme-dark .lang-dropdown-item-active {
+  background-color: rgba(37, 99, 235, 0.25);
+  color: #60a5fa;
+}
+.theme-dark .app-icon-inner {
+  background-color: #070e22;
+}
+.theme-dark .institute-pill {
+  background-color: rgba(37, 99, 235, 0.12);
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  color: #93c5fd;
+}
+.theme-dark .glass-card {
+  background: linear-gradient(165deg, rgba(15, 23, 42, 0.82) 0%, rgba(8, 14, 28, 0.92) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.7);
+}
+.theme-dark .role-tabs {
+  background-color: rgba(2, 6, 23, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.theme-dark .role-item {
+  color: #94a3b8;
+}
+.theme-dark .role-item:hover {
+  color: #ffffff;
+}
+.theme-dark .form-label {
+  color: #cbd5e1;
+}
+.theme-dark .form-control {
+  background-color: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
+.theme-dark .form-control::placeholder {
+  color: #94a3b8;
+  opacity: 0.85;
+}
+.theme-dark .form-check-label {
+  color: #94a3b8;
+}
+.theme-dark .form-subtext {
+  color: #94a3b8;
+}
+.theme-dark .divider-row::before {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.theme-dark .divider-row span {
+  background-color: #0c1428;
+  color: #94a3b8;
+}
+.theme-dark .sso-action-btn {
+  background-color: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f1f5f9;
+}
+.theme-dark .sso-action-btn:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.theme-dark .auth-loading-title {
+  color: #f8fafc;
+}
+.theme-dark .auth-loading-sub {
+  color: #94a3b8;
+}
+.theme-dark .footer-links a {
+  color: #94a3b8;
+}
+.theme-dark .copyright-note {
+  color: #64748b;
+}
+
+/* Theme: Light */
+.theme-light {
+  background-color: #f8fafc;
+  background-image: radial-gradient(rgba(15, 23, 42, 0.06) 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: #0f172a;
+}
+.theme-light .ambient-glow {
+  opacity: 0.08;
+}
+.theme-light .nav-pill-btn {
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(203, 213, 225, 0.9);
+  color: #1e293b;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+.theme-light .lang-dropdown {
+  background-color: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(203, 213, 225, 0.9);
+  color: #0f172a;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+.theme-light .lang-dropdown-item {
+  color: #334155;
+}
+.theme-light .lang-dropdown-item:hover {
+  background-color: rgba(241, 245, 249, 1);
+  color: #0f172a;
+}
+.theme-light .lang-dropdown-item-active {
+  background-color: rgba(239, 246, 255, 1);
+  color: #2563eb;
+}
+.theme-light .app-icon-inner {
+  background-color: #ffffff;
+}
+.theme-light .institute-pill {
+  background-color: rgba(239, 246, 255, 0.95);
+  border: 1px solid rgba(191, 219, 254, 0.9);
+  color: #1d4ed8;
+}
+.theme-light .glass-card {
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.92) 100%);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.1);
+}
+.theme-light .role-tabs {
+  background-color: rgba(241, 245, 249, 0.9);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+}
+.theme-light .role-item {
+  color: #64748b;
+}
+.theme-light .role-item:hover {
+  color: #0f172a;
+}
+.theme-light .form-label {
+  color: #334155;
+}
+.theme-light .form-control {
+  background-color: rgba(248, 250, 252, 0.95);
+  border: 1px solid rgba(203, 213, 225, 0.95);
+  color: #0f172a;
+}
+.theme-light .form-control::placeholder {
+  color: #94a3b8;
+  opacity: 0.9;
+}
+.theme-light .form-control:focus {
+  background-color: #ffffff;
+}
+.theme-light .form-check-label {
+  color: #475569;
+}
+.theme-light .form-subtext {
+  color: #64748b;
+}
+.theme-light .divider-row::before {
+  border-top: 1px solid rgba(226, 232, 240, 0.9);
+}
+.theme-light .divider-row span {
+  background-color: #ffffff;
+  color: #64748b;
+}
+.theme-light .sso-action-btn {
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(203, 213, 225, 0.9);
+  color: #1e293b;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+.theme-light .sso-action-btn:hover {
+  background-color: rgba(241, 245, 249, 1);
+  border-color: rgba(148, 163, 184, 0.6);
+}
+.theme-light .auth-loading-title {
+  color: #0f172a;
+}
+.theme-light .auth-loading-sub {
+  color: #64748b;
+}
+.theme-light .footer-links a {
+  color: #64748b;
+}
+.theme-light .footer-links a:hover {
+  color: #2563eb;
+}
+.theme-light .copyright-note {
+  color: #94a3b8;
 }
 
 /* Ambient Lights (GPU Accelerated) */
@@ -955,7 +1143,7 @@ onUnmounted(() => {
 .orb-1 { top: -6rem; left: 50%; transform: translateX(-50%) translateZ(0); background-color: #2563eb; }
 .orb-2 { bottom: -6rem; right: -4rem; background-color: #4f46e5; transform: translateZ(0); }
 
-/* Subtle Geo Accents on Desktop (Hidden on small mobile screens to eliminate lag) */
+/* Subtle Geo Accents on Desktop */
 .geo-decor {
   position: absolute;
   pointer-events: none;
@@ -1001,8 +1189,6 @@ onUnmounted(() => {
   gap: 0.375rem;
   padding: 0.45rem 0.95rem;
   border-radius: 9999px;
-  background-color: rgba(15, 23, 42, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.14);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   cursor: pointer;
@@ -1019,11 +1205,8 @@ onUnmounted(() => {
   margin-top: 0.375rem;
   width: 10.5rem;
   border-radius: 1rem;
-  background-color: rgba(15, 23, 42, 0.96);
-  border: 1px solid rgba(255, 255, 255, 0.14);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6);
   padding: 0.25rem 0;
   z-index: 50;
   overflow: hidden;
@@ -1036,14 +1219,11 @@ onUnmounted(() => {
   padding: 0.55rem 0.85rem;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #cbd5e1;
   background: transparent;
   border: none;
   cursor: pointer;
   transition: background-color 0.15s;
 }
-.lang-dropdown-item:hover { background-color: rgba(255, 255, 255, 0.08); color: #ffffff; }
-.lang-dropdown-item-active { background-color: rgba(37, 99, 235, 0.25); color: #60a5fa; }
 
 /* Main Stage */
 .auth-center-stage {
@@ -1071,7 +1251,6 @@ onUnmounted(() => {
 .app-icon-inner {
   width: 3.5rem;
   height: 3.5rem;
-  background-color: #070e22;
   border-radius: 1.15rem;
   display: flex;
   align-items: center;
@@ -1080,20 +1259,14 @@ onUnmounted(() => {
 .institute-pill {
   padding: 0.25rem 0.875rem;
   border-radius: 9999px;
-  background-color: rgba(37, 99, 235, 0.12);
-  border: 1px solid rgba(37, 99, 235, 0.25);
-  color: #93c5fd;
   font-size: 0.75rem;
   font-weight: 600;
 }
 
 /* Glass Card */
 .glass-card {
-  background: linear-gradient(165deg, rgba(15, 23, 42, 0.82) 0%, rgba(8, 14, 28, 0.92) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 1.5rem;
   padding: 1.35rem;
-  box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
@@ -1143,10 +1316,8 @@ onUnmounted(() => {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0.35rem;
-  background-color: rgba(2, 6, 23, 0.75);
   padding: 0.25rem;
   border-radius: 0.875rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
   margin-bottom: 1.25rem;
 }
 .role-item {
@@ -1158,14 +1329,13 @@ onUnmounted(() => {
   border-radius: 0.625rem;
   border: none;
   background: transparent;
-  color: #94a3b8;
   cursor: pointer;
   touch-action: manipulation;
   transition: all 0.2s ease;
 }
 .role-active {
-  background: linear-gradient(135deg, #2563eb, #3b82f6);
-  color: #ffffff;
+  background: linear-gradient(135deg, #2563eb, #3b82f6) !important;
+  color: #ffffff !important;
   box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
 }
 .role-ico { font-size: 0.875rem; }
@@ -1174,8 +1344,8 @@ onUnmounted(() => {
 /* Form Elements */
 .form-body { display: flex; flex-direction: column; gap: 0.875rem; }
 .form-group { display: flex; flex-direction: column; gap: 0.3125rem; }
-.form-label { font-size: 0.75rem; font-weight: 600; color: #cbd5e1; }
-.inline-link { font-size: 0.6875rem; color: #60a5fa; text-decoration: none; }
+.form-label { font-size: 0.75rem; font-weight: 600; }
+.inline-link { font-size: 0.6875rem; color: #3b82f6; text-decoration: none; font-weight: 600; }
 .inline-link:hover { text-decoration: underline; }
 
 .input-shell { position: relative; display: flex; align-items: center; width: 100%; }
@@ -1190,23 +1360,15 @@ onUnmounted(() => {
 .form-control {
   width: 100%;
   padding: 0.6875rem 0.875rem 0.6875rem 2.375rem;
-  background-color: rgba(15, 23, 42, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 0.75rem;
   font-size: 0.875rem;
-  color: #ffffff;
   outline: none;
   box-sizing: border-box;
   -webkit-appearance: none;
   transition: all 0.2s ease;
 }
-.form-control::placeholder {
-  color: #94a3b8;
-  opacity: 0.85;
-}
 .form-control:focus {
   border-color: #3b82f6;
-  background-color: rgba(15, 23, 42, 0.95);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.22);
 }
 .suffix-clear-btn {
@@ -1270,18 +1432,10 @@ onUnmounted(() => {
   justify-content: center;
   margin: 0.875rem 0;
 }
-.divider-row::before {
-  content: '';
-  position: absolute;
-  width: 100%;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
 .divider-row span {
   position: relative;
-  background-color: #0c1428;
   padding: 0 0.625rem;
   font-size: 0.6875rem;
-  color: #94a3b8;
   font-weight: 600;
 }
 
@@ -1298,17 +1452,13 @@ onUnmounted(() => {
   justify-content: center;
   gap: 0.5rem;
   padding: 0.625rem;
-  background-color: rgba(15, 23, 42, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 0.75rem;
-  color: #f1f5f9;
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   touch-action: manipulation;
   transition: all 0.15s ease;
 }
-.sso-action-btn:hover { background-color: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.2); }
 .sso-action-btn:active { transform: scale(0.97); }
 
 /* Loading State */
@@ -1341,7 +1491,7 @@ onUnmounted(() => {
   100% { transform: translateX(100%) scaleX(0.2); }
 }
 
-/* Institutional Footer (Optimized for Mobile Touch & Readability) */
+/* Institutional Footer */
 .footer-block {
   text-align: center;
   z-index: 20;
@@ -1353,13 +1503,10 @@ onUnmounted(() => {
   justify-content: center;
   gap: 0.75rem;
   font-size: 0.75rem;
-  color: #94a3b8;
   margin-bottom: 0.25rem;
 }
-.footer-links a { color: #94a3b8; text-decoration: none; transition: color 0.15s; }
-.footer-links a:hover { color: #60a5fa; }
+.footer-links a { text-decoration: none; transition: color 0.15s; }
 .copyright-note {
   font-size: 0.6875rem;
-  color: #64748b;
 }
 </style>
