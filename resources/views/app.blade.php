@@ -128,10 +128,19 @@
 
 
     <script>
+        // Force cleanup of any stale Service Worker or Corrupt CacheStorage on Mobile
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.getRegistrations().then(function(registrations) {
                 for (var i = 0; i < registrations.length; i++) {
-                    registrations[i].update();
+                    registrations[i].unregister();
+                }
+            }).catch(function() {});
+        }
+
+        if ('caches' in window) {
+            caches.keys().then(function(names) {
+                for (var i = 0; i < names.length; i++) {
+                    caches.delete(names[i]);
                 }
             }).catch(function() {});
         }
@@ -142,13 +151,8 @@
                 String(e.reason).includes('Importing a module script failed') ||
                 String(e.reason).includes('Failed to fetch')
             )) {
-                if ('caches' in window) {
-                    caches.keys().then(function(names) {
-                        for (var i = 0; i < names.length; i++) caches.delete(names[i]);
-                    });
-                }
-                if (!sessionStorage.getItem('chunk_reload')) {
-                    sessionStorage.setItem('chunk_reload', '1');
+                if (!sessionStorage.getItem('chunk_reload_done')) {
+                    sessionStorage.setItem('chunk_reload_done', '1');
                     window.location.reload();
                 }
             }

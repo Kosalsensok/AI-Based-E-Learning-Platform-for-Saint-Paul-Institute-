@@ -20,9 +20,7 @@ import { initTheme } from '@/composables/useTheme'
 
 initTheme()
 
-try {
-  registerSW({ immediate: true })
-} catch (e) {}
+
 
 if (typeof window !== 'undefined') {
   window.addEventListener('vite:preloadError', () => {
