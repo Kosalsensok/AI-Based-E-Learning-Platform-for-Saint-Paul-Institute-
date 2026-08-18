@@ -58,21 +58,22 @@ onMounted(() => {
 
         <!-- Right Utilities (Language, Back Button) -->
         <div class="flex items-center gap-2 sm:gap-3">
-          <!-- Language Toggle Buttons -->
-          <div class="flex items-center bg-slate-900 border border-slate-800 rounded-xl p-1 text-xs">
+          <!-- Language Toggle Buttons with Flag Icons -->
+          <div class="flex items-center bg-slate-900/90 border border-slate-800 rounded-xl p-1 text-xs shadow-inner">
             <button
               v-for="lang in languages"
               :key="lang.code"
               type="button"
               @click="setLanguage(lang.code)"
               :class="[
-                'px-2.5 py-1 rounded-lg font-semibold transition-all duration-200 cursor-pointer',
+                'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-semibold transition-all duration-200 cursor-pointer',
                 currentLang === lang.code
                   ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
               ]"
             >
-              {{ lang.label }}
+              <img :src="lang.flagUrl" :alt="lang.name" class="w-3.5 h-3.5 rounded-full object-cover shrink-0 ring-1 ring-white/20" />
+              <span>{{ lang.label }}</span>
             </button>
           </div>
 
