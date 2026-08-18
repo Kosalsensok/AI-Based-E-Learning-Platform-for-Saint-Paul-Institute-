@@ -63,10 +63,7 @@ onMounted(() => {
       <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <!-- Logo & Institution Name -->
         <Link href="/" class="flex items-center gap-3 group">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-lg shadow-blue-500/25 ring-1 ring-white/20 group-hover:scale-105 transition-transform duration-200">
-            <img :src="logoUrl" alt="SPI Logo" class="w-7 h-7 object-contain" onerror="this.style.display='none'" />
-            <span class="text-white font-black text-sm tracking-wider">SPI</span>
-          </div>
+          <img :src="logoUrl" alt="SPI Logo" class="w-10 h-10 object-contain group-hover:scale-105 transition-transform duration-200" />
           <div>
             <div class="text-xs font-bold text-blue-400 tracking-wider uppercase">Saint Paul Institute</div>
             <div class="text-sm font-extrabold text-white tracking-tight group-hover:text-blue-300 transition-colors">AI-ELMS Portal</div>
