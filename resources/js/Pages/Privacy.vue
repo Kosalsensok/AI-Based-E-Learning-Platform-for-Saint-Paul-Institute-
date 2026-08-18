@@ -31,8 +31,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <Head title="Privacy Policy - Saint Paul Institute LMS">
-    <meta name="description" content="Privacy Policy and Google API Services User Data Compliance for Saint Paul Institute AI-ELMS (spilms.tech)" />
+  <Head title="Privacy Policy - E-LMS Portal">
+    <meta name="description" content="Privacy Policy and Google API Services User Data Compliance for E-LMS Portal (spilms.tech)" />
     <meta name="robots" content="index, follow" />
   </Head>
 
@@ -47,11 +47,11 @@ onMounted(() => {
     <!-- Top Navigation Bar -->
     <header class="sticky top-0 z-50 backdrop-blur-xl bg-slate-950/80 border-b border-slate-800/80 transition-colors">
       <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <!-- Logo & Institution Name -->
+        <!-- Logo & Brand Name -->
         <Link href="/" class="flex items-center gap-3 group">
-          <img :src="logoUrl" alt="SPI Logo" class="w-10 h-10 object-contain group-hover:scale-105 transition-transform duration-200" />
+          <img :src="logoUrl" alt="E-LMS Logo" class="w-10 h-10 object-contain group-hover:scale-105 transition-transform duration-200" />
           <div>
-            <div class="text-xs font-bold text-blue-400 tracking-wider uppercase">Saint Paul Institute</div>
+            <div class="text-xs font-bold text-blue-400 tracking-wider uppercase">E-LMS</div>
             <div class="text-sm font-extrabold text-white tracking-tight group-hover:text-blue-300 transition-colors">AI-ELMS Portal</div>
           </div>
         </Link>
@@ -110,8 +110,8 @@ onMounted(() => {
 
         <p class="text-sm sm:text-base text-slate-300 max-w-2xl mx-auto leading-relaxed">
           {{ currentLang === 'km'
-            ? 'វិទ្យាស្ថាន សន្តប៉ូល (Saint Paul Institute - SPI) ប្តេជ្ញាការពារទិន្នន័យផ្ទាល់ខ្លួន និងភាពឯកជនរបស់អ្នកប្រើប្រាស់ទាំងអស់នៅលើប្រព័ន្ធ'
-            : 'Saint Paul Institute (SPI) is committed to protecting the privacy and personal data of all users on the'
+            ? 'ប្រព័ន្ធគ្រប់គ្រងការសិក្សា E-LMS ប្តេជ្ញាការពារទិន្នន័យផ្ទាល់ខ្លួន និងភាពឯកជនរបស់អ្នកប្រើប្រាស់ទាំងអស់នៅលើប្រព័ន្ធ'
+            : 'The E-LMS platform is committed to protecting the privacy and personal data of all users on the'
           }}
           <span class="text-blue-400 font-medium">AI-ELMS (spilms.tech)</span>
           {{ currentLang === 'km'
@@ -150,8 +150,8 @@ onMounted(() => {
             </h2>
             <p class="text-sm text-slate-300 leading-relaxed">
               {{ currentLang === 'km'
-                ? 'ប្រព័ន្ធ SPI AI-ELMS ប្រើប្រាស់ Google Sign-In សម្រាប់តែការផ្ទៀងផ្ទាត់អត្តសញ្ញាណ (Authentication) របស់សិស្ស និស្សិត និងសាស្ត្រាចារ្យតែប៉ុណ្ណោះ។ យើងប្រមូលតែ ឈ្មោះ (Name), អ៊ីមែល (Email Address) និង រូបភាព Profile (Avatar) ពី Google ដើម្បីបង្កើតគណនី និងអនុញ្ញាតឱ្យចូលប្រើប្រាស់មុខងារសិក្សា។ SPI មិនលក់ មិនចែករំលែក និងមិនប្រើប្រាស់ទិន្នន័យ Google សម្រាប់គោលបំណងផ្សព្វផ្សាយពាណិជ្ជកម្មឡើយ។'
-                : 'SPI AI-ELMS uses Google Sign-In strictly for authenticating students, teachers, and administrators. We only access basic profile information (Full Name, Email Address, and Avatar URL) via standard Google OAuth 2.0 scopes (openid, email, profile) to create or match your academic account. We NEVER sell, share, transfer, or use Google user data for advertising purposes or third-party brokers.'
+                ? 'ប្រព័ន្ធ E-LMS ប្រើប្រាស់ Google Sign-In សម្រាប់តែការផ្ទៀងផ្ទាត់អត្តសញ្ញាណ (Authentication) របស់អ្នកប្រើប្រាស់តែប៉ុណ្ណោះ។ យើងប្រមូលតែ ឈ្មោះ (Name), អ៊ីមែល (Email Address) និង រូបភាព Profile (Avatar) ពី Google ដើម្បីបង្កើតគណនី និងអនុញ្ញាតឱ្យចូលប្រើប្រាស់មុខងារសិក្សា។ E-LMS មិនលក់ មិនចែករំលែក និងមិនប្រើប្រាស់ទិន្នន័យ Google សម្រាប់គោលបំណងផ្សព្វផ្សាយពាណិជ្ជកម្មឡើយ។'
+                : 'E-LMS uses Google Sign-In strictly for authenticating students, teachers, and administrators. We only access basic profile information (Full Name, Email Address, and Avatar URL) via standard Google OAuth 2.0 scopes (openid, email, profile) to create or match your academic account. We NEVER sell, share, transfer, or use Google user data for advertising purposes or third-party brokers.'
               }}
             </p>
           </div>
@@ -166,13 +166,13 @@ onMounted(() => {
           <div class="flex items-center gap-3 mb-3">
             <span class="flex items-center justify-center w-7 h-7 rounded-lg bg-blue-500/10 text-blue-400 font-semibold text-sm border border-blue-500/20 shrink-0">១</span>
             <h3 class="text-base sm:text-lg font-bold text-white">
-              {{ currentLang === 'km' ? 'អំពីស្ថាប័ន និងវិសាលភាព (About SPI & Scope)' : '1. About the Institution & Scope' }}
+              {{ currentLang === 'km' ? 'អំពីប្រព័ន្ធ និងវិសាលភាព (About E-LMS & Scope)' : '1. About E-LMS & Scope' }}
             </h3>
           </div>
           <p class="text-sm text-slate-300/90 leading-relaxed pl-0 sm:pl-10">
             {{ currentLang === 'km'
-              ? 'វិទ្យាស្ថាន សន្តប៉ូល (Saint Paul Institute - SPI) គឺជាគ្រឹះស្ថានឧត្តមសិក្សាដែលមានទីតាំងស្ថិតនៅ ខេត្តតាកែវ និងរាជធានីភ្នំពេញ ព្រះរាជាណាចក្រកម្ពុជា។ គោលការណ៍ឯកជនភាពនេះអនុវត្តចំពោះប្រព័ន្ធគ្រប់គ្រងការសិក្សាអេឡិចត្រូនិកផ្លូវការ SPI AI-ELMS ដែលមានអាសយដ្ឋានផ្លូវការ https://spilms.tech និងសេវាកម្មពាក់ព័ន្ធទាំងអស់។'
-              : 'Saint Paul Institute (SPI) is a premier higher education institution located in Takeo Province and Phnom Penh, Kingdom of Cambodia. This Privacy Policy applies to the SPI AI-ELMS digital learning management platform hosted at https://spilms.tech and all affiliated educational services.'
+              ? 'ប្រព័ន្ធគ្រប់គ្រងការសិក្សាអេឡិចត្រូនិកឆ្លាតវៃ E-LMS គឺជាថ្នាលអប់រំបច្ចេកវិទ្យាដែលមានអាសយដ្ឋានផ្លូវការ https://spilms.tech។ គោលការណ៍ឯកជនភាពនេះអនុវត្តចំពោះប្រព័ន្ធគ្រប់គ្រងការសិក្សា E-LMS និងសេវាកម្មពាក់ព័ន្ធទាំងអស់។'
+              : 'E-LMS is a modern digital learning management platform hosted at https://spilms.tech. This Privacy Policy applies to the E-LMS platform and all affiliated educational services.'
             }}
           </p>
         </div>
@@ -234,8 +234,8 @@ onMounted(() => {
           <div class="pl-0 sm:pl-10 space-y-3">
             <p class="text-sm text-slate-300/90 leading-relaxed">
               {{ currentLang === 'km'
-                ? 'ទិន្នន័យទាំងអស់ដែលបានប្រមូលត្រូវបានប្រើប្រាស់សម្រាប់តែគោលបំណងអប់រំ និងការគ្រប់គ្រងប្រព័ន្ធសិក្សារបស់វិទ្យាស្ថាន សន្តប៉ូល ប៉ុណ្ណោះ រួមមាន៖'
-                : 'All collected information is used solely for legitimate educational, academic, and administrative operations of Saint Paul Institute, including:'
+                ? 'ទិន្នន័យទាំងអស់ដែលបានប្រមូលត្រូវបានប្រើប្រាស់សម្រាប់តែគោលបំណងអប់រំ និងការគ្រប់គ្រងប្រព័ន្ធសិក្សា E-LMS ប៉ុណ្ណោះ រួមមាន៖'
+                : 'All collected information is used solely for legitimate educational, academic, and administrative operations of E-LMS, including:'
               }}
             </p>
             <ul class="text-sm text-slate-400 space-y-2 list-disc list-inside">
@@ -258,7 +258,7 @@ onMounted(() => {
           <div class="pl-0 sm:pl-10 space-y-3">
             <div class="p-4 rounded-xl bg-blue-950/40 border border-blue-500/20 text-xs sm:text-sm text-slate-300 leading-relaxed space-y-3">
               <p>
-                <strong class="text-white">SPI AI-ELMS (https://spilms.tech)</strong> adheres strictly to the 
+                <strong class="text-white">E-LMS (https://spilms.tech)</strong> adheres strictly to the 
                 <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener noreferrer" class="text-blue-400 underline font-semibold hover:text-blue-300">
                   Google API Services User Data Policy
                 </a>, including the Limited Use requirements.
@@ -316,7 +316,7 @@ onMounted(() => {
           <p class="text-sm text-slate-300/90 leading-relaxed pl-0 sm:pl-10">
             {{ currentLang === 'km'
               ? 'យើងប្រើប្រាស់ Cookies និង Local Storage សម្រាប់រក្សាស្ថានភាព Login (Session), ការចងចាំភាសា (Khmer/English), និងរចនាបថពណ៌ (Dark/Light mode)។ យើងមិនប្រើប្រាស់ Third-party Tracking Cookies សម្រាប់តាមដានអ្នកឡើយ។'
-              : 'SPI AI-ELMS uses essential first-party session cookies and browser localStorage strictly for user authentication sessions, language preference persistence (Khmer/English), and theme preferences (Dark/Light mode). We do not use third-party tracking cookies.'
+              : 'E-LMS uses essential first-party session cookies and browser localStorage strictly for user authentication sessions, language preference persistence (Khmer/English), and theme preferences (Dark/Light mode). We do not use third-party tracking cookies.'
             }}
           </p>
         </div>
@@ -332,7 +332,7 @@ onMounted(() => {
           <div class="pl-0 sm:pl-10 space-y-3 text-sm text-slate-300/90 leading-relaxed">
             <p>
               {{ currentLang === 'km'
-                ? 'អ្នកប្រើប្រាស់គ្រប់រូបមានសិទ្ធិមើល កែសម្រួល ឬស្នើសុំលុបគណនី និងទិន្នន័យផ្ទាល់ខ្លួនចេញពីប្រព័ន្ធ SPI AI-ELMS បានគ្រប់ពេលវេលា។'
+                ? 'អ្នកប្រើប្រាស់គ្រប់រូបមានសិទ្ធិមើល កែសម្រួល ឬស្នើសុំលុបគណនី និងទិន្នន័យផ្ទាល់ខ្លួនចេញពីប្រព័ន្ធ E-LMS បានគ្រប់ពេលវេលា។'
                 : 'You retain full ownership rights over your personal data. You may at any time inspect, correct, export, or request the permanent deletion of your account and associated records.'
               }}
             </p>
@@ -346,11 +346,9 @@ onMounted(() => {
                   ? 'សូមផ្ញើអ៊ីមែលមកកាន់'
                   : 'Send an email to'
                 }}
-                <a href="mailto:support@spilms.tech" class="text-blue-400 hover:underline font-medium">support@spilms.tech</a>
-                {{ currentLang === 'km' ? 'ឬ' : 'or' }}
-                <a href="mailto:info@spi.edu.kh" class="text-blue-400 hover:underline font-medium">info@spi.edu.kh</a>
+                <a href="mailto:info@spilms.tech" class="text-blue-400 hover:underline font-medium">info@spilms.tech</a>
                 {{ currentLang === 'km'
-                  ? 'ដោយបញ្ជាក់ពីឈ្មោះ អ៊ីមែល និងលេខកូដសម្គាល់របស់អ្នក។ ក្រុមការងារ IT របស់ SPI នឹងដំណើរការលុបទិន្នន័យជូនក្នុងរយៈពេលយ៉ាងយូរបំផុត'
+                  ? 'ដោយបញ្ជាក់ពីឈ្មោះ អ៊ីមែល និងលេខកូដសម្គាល់របស់អ្នក។ ក្រុមការងារ IT នឹងដំណើរការលុបទិន្នន័យជូនក្នុងរយៈពេលយ៉ាងយូរបំផុត'
                   : 'specifying your registered email and ID with the subject "Data Deletion Request". Our IT team will process your request within'
                 }}
                 <strong class="text-slate-200">{{ currentLang === 'km' ? '៤៨ ម៉ោង' : '48 business hours' }}</strong>
@@ -370,13 +368,11 @@ onMounted(() => {
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pl-0 sm:pl-10 text-sm text-slate-400">
             <div class="space-y-1">
-              <p class="font-semibold text-slate-200">Saint Paul Institute (SPI)</p>
-              <p>Angkeo District, Takeo Province, Cambodia</p>
-              <p>Phnom Penh Liaison Office, Cambodia</p>
+              <p class="font-semibold text-slate-200">E-LMS Portal</p>
+              <p>Kingdom of Cambodia</p>
             </div>
             <div class="space-y-1 md:text-right">
-              <p>Email: <a href="mailto:support@spilms.tech" class="text-blue-400 hover:underline font-medium">support@spilms.tech</a></p>
-              <p>Official Email: <a href="mailto:info@spi.edu.kh" class="text-blue-400 hover:underline font-medium">info@spi.edu.kh</a></p>
+              <p>Email: <a href="mailto:info@spilms.tech" class="text-blue-400 hover:underline font-medium">info@spilms.tech</a></p>
               <p>Portal Website: <a href="https://spilms.tech" target="_blank" class="text-blue-400 hover:underline font-medium">https://spilms.tech</a></p>
             </div>
           </div>
@@ -394,7 +390,7 @@ onMounted(() => {
           <Link href="/login" class="hover:text-slate-200 transition-colors">{{ currentLang === 'km' ? 'ទំព័រដើម / ចូលប្រព័ន្ធ' : 'Sign In' }}</Link>
         </div>
         <p class="text-xs text-slate-400 font-sans">
-          © 2026 Saint Paul Institute (SPI). All Rights Reserved. AI-Based E-Learning Platform.
+          © 2026 E-LMS. All Rights Reserved. AI-Based E-Learning Platform.
         </p>
       </footer>
 

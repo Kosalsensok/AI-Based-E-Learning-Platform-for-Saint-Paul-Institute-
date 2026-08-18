@@ -31,8 +31,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <Head title="Terms of Service - Saint Paul Institute LMS">
-    <meta name="description" content="Terms of Service and Conditions of Use for Saint Paul Institute AI-ELMS (spilms.tech)" />
+  <Head title="Terms of Service - E-LMS Portal">
+    <meta name="description" content="Terms of Service and Conditions of Use for E-LMS Portal (spilms.tech)" />
     <meta name="robots" content="index, follow" />
   </Head>
 
@@ -47,11 +47,11 @@ onMounted(() => {
     <!-- Top Navigation Bar -->
     <header class="sticky top-0 z-50 backdrop-blur-xl bg-slate-950/80 border-b border-slate-800/80 transition-colors">
       <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <!-- Logo & Institution Name -->
+        <!-- Logo & Brand Name -->
         <Link href="/" class="flex items-center gap-3 group">
-          <img :src="logoUrl" alt="SPI Logo" class="w-10 h-10 object-contain group-hover:scale-105 transition-transform duration-200" />
+          <img :src="logoUrl" alt="E-LMS Logo" class="w-10 h-10 object-contain group-hover:scale-105 transition-transform duration-200" />
           <div>
-            <div class="text-xs font-bold text-blue-400 tracking-wider uppercase">Saint Paul Institute</div>
+            <div class="text-xs font-bold text-blue-400 tracking-wider uppercase">E-LMS</div>
             <div class="text-sm font-extrabold text-white tracking-tight group-hover:text-blue-300 transition-colors">AI-ELMS Portal</div>
           </div>
         </Link>
@@ -117,10 +117,10 @@ onMounted(() => {
             ? 'សូមអានលក្ខខណ្ឌប្រើប្រាស់ខាងក្រោមឱ្យបានច្បាស់លាស់មុនពេលប្រើប្រាស់ប្រព័ន្ធគ្រប់គ្រងការសិក្សា'
             : 'Please review these Terms of Service carefully before accessing or using the'
           }}
-          <span class="text-blue-400 font-medium">SPI AI-ELMS (spilms.tech)</span>
+          <span class="text-blue-400 font-medium">E-LMS (spilms.tech)</span>
           {{ currentLang === 'km'
             ? '។ ការចូលប្រើប្រាស់របស់អ្នកមានន័យថាអ្នកបានយល់ព្រមតាមលក្ខខណ្ឌទាំងអស់នេះ។'
-            : 'platform. By signing in, you agree to be bound by these institutional terms and policies.'
+            : 'platform. By signing in, you agree to be bound by these platform terms and policies.'
           }}
         </p>
 
@@ -152,8 +152,8 @@ onMounted(() => {
           </div>
           <p class="text-sm text-slate-300/90 leading-relaxed pl-0 sm:pl-10">
             {{ currentLang === 'km'
-              ? 'ដោយការបង្កើតគណនី ការចូលតាមរយៈ Google Sign-In ឬការប្រើប្រាស់គេហទំព័រ https://spilms.tech អ្នកបញ្ជាក់ថាអ្នកជាសិស្ស និស្សិត សាស្ត្រាចារ្យ ឬបុគ្គលិកដែលមានសិទ្ធិស្របច្បាប់របស់វិទ្យាស្ថាន សន្តប៉ូល ហើយយល់ព្រមគោរពតាមបទបញ្ជាផ្ទៃក្នុងរបស់វិទ្យាស្ថាន។'
-              : 'By creating an account, authenticating via Google Sign-In, or using https://spilms.tech, you confirm that you are an authorized student, faculty member, or staff of Saint Paul Institute and agree to adhere to these Terms and SPI institutional bylaws.'
+              ? 'ដោយការបង្កើតគណនី ការចូលតាមរយៈ Google Sign-In ឬការប្រើប្រាស់គេហទំព័រ https://spilms.tech អ្នកបញ្ជាក់ថាអ្នកជាសិស្ស និស្សិត សាស្ត្រាចារ្យ ឬអ្នកប្រើប្រាស់ដែលមានសិទ្ធិស្របច្បាប់របស់ប្រព័ន្ធ E-LMS ហើយយល់ព្រមគោរពតាមបទបញ្ជា និងលក្ខខណ្ឌប្រើប្រាស់ទាំងអស់។'
+              : 'By creating an account, authenticating via Google Sign-In, or using https://spilms.tech, you confirm that you are an authorized user of E-LMS and agree to adhere to these Terms of Service and platform policies.'
             }}
           </p>
         </div>
@@ -169,7 +169,7 @@ onMounted(() => {
           <p class="text-sm text-slate-300/90 leading-relaxed pl-0 sm:pl-10">
             {{ currentLang === 'km'
               ? 'អ្នកប្រើប្រាស់ត្រូវទទួលខុសត្រូវចំពោះការរក្សាការសម្ងាត់នៃព័ត៌មាន Login របស់ខ្លួន។ ប្រសិនបើអ្នកប្រើ Google Sign-In អ្នកត្រូវប្រាកដថាគណនី Google ផ្ទាល់ខ្លួនរបស់អ្នកមានសុវត្ថិភាពខ្ពស់។ ហាមដាច់ខាតការចែករំលែក Password ឬ Session ឱ្យអ្នកដទៃចូលប្រើជំនួស។'
-              : 'Users are strictly responsible for safeguarding their login credentials. When using Google Sign-In, ensure your Google account is secured. Account sharing, proxy examination taking, or unauthorized credential disclosure is strictly prohibited under SPI disciplinary rules.'
+              : 'Users are strictly responsible for safeguarding their login credentials. When using Google Sign-In, ensure your Google account is secured. Account sharing or unauthorized credential disclosure is strictly prohibited.'
             }}
           </p>
         </div>
@@ -184,8 +184,8 @@ onMounted(() => {
           </div>
           <p class="text-sm text-slate-300/90 leading-relaxed pl-0 sm:pl-10">
             {{ currentLang === 'km'
-              ? 'រាល់ឯកសារមេរៀន វីដេអូបង្រៀន កម្រងសំណួរ និងវិញ្ញាបនបត្រទាំងអស់នៅលើ SPI AI-ELMS គឺជាកម្មសិទ្ធិបញ្ញារបស់វិទ្យាស្ថាន សន្តប៉ូល និងសាស្ត្រាចារ្យដែលពាក់ព័ន្ធ។ ហាមលួចចម្លង ចែកចាយលក់បន្ត ឬយកទៅប្រើប្រាស់ក្រៅប្រព័ន្ធដោយគ្មានការអនុញ្ញាតជាលាយលក្ខណ៍អក្សរ។'
-              : 'All lecture videos, syllabus materials, question banks, AI recommendations, and digital certificates hosted on SPI AI-ELMS are the intellectual property of Saint Paul Institute and respective faculty. Redistribution, copying, or commercial exploitation is strictly prohibited.'
+              ? 'រាល់ឯកសារមេរៀន វីដេអូបង្រៀន កម្រងសំណួរ និងវិញ្ញាបនបត្រទាំងអស់នៅលើ E-LMS គឺជាកម្មសិទ្ធិបញ្ញារបស់ប្រព័ន្ធ E-LMS និងសាស្ត្រាចារ្យដែលពាក់ព័ន្ធ។ ហាមលួចចម្លង ចែកចាយលក់បន្ត ឬយកទៅប្រើប្រាស់ក្រៅប្រព័ន្ធដោយគ្មានការអនុញ្ញាតជាលាយលក្ខណ៍អក្សរ។'
+              : 'All lecture videos, syllabus materials, question banks, AI recommendations, and digital certificates hosted on E-LMS are protected intellectual property. Redistribution, copying, or unauthorized commercial exploitation is strictly prohibited.'
             }}
           </p>
         </div>
@@ -217,8 +217,8 @@ onMounted(() => {
           </div>
           <p class="text-sm text-slate-300/90 leading-relaxed pl-0 sm:pl-10">
             {{ currentLang === 'km'
-              ? 'វិទ្យាស្ថាន សន្តប៉ូល រក្សាសិទ្ធិក្នុងការផ្អាក ឬបិទគណនីរបស់អ្នកប្រើប្រាស់ណាដែលបានបំពានលើលក្ខខណ្ឌប្រើប្រាស់ ឬបទបញ្ជាផ្ទៃក្នុងរបស់វិទ្យាស្ថានដោយពុំចាំបាច់ជូនដំណឹងជាមុន។'
-              : 'Saint Paul Institute reserves the right to suspend or terminate platform access for any user found violating these terms, engaging in academic misconduct, or endangering system security.'
+              ? 'ប្រព័ន្ធ E-LMS រក្សាសិទ្ធិក្នុងការផ្អាក ឬបិទគណនីរបស់អ្នកប្រើប្រាស់ណាដែលបានបំពានលើលក្ខខណ្ឌប្រើប្រាស់ ឬបង្កផលប៉ះពាល់ដល់ប្រព័ន្ធដោយពុំចាំបាច់ជូនដំណឹងជាមុន។'
+              : 'E-LMS reserves the right to suspend or terminate platform access for any user found violating these terms, engaging in misconduct, or endangering system security.'
             }}
           </p>
         </div>
@@ -235,7 +235,7 @@ onMounted(() => {
           <Link href="/login" class="hover:text-slate-200 transition-colors">{{ currentLang === 'km' ? 'ទំព័រដើម / ចូលប្រព័ន្ធ' : 'Sign In' }}</Link>
         </div>
         <p class="text-xs text-slate-400 font-sans">
-          © 2026 Saint Paul Institute (SPI). All Rights Reserved. AI-Based E-Learning Platform.
+          © 2026 E-LMS. All Rights Reserved. AI-Based E-Learning Platform.
         </p>
       </footer>
 
