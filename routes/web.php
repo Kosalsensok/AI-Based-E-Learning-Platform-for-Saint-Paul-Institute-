@@ -442,7 +442,7 @@ Route::middleware(['auth'])->group(function () {
 
         // Notifications
         Route::get('notifications', function () {
-            return \Inertia\Inertia::render('Teacher/Notifications/Index');
+            return Inertia::render('Teacher/Notifications/Index');
         })->name('notifications.index');
     });
 
