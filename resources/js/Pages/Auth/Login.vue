@@ -258,9 +258,7 @@ const getTelegramOAuthUrl = () => {
   return 'https://oauth.telegram.org/auth?bot_id=8828915669&origin=https%3A%2F%2Fspilms.tech&return_to=https%3A%2F%2Fspilms.tech%2Fauth%2Ftelegram%2Fcallback&request_access=write'
 }
 
-const clerkPublishableKey = computed(() => {
-  return (page.props as any).clerk?.publishable_key || 'pk_test_Y2xlcmsuYXBwXzNIdXFzcnd5VUlCWUR2OTBhS2dPaXdmc0treC5sY2xzdGFnZS5kZXYk'
-})
+
 
 const isAuthenticating = ref(false)
 const authLoadingTitle = ref('')
@@ -461,70 +459,7 @@ const handleGoogleAuthSuccess = async (googleUser: any) => {
   }
 }
 
-let clerkLoadingPromise: Promise<any> | null = null
 
-const initClerk = async (): Promise<any> => {
-  if ((window as any).Clerk && (window as any).Clerk.loaded) {
-    return (window as any).Clerk
-  }
-
-  if (clerkLoadingPromise) {
-    return clerkLoadingPromise
-  }
-
-  clerkLoadingPromise = (async () => {
-    try {
-      if (!(window as any).Clerk) {
-        const script = document.createElement('script')
-        script.async = true
-        script.src = 'https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js'
-        script.setAttribute('data-clerk-publishable-key', clerkPublishableKey.value)
-
-        await new Promise<void>((resolve, reject) => {
-          script.onload = () => resolve()
-          script.onerror = () => reject(new Error('Clerk JS SDK script load error'))
-          document.head.appendChild(script)
-        })
-      }
-
-      const Clerk = (window as any).Clerk
-      if (Clerk && !Clerk.loaded) {
-        await Clerk.load({
-          publishableKey: clerkPublishableKey.value,
-        })
-      }
-      return Clerk
-    } catch (e) {
-      console.warn('Clerk initialization notice:', e)
-      return null
-    }
-  })()
-
-  return clerkLoadingPromise
-}
-
-const checkClerkOAuthCallback = async () => {
-  try {
-    const clerk = await initClerk()
-    if (clerk && clerk.user) {
-      const email = clerk.user.primaryEmailAddress?.emailAddress
-      if (email) {
-        const googleUser = {
-          id: clerk.user.id,
-          clerk_id: clerk.user.id,
-          google_id: clerk.user.externalAccounts?.find((acc: any) => acc.provider === 'google')?.externalId || clerk.user.id,
-          email: email,
-          first_name: clerk.user.firstName || '',
-          last_name: clerk.user.lastName || '',
-          image_url: clerk.user.imageUrl,
-        }
-        await handleGoogleAuthSuccess(googleUser)
-      }
-    }
-  } catch (err) {
-    console.warn('Clerk session check:', err)
-  }
-}
 
 const redirectToGoogleOAuth = () => {
   isGoogleLoading.value = true

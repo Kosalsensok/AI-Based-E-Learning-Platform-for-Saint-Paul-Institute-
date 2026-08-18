@@ -125,10 +125,7 @@
     <!-- Google Identity Services SDK -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
-    <!-- Clerk Authentication SDK -->
-    @if(config('services.clerk.publishable_key') || env('VITE_CLERK_PUBLISHABLE_KEY'))
-    <script async crossorigin="anonymous" data-clerk-publishable-key="{{ config('services.clerk.publishable_key') ?? env('VITE_CLERK_PUBLISHABLE_KEY') }}" src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js" type="text/javascript"></script>
-    @endif
+
 
     <script>
         window.addEventListener('unhandledrejection', function(e) {
