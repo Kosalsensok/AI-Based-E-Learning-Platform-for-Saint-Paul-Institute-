@@ -21,11 +21,11 @@ class ClerkAuthController extends Controller
     public function redirectToGoogle(Request $request)
     {
         $googleClientId = config('services.google.client_id') ?: env('GOOGLE_CLIENT_ID');
-        $redirectUri = config('services.google.redirect') ?: env('GOOGLE_REDIRECT_URI') ?: url('/auth/google/callback');
+        $redirectUri = config('services.google.redirect') ?: env('GOOGLE_REDIRECT_URI') ?: 'https://spilms.tech/auth/google/callback';
 
         if (empty($googleClientId)) {
             Log::error('Google OAuth Client ID is missing. Please set GOOGLE_CLIENT_ID in your environment.');
-            return redirect()->route('login')->withErrors(['email' => 'Google Login is currently not configured on this server (Missing GOOGLE_CLIENT_ID). Please check server environment settings.']);
+            return redirect()->route('login')->withErrors(['email' => 'Google Login មិនទាន់ត្រូវបានកំណត់នៅលើ Server ទេ (Missing GOOGLE_CLIENT_ID)។']);
         }
 
         // Generate PKCE code verifier and code challenge (RFC 7636)
@@ -75,7 +75,7 @@ class ClerkAuthController extends Controller
                 $code = $data['code'];
                 $googleClientId = config('services.google.client_id') ?: env('GOOGLE_CLIENT_ID');
                 $googleClientSecret = config('services.google.client_secret') ?: env('GOOGLE_CLIENT_SECRET');
-                $redirectUri = config('services.google.redirect') ?: env('GOOGLE_REDIRECT_URI') ?: url('/auth/google/callback');
+                $redirectUri = config('services.google.redirect') ?: env('GOOGLE_REDIRECT_URI') ?: 'https://spilms.tech/auth/google/callback';
 
                 // Extract code_verifier from state or session
                 $codeVerifier = null;
@@ -103,7 +103,7 @@ class ClerkAuthController extends Controller
                     $postData['code_verifier'] = $codeVerifier;
                 }
 
-                $tokenResponse = Http::timeout(10)->asForm()->post('https://oauth2.googleapis.com/token', $postData);
+                $tokenResponse = Http::timeout(15)->asForm()->post('https://oauth2.googleapis.com/token', $postData);
 
                 if ($tokenResponse->successful()) {
                     $tokenJson = $tokenResponse->json();
@@ -127,7 +127,7 @@ class ClerkAuthController extends Controller
                     }
 
                     if (empty($googleEmail) && $accessToken) {
-                        $userInfoRes = Http::timeout(10)->withToken($accessToken)->get('https://www.googleapis.com/oauth2/v3/userinfo');
+                        $userInfoRes = Http::timeout(15)->withToken($accessToken)->get('https://www.googleapis.com/oauth2/v3/userinfo');
                         if ($userInfoRes->successful()) {
                             $uInfo = $userInfoRes->json();
                             $googleEmail = $uInfo['email'] ?? null;

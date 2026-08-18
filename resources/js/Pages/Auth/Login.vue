@@ -472,23 +472,8 @@ const showGoogleModal = ref(false)
 const isGoogleVerifying = ref(false)
 const googleErrorMessage = ref<string | null>(null)
 
-const redirectToGoogleOAuth = async () => {
-  isGoogleVerifying.value = true
-  try {
-    const clerk = await initClerk()
-    if (clerk && typeof clerk.authenticateWithRedirect === 'function') {
-      await clerk.authenticateWithRedirect({
-        strategy: 'oauth_google',
-        redirectUrl: window.location.origin + '/auth/google/callback',
-        redirectUrlComplete: '/student/dashboard',
-      })
-      return
-    }
-  } catch (e) {
-    console.warn('Clerk redirect fallback to server-side Google OAuth:', e)
-  }
-  // Direct Server-Side Google OAuth Full Page Redirect
-  window.location.href = '/auth/google/redirect'
+const redirectToGoogleOAuth = () => {
+  window.location.assign('/auth/google/redirect')
 }
 
 const handleSocialLogin = (provider: string) => {
@@ -968,6 +953,7 @@ onMounted(() => {
               <div class="grid grid-cols-2 gap-2.5">
                 <a
                   href="/auth/google/redirect"
+                  @click="redirectToGoogleOAuth"
                   class="h-10.5 py-2 px-3 bg-white dark:bg-slate-800/80 hover:bg-slate-50/90 dark:hover:bg-slate-700/60 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white transition-all duration-150 flex items-center justify-center gap-2 hover:shadow-xs active:scale-98 shadow-2xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-600 select-none"
                 >
                   <i class="pi pi-google text-rose-500 text-sm"></i> <span>Google</span>

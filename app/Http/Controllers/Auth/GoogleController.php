@@ -21,11 +21,13 @@ class GoogleController extends Controller
     public function redirectToGoogle(Request $request)
     {
         $clientId = config('services.google.client_id') ?: env('GOOGLE_CLIENT_ID');
-        $redirectUri = config('services.google.redirect') ?: env('GOOGLE_REDIRECT_URI') ?: url('/auth/google/callback');
+        $redirectUri = config('services.google.redirect') ?: env('GOOGLE_REDIRECT_URI') ?: 'https://spilms.tech/auth/google/callback';
 
         if (empty($clientId)) {
-            Log::error('Google OAuth Client ID is missing. Please set GOOGLE_CLIENT_ID in your environment.');
-            return redirect()->route('login')->withErrors(['email' => 'Google Login is currently not configured on this server (Missing GOOGLE_CLIENT_ID). Please check server environment settings.']);
+            Log::error('Google OAuth Client ID is missing. Please configure GOOGLE_CLIENT_ID in your environment variables.');
+            return redirect()->route('login')->withErrors([
+                'email' => 'Google Login មិនទាន់ត្រូវបានកំណត់នៅលើ Server ទេ (Missing GOOGLE_CLIENT_ID)។ សូមបន្ថែម GOOGLE_CLIENT_ID នៅក្នុង Server Environment Variables។'
+            ]);
         }
 
         // PKCE
@@ -34,12 +36,14 @@ class GoogleController extends Controller
 
         $stateData = [
             'verifier' => $codeVerifier,
+            'nonce' => Str::random(16),
             'time' => time(),
         ];
         $state = base64_encode(json_encode($stateData));
 
         if ($request->hasSession()) {
             $request->session()->put('google_code_verifier', $codeVerifier);
+            $request->session()->put('google_oauth_state', $state);
             $request->session()->save();
         }
 
@@ -53,6 +57,7 @@ class GoogleController extends Controller
             'state' => $state,
             'code_challenge' => $codeChallenge,
             'code_challenge_method' => 'S256',
+            'include_granted_scopes' => 'true',
         ]);
 
         return redirect("https://accounts.google.com/o/oauth2/v2/auth?{$query}");
@@ -72,7 +77,7 @@ class GoogleController extends Controller
         try {
             $clientId = config('services.google.client_id') ?: env('GOOGLE_CLIENT_ID');
             $clientSecret = config('services.google.client_secret') ?: env('GOOGLE_CLIENT_SECRET');
-            $redirectUri = config('services.google.redirect') ?: env('GOOGLE_REDIRECT_URI') ?: url('/auth/google/callback');
+            $redirectUri = config('services.google.redirect') ?: env('GOOGLE_REDIRECT_URI') ?: 'https://spilms.tech/auth/google/callback';
 
             // Extract code_verifier
             $codeVerifier = null;
@@ -98,7 +103,7 @@ class GoogleController extends Controller
                 $postData['code_verifier'] = $codeVerifier;
             }
 
-            $response = Http::timeout(10)->asForm()->post('https://oauth2.googleapis.com/token', $postData);
+            $response = Http::timeout(15)->asForm()->post('https://oauth2.googleapis.com/token', $postData);
 
             if (!$response->successful()) {
                 Log::error('Google Token Exchange Failed: ' . $response->body());
@@ -128,7 +133,7 @@ class GoogleController extends Controller
 
             // 2. Fallback to UserInfo endpoint
             if (empty($email) && $accessToken) {
-                $userInfoRes = Http::timeout(10)->withToken($accessToken)->get('https://www.googleapis.com/oauth2/v3/userinfo');
+                $userInfoRes = Http::timeout(15)->withToken($accessToken)->get('https://www.googleapis.com/oauth2/v3/userinfo');
                 if ($userInfoRes->successful()) {
                     $uInfo = $userInfoRes->json();
                     $email = strtolower(trim($uInfo['email'] ?? ''));
