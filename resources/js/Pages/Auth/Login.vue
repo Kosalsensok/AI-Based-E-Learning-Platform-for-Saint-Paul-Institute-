@@ -2,7 +2,6 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useForm, Link, router, usePage } from '@inertiajs/vue3'
 import { i18n, type LanguageCode } from '../../Services/i18n'
-import AuthAnimatedBackground from '../../Components/AuthAnimatedBackground.vue'
 
 const logoUrl = '/images/logo.png'
 
@@ -21,7 +20,6 @@ const form = useForm({
 
 const showPassword = ref(false)
 const capsLockOn = ref(false)
-const socialNotice = ref<string | null>(null)
 const isDark = ref(true)
 const isLangOpen = ref(false)
 const showSuccessModal = ref(false)
@@ -45,17 +43,29 @@ const t = (key: string, defaultText?: string) => {
 }
 
 const roles = computed(() => [
-  { id: 'student', label: t('login_tab_student', 'និស្សិត'), icon: '🎓' },
-  { id: 'teacher', label: t('login_tab_teacher', 'សាស្ត្រាចារ្យ'), icon: '👨‍🏫' },
-  { id: 'admin', label: t('login_tab_admin', 'រដ្ឋបាល'), icon: '🛡️' }
+  { id: 'student', label: t('login_tab_student', 'Student'), icon: '🎓' },
+  { id: 'teacher', label: t('login_tab_teacher', 'Teacher'), icon: '👨‍🏫' },
+  { id: 'admin', label: t('login_tab_admin', 'Admin'), icon: '🛡️' }
 ])
 
 const identityLabel = computed(() => {
-  return t(`login_input_identity_label_${form.role}`, form.role === 'teacher' ? 'អត្តលេខ អ៊ីមែល ឬ លេខទូរស័ព្ទ' : form.role === 'admin' ? 'អត្តលេខ អ៊ីមែល ឬ លេខទូរស័ព្ទ' : 'អត្តលេខ អ៊ីមែល ឬ លេខទូរស័ព្ទ')
+  if (form.role === 'teacher') {
+    return currentLang.value === 'km' ? 'អត្តលេខគ្រូ អ៊ីមែល ឬ លេខទូរស័ព្ទ' : 'Teacher ID, Email or Phone'
+  }
+  if (form.role === 'admin') {
+    return currentLang.value === 'km' ? 'អត្តលេខរដ្ឋបាល អ៊ីមែល ឬ លេខទូរស័ព្ទ' : 'Admin ID, Email or Phone'
+  }
+  return currentLang.value === 'km' ? 'អត្តលេខនិស្សិត អ៊ីមែល ឬ លេខទូរស័ព្ទ' : 'Student ID, Email or Phone'
 })
 
 const identityPlaceholder = computed(() => {
-  return t(`login_input_identity_placeholder_${form.role}`, form.role === 'teacher' ? 'អត្តលេខ អ៊ីមែល ឬទូរស័ព្ទ' : form.role === 'admin' ? 'អត្តលេខ អ៊ីមែល ឬទូរស័ព្ទ' : 'អត្តលេខ អ៊ីមែល ឬទូរស័ព្ទ')
+  if (form.role === 'teacher') {
+    return currentLang.value === 'km' ? 'អត្តលេខគ្រូ, អ៊ីមែល ឬទូរស័ព្ទ' : 'Teacher ID, email or phone'
+  }
+  if (form.role === 'admin') {
+    return currentLang.value === 'km' ? 'អត្តលេខរដ្ឋបាល, អ៊ីមែល ឬទូរស័ព្ទ' : 'Admin ID, email or phone'
+  }
+  return currentLang.value === 'km' ? 'អត្តលេខនិស្សិត, អ៊ីមែល ឬទូរស័ព្ទ' : 'Student ID, email or phone'
 })
 
 const initTheme = () => {
@@ -534,29 +544,30 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="lms-viewport">
+  <div class="lms-auth-wrapper">
     
-    <!-- Ambient Background Lighting & ThreeJS Layer -->
-    <div class="ambient-layer">
-      <AuthAnimatedBackground />
-      <div class="glow-orb orb-top"></div>
-      <div class="glow-orb orb-bottom"></div>
-    </div>
+    <!-- Ambient Dynamic Lighting -->
+    <div class="ambient-glow orb-1"></div>
+    <div class="ambient-glow orb-2"></div>
 
-    <!-- Header Tools (Safe Area Compliant) -->
-    <header class="lms-header">
-      <!-- Language Switcher Dropdown -->
+    <!-- Floating Background Geometry (Optimized GPU Rendering) -->
+    <div class="geo-decor geo-left" aria-hidden="true"></div>
+    <div class="geo-decor geo-right" aria-hidden="true"></div>
+
+    <!-- Header Actions (Responsive Safe-Area) -->
+    <header class="top-nav-bar">
+      <!-- Language Dropdown Pill -->
       <div class="relative lang-switcher-container">
         <button 
           type="button" 
           @click.stop="isLangOpen = !isLangOpen"
-          class="action-chip" 
+          class="nav-pill-btn" 
           aria-label="Language Selector"
         >
-          <span class="chip-flag">{{ currentLang === 'km' ? '🇰🇭' : '🇬🇧' }}</span>
-          <span class="chip-text">{{ currentLang === 'km' ? 'KH' : 'EN' }}</span>
-          <svg :class="['chip-arrow transition-transform duration-200', isLangOpen ? 'rotate-180 text-blue-400' : '']" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+          <span class="text-xs">{{ currentLang === 'km' ? '🇰🇭' : '🇬🇧' }}</span>
+          <span class="pill-text">{{ currentLang === 'km' ? 'KH' : 'EN' }}</span>
+          <svg :class="['w-3.5 h-3.5 opacity-60 transition-transform duration-200', isLangOpen ? 'rotate-180 text-blue-400' : '']" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M19 9l-7 7-7-7" />
           </svg>
         </button>
 
@@ -597,8 +608,8 @@ onUnmounted(() => {
       <button 
         type="button" 
         @click="toggleTheme"
-        :class="['action-chip', isDark ? 'text-amber-400' : 'text-indigo-400']" 
-        aria-label="Theme Selector"
+        :class="['nav-pill-btn', isDark ? 'text-amber-400' : 'text-indigo-400']" 
+        aria-label="Toggle Theme"
       >
         <svg v-if="isDark" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -606,27 +617,25 @@ onUnmounted(() => {
         <svg v-else class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
         </svg>
-        <span class="chip-text">{{ isDark ? t('theme_light', 'ពន្លឺ') : t('theme_dark', 'ងងឹត') }}</span>
+        <span class="pill-text text-slate-200">{{ isDark ? (currentLang === 'km' ? 'ពន្លឺ' : 'Light Mode') : (currentLang === 'km' ? 'ងងឹត' : 'Dark Mode') }}</span>
       </button>
     </header>
 
-    <!-- Main Container Card -->
-    <main class="lms-main">
+    <!-- Main Content Container -->
+    <main class="auth-center-stage">
       
       <!-- Brand & Institute Header -->
-      <div v-if="!isAuthenticating" class="branding-group">
-        <div class="logo-badge">
-          <div class="logo-box">
+      <div v-if="!isAuthenticating" class="brand-badge-area">
+        <div class="app-icon-wrap">
+          <div class="app-icon-inner">
             <img :src="logoUrl" alt="Saint Paul Institute Logo" class="w-10 h-10 object-contain rounded-full bg-white p-0.5" />
           </div>
         </div>
-        <div class="institute-badge">
-          {{ t('login_subtitle', 'វិទ្យាស្ថាន សន្តប៉ូល') }}
-        </div>
+        <div class="institute-pill">{{ t('login_subtitle', 'វិទ្យាស្ថាន សន្តប៉ូល') }}</div>
       </div>
 
-      <!-- Auth Glassmorphic Card -->
-      <div class="auth-card">
+      <!-- High-End Glassmorphic Card -->
+      <div class="glass-card">
         
         <!-- Standard Login Flow -->
         <div v-if="!isAuthenticating">
@@ -658,8 +667,8 @@ onUnmounted(() => {
             <span>{{ t('login_caps_lock_active', 'Caps Lock is ON') }}</span>
           </div>
 
-          <!-- Multi-Role Switcher Tabs -->
-          <div class="role-switcher" role="tablist">
+          <!-- Role Tabs Switcher -->
+          <div class="role-tabs" role="tablist">
             <button 
               v-for="role in roles" 
               :key="role.id"
@@ -667,39 +676,39 @@ onUnmounted(() => {
               role="tab"
               :aria-selected="form.role === role.id"
               @click="form.role = role.id"
-              :class="['role-btn', { 'role-btn-active': form.role === role.id }]"
+              :class="['role-item', { 'role-active': form.role === role.id }]"
             >
-              <span class="role-icon">{{ role.icon }}</span>
-              <span class="role-title">{{ role.label }}</span>
+              <span class="role-ico">{{ role.icon }}</span>
+              <span class="role-txt">{{ role.label }}</span>
             </button>
           </div>
 
-          <!-- Inputs Form -->
-          <form @submit.prevent="submit" class="auth-form" autocomplete="on">
+          <!-- Form Elements -->
+          <form @submit.prevent="submit" class="form-body" autocomplete="on">
             
             <!-- Identity Input -->
-            <div class="form-field">
-              <label for="identity-input" class="input-label">{{ identityLabel }}</label>
-              <div class="input-container">
-                <span class="input-prefix-icon">
+            <div class="form-group">
+              <label for="identity" class="form-label">{{ identityLabel }}</label>
+              <div class="input-shell">
+                <span class="prefix-icon">
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </span>
                 <input 
-                  id="identity-input"
+                  id="identity"
                   v-model="form.email"
                   type="text" 
                   autocomplete="username"
                   :placeholder="identityPlaceholder" 
-                  class="text-input"
+                  class="form-control"
                   required
                 />
                 <button 
                   v-if="form.email"
                   type="button" 
                   @click="clearEmail"
-                  class="input-suffix-btn"
+                  class="suffix-clear-btn"
                   title="Clear"
                 >
                   <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -710,30 +719,30 @@ onUnmounted(() => {
             </div>
 
             <!-- Password Input -->
-            <div class="form-field">
+            <div class="form-group">
               <div class="flex items-center justify-between">
-                <label for="password-input" class="input-label">{{ t('login_input_password_label', 'ពាក្យសម្ងាត់') }}</label>
-                <Link href="/forgot-password" class="forgot-pwd-link">{{ t('login_forgot_password', 'ភ្លេចពាក្យសម្ងាត់?') }}</Link>
+                <label for="password" class="form-label">{{ t('login_input_password_label', 'ពាក្យសម្ងាត់') }}</label>
+                <Link href="/forgot-password" class="inline-link">{{ t('login_forgot_password', 'ភ្លេចពាក្យសម្ងាត់?') }}</Link>
               </div>
-              <div class="input-container">
-                <span class="input-prefix-icon">
+              <div class="input-shell">
+                <span class="prefix-icon">
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                 </span>
                 <input 
-                  id="password-input"
+                  id="password"
                   v-model="form.password"
                   :type="showPassword ? 'text' : 'password'"
                   autocomplete="current-password"
                   placeholder="••••••••••••" 
-                  class="text-input has-suffix"
+                  class="form-control pr-10"
                   required
                 />
                 <button 
                   type="button" 
                   @click="showPassword = !showPassword"
-                  class="input-suffix-btn"
+                  class="suffix-icon-btn"
                   aria-label="Toggle Password Visibility"
                 >
                   <svg v-if="!showPassword" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -748,24 +757,24 @@ onUnmounted(() => {
               <span v-if="form.errors.password" class="text-[10px] text-rose-400 block font-semibold mt-0.5">{{ form.errors.password }}</span>
             </div>
 
-            <!-- Remember Me Checkbox -->
+            <!-- Remember Me -->
             <div class="flex items-center gap-2">
               <input 
-                id="remember-device"
+                id="remember"
                 type="checkbox" 
                 v-model="form.remember" 
-                class="checkbox-custom"
+                class="form-check-input"
               />
-              <label for="remember-device" class="text-xs text-slate-400 cursor-pointer select-none">
-                {{ t('login_remember_me', 'ចងចាំការចូលប្រើលើឧបករណ៍នេះ') }}
+              <label for="remember" class="text-xs text-slate-300 dark:text-slate-400 select-none cursor-pointer">
+                {{ t('login_remember_me', 'ចងចាំគណនីលើឧបករណ៍នេះ') }}
               </label>
             </div>
 
-            <!-- Submit Button -->
+            <!-- Primary Submit Action -->
             <button 
               type="submit" 
               :disabled="isSubmitting || form.processing"
-              class="submit-button"
+              class="main-submit-btn"
             >
               <span>{{ isSubmitting || form.processing ? t('login_btn_submitting', 'កំពុងផ្ទៀងផ្ទាត់...') : t('login_btn_submit', 'ចូលប្រព័ន្ធ') }}</span>
               <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -774,18 +783,18 @@ onUnmounted(() => {
             </button>
           </form>
 
-          <!-- Divider Line -->
-          <div class="or-separator">
+          <!-- Divider -->
+          <div class="divider-row">
             <span>{{ t('login_or', 'ឬ') }}</span>
           </div>
 
-          <!-- Social SSO Authentication -->
-          <div class="sso-grid">
+          <!-- Social SSO Connectors -->
+          <div class="sso-actions-grid">
             <button 
               type="button" 
               :disabled="isAuthenticating"
               @click="redirectToGoogleOAuth"
-              class="sso-provider-btn"
+              class="sso-action-btn"
             >
               <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                 <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"/>
@@ -800,7 +809,7 @@ onUnmounted(() => {
               type="button" 
               :disabled="isAuthenticating"
               @click="redirectToTelegramOAuth"
-              class="sso-provider-btn"
+              class="sso-action-btn"
             >
               <svg class="w-4 h-4 text-sky-400 shrink-0" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.52 2.77-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
@@ -809,22 +818,22 @@ onUnmounted(() => {
             </button>
           </div>
 
-          <!-- Register Callout -->
-          <div class="register-callout">
-            <p class="text-xs text-slate-400 flex items-center justify-center gap-1.5">
-              <span>{{ t('login_dont_have_account', 'មិនទាន់មានគណនី?') }}</span>
-              <Link href="/register" class="font-bold text-blue-400 hover:underline">
-                {{ t('login_register_now', 'ចុះឈ្មោះគណនីថ្មី') }}
-              </Link>
-            </p>
+          <!-- Registration Link -->
+          <div class="text-center pt-2">
+            <span class="text-xs text-slate-400">{{ t('login_dont_have_account', 'មិនទាន់មានគណនី?') }} </span>
+            <Link href="/register" class="text-xs font-semibold text-blue-400 hover:text-blue-300 hover:underline transition">
+              {{ t('login_register_now', 'ចុះឈ្មោះគណនីថ្មី') }}
+            </Link>
           </div>
 
         </div>
 
         <!-- Authenticating / Loading State -->
         <div v-else class="auth-loading-state">
-          <div class="logo-box mx-auto mb-3">
-            <img :src="logoUrl" alt="E-LMS Logo" class="w-10 h-10 object-contain rounded-full bg-white p-0.5" />
+          <div class="app-icon-wrap mx-auto mb-3">
+            <div class="app-icon-inner">
+              <img :src="logoUrl" alt="E-LMS Logo" class="w-10 h-10 object-contain rounded-full bg-white p-0.5" />
+            </div>
           </div>
           <h3 class="text-sm font-bold text-slate-100 mb-1">
             {{ authLoadingTitle || (currentLang === 'km' ? 'កំពុងរៀបចំ Dashboard របស់អ្នក...' : 'Setting up your dashboard...') }}
@@ -840,14 +849,14 @@ onUnmounted(() => {
       </div>
     </main>
 
-    <!-- Footer Copyright Note & Links -->
-    <footer class="lms-footer">
+    <!-- Institutional Footer -->
+    <footer class="footer-block">
       <div class="footer-links">
-        <Link href="/privacy" class="hover:text-blue-400 hover:underline">{{ t('privacy_policy', 'គោលការណ៍ឯកជនភាព') }}</Link>
+        <Link href="/privacy">{{ t('privacy_policy', 'គោលការណ៍ឯកជនភាព') }}</Link>
         <span>•</span>
-        <Link href="/terms" class="hover:text-blue-400 hover:underline">{{ t('terms_of_service', 'លក្ខខណ្ឌប្រើប្រាស់') }}</Link>
+        <Link href="/terms">{{ t('terms_of_service', 'លក្ខខណ្ឌប្រើប្រាស់') }}</Link>
       </div>
-      <p class="mt-1">© 2026 E-LMS • {{ t('login_subtitle', 'វិទ្យាស្ថាន សន្តប៉ូល') }}</p>
+      <p class="copyright-note">© 2026 E-LMS • {{ t('login_subtitle', 'វិទ្យាស្ថាន សន្តប៉ូល') }}</p>
     </footer>
 
     <!-- Compact Success Alert Modal -->
@@ -913,16 +922,16 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* Base Universal Viewport Architecture */
-.lms-viewport {
+/* Responsive Viewport Wrapper */
+.lms-auth-wrapper {
   min-height: 100vh;
   min-height: 100dvh;
   width: 100%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  background-color: #060b18;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-color: #040914;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
   background-size: 24px 24px;
   color: #f8fafc;
   box-sizing: border-box;
@@ -931,67 +940,90 @@ onUnmounted(() => {
   padding: calc(env(safe-area-inset-top, 16px) + 8px) calc(env(safe-area-inset-right, 16px) + 8px) calc(env(safe-area-inset-bottom, 16px) + 8px) calc(env(safe-area-inset-left, 16px) + 8px);
 }
 
-/* Ambient Backdrops */
-.ambient-layer {
+/* Ambient Lights (GPU Accelerated) */
+.ambient-glow {
   position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-  z-index: 0;
-}
-.glow-orb {
-  position: absolute;
-  width: 20rem;
-  height: 20rem;
+  width: 22rem;
+  height: 22rem;
   border-radius: 9999px;
-  filter: blur(80px);
+  filter: blur(90px);
   pointer-events: none;
   opacity: 0.16;
+  transform: translateZ(0);
+  will-change: transform;
 }
-.orb-top { top: -5rem; left: 50%; transform: translateX(-50%); background-color: #2563eb; }
-.orb-bottom { bottom: -5rem; right: -3rem; background-color: #4f46e5; }
+.orb-1 { top: -6rem; left: 50%; transform: translateX(-50%) translateZ(0); background-color: #2563eb; }
+.orb-2 { bottom: -6rem; right: -4rem; background-color: #4f46e5; transform: translateZ(0); }
 
-/* Top Header Bar */
-.lms-header {
+/* Subtle Geo Accents on Desktop (Hidden on small mobile screens to eliminate lag) */
+.geo-decor {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.25;
+  filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.2));
+  display: none;
+  transform: translateZ(0);
+}
+@media (min-width: 1024px) {
+  .geo-decor { display: block; }
+  .geo-left {
+    top: 20%;
+    left: 8%;
+    width: 160px;
+    height: 160px;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 50%;
+    transform: rotate(45deg) translateZ(0);
+  }
+  .geo-right {
+    bottom: 25%;
+    right: 8%;
+    width: 120px;
+    height: 120px;
+    border: 1px solid rgba(147, 51, 234, 0.3);
+    transform: rotate(15deg) translateZ(0);
+  }
+}
+
+/* Header */
+.top-nav-bar {
   width: 100%;
-  max-width: 410px;
+  max-width: 420px;
   margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
   z-index: 30;
 }
-.action-chip {
+.nav-pill-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  padding: 0.35rem 0.75rem;
+  padding: 0.45rem 0.95rem;
   border-radius: 9999px;
-  background-color: rgba(15, 23, 42, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   cursor: pointer;
   touch-action: manipulation;
-  transition: transform 0.15s ease;
+  transition: all 0.15s ease;
 }
-.action-chip:active { transform: scale(0.96); }
-.chip-flag { font-size: 0.8125rem; }
-.chip-text { font-size: 0.75rem; font-weight: 600; }
-.chip-arrow { width: 0.75rem; height: 0.75rem; opacity: 0.7; }
+.nav-pill-btn:active { transform: scale(0.96); }
+.pill-text { font-size: 0.75rem; font-weight: 600; }
 
 /* Language Dropdown */
 .lang-dropdown {
   position: absolute;
   left: 0;
   margin-top: 0.375rem;
-  width: 10rem;
+  width: 10.5rem;
   border-radius: 1rem;
-  background-color: rgba(15, 23, 42, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6);
   padding: 0.25rem 0;
   z-index: 50;
   overflow: hidden;
@@ -1001,7 +1033,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem 0.75rem;
+  padding: 0.55rem 0.85rem;
   font-size: 0.75rem;
   font-weight: 600;
   color: #cbd5e1;
@@ -1011,42 +1043,41 @@ onUnmounted(() => {
   transition: background-color 0.15s;
 }
 .lang-dropdown-item:hover { background-color: rgba(255, 255, 255, 0.08); color: #ffffff; }
-.lang-dropdown-item-active { background-color: rgba(37, 99, 235, 0.2); color: #60a5fa; }
+.lang-dropdown-item-active { background-color: rgba(37, 99, 235, 0.25); color: #60a5fa; }
 
-/* Main Wrapper */
-.lms-main {
+/* Main Stage */
+.auth-center-stage {
   width: 100%;
-  max-width: 410px;
+  max-width: 420px;
   margin: auto;
   z-index: 20;
   padding: 0.5rem 0;
 }
 
 /* Branding */
-.branding-group {
+.brand-badge-area {
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
-  margin-bottom: 0.875rem;
+  margin-bottom: 1.125rem;
 }
-.logo-badge {
+.app-icon-wrap {
   padding: 2px;
   border-radius: 1.25rem;
   background: linear-gradient(135deg, #2563eb, #6366f1);
-  box-shadow: 0 10px 24px -4px rgba(37, 99, 235, 0.3);
+  box-shadow: 0 10px 24px -4px rgba(37, 99, 235, 0.35);
   margin-bottom: 0.5rem;
 }
-.logo-box {
+.app-icon-inner {
   width: 3.5rem;
   height: 3.5rem;
-  background-color: #0b1329;
+  background-color: #070e22;
   border-radius: 1.15rem;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.institute-badge {
+.institute-pill {
   padding: 0.25rem 0.875rem;
   border-radius: 9999px;
   background-color: rgba(37, 99, 235, 0.12);
@@ -1056,18 +1087,18 @@ onUnmounted(() => {
   font-weight: 600;
 }
 
-/* Glassmorphism Card */
-.auth-card {
-  background: linear-gradient(165deg, rgba(15, 23, 42, 0.75) 0%, rgba(10, 16, 31, 0.85) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+/* Glass Card */
+.glass-card {
+  background: linear-gradient(165deg, rgba(15, 23, 42, 0.82) 0%, rgba(8, 14, 28, 0.92) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 1.5rem;
-  padding: 1.25rem;
-  box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.6);
+  padding: 1.35rem;
+  box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
 @media (min-width: 640px) {
-  .auth-card { padding: 1.625rem; }
+  .glass-card { padding: 1.75rem; }
 }
 
 /* Notice & Alerts */
@@ -1107,98 +1138,111 @@ onUnmounted(() => {
   margin-bottom: 0.75rem;
 }
 
-/* Role Selector Tabs */
-.role-switcher {
+/* Role Selector */
+.role-tabs {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0.25rem;
-  background-color: rgba(2, 6, 23, 0.7);
+  gap: 0.35rem;
+  background-color: rgba(2, 6, 23, 0.75);
   padding: 0.25rem;
   border-radius: 0.875rem;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  margin-bottom: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 1.25rem;
 }
-.role-btn {
+.role-item {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.25rem;
-  padding: 0.5rem 0.125rem;
+  padding: 0.55rem 0.125rem;
   border-radius: 0.625rem;
   border: none;
   background: transparent;
-  color: #64748b;
+  color: #94a3b8;
   cursor: pointer;
   touch-action: manipulation;
   transition: all 0.2s ease;
 }
-.role-btn-active {
+.role-active {
   background: linear-gradient(135deg, #2563eb, #3b82f6);
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
 }
-.role-icon { font-size: 0.875rem; }
-.role-title { font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+.role-ico { font-size: 0.875rem; }
+.role-txt { font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
 
-/* Form Fields */
-.auth-form { display: flex; flex-direction: column; gap: 0.875rem; }
-.form-field { display: flex; flex-direction: column; gap: 0.3125rem; }
-.input-label { font-size: 0.75rem; font-weight: 600; color: #cbd5e1; }
-.forgot-pwd-link { font-size: 0.6875rem; color: #60a5fa; text-decoration: none; }
-.forgot-pwd-link:hover { text-decoration: underline; }
+/* Form Elements */
+.form-body { display: flex; flex-direction: column; gap: 0.875rem; }
+.form-group { display: flex; flex-direction: column; gap: 0.3125rem; }
+.form-label { font-size: 0.75rem; font-weight: 600; color: #cbd5e1; }
+.inline-link { font-size: 0.6875rem; color: #60a5fa; text-decoration: none; }
+.inline-link:hover { text-decoration: underline; }
 
-.input-container { position: relative; display: flex; align-items: center; width: 100%; }
-.input-prefix-icon {
+.input-shell { position: relative; display: flex; align-items: center; width: 100%; }
+.prefix-icon {
   position: absolute;
   left: 0.875rem;
-  color: #64748b;
+  color: #94a3b8;
   pointer-events: none;
   display: flex;
   align-items: center;
 }
-.text-input {
+.form-control {
   width: 100%;
-  padding: 0.625rem 0.875rem 0.625rem 2.375rem;
-  background-color: rgba(2, 6, 23, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.6875rem 0.875rem 0.6875rem 2.375rem;
+  background-color: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 0.75rem;
   font-size: 0.875rem;
-  color: #f8fafc;
+  color: #ffffff;
   outline: none;
   box-sizing: border-box;
   -webkit-appearance: none;
   transition: all 0.2s ease;
 }
-.text-input:focus {
-  border-color: #3b82f6;
-  background-color: rgba(2, 6, 23, 0.85);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+.form-control::placeholder {
+  color: #94a3b8;
+  opacity: 0.85;
 }
-.text-input.has-suffix { padding-right: 2.375rem; }
-.input-suffix-btn {
+.form-control:focus {
+  border-color: #3b82f6;
+  background-color: rgba(15, 23, 42, 0.95);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.22);
+}
+.suffix-clear-btn {
   position: absolute;
   right: 0.875rem;
   background: transparent;
   border: none;
-  color: #64748b;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+.suffix-icon-btn {
+  position: absolute;
+  right: 0.875rem;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
   cursor: pointer;
   display: flex;
   align-items: center;
 }
 
-/* Checkbox */
-.checkbox-custom {
+/* Custom Checkbox */
+.form-check-input {
   width: 0.95rem;
   height: 0.95rem;
   accent-color: #2563eb;
   cursor: pointer;
 }
 
-/* Primary Button */
-.submit-button {
+/* Submit Action Button */
+.main-submit-btn {
   margin-top: 0.25rem;
   width: 100%;
-  padding: 0.6875rem;
+  padding: 0.75rem;
   background: linear-gradient(135deg, #2563eb, #1d4ed8);
   color: #ffffff;
   font-size: 0.875rem;
@@ -1210,69 +1254,62 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  box-shadow: 0 8px 20px -4px rgba(37, 99, 235, 0.4);
+  box-shadow: 0 8px 22px -4px rgba(37, 99, 235, 0.45);
   touch-action: manipulation;
   transition: all 0.2s ease;
 }
-.submit-button:hover { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-.submit-button:active { transform: scale(0.98); }
-.submit-button:disabled { opacity: 0.5; cursor: not-allowed; }
+.main-submit-btn:hover { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.main-submit-btn:active { transform: scale(0.98); }
+.main-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* Separator */
-.or-separator {
+/* Divider */
+.divider-row {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0.875rem 0;
 }
-.or-separator::before {
+.divider-row::before {
   content: '';
   position: absolute;
   width: 100%;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
-.or-separator span {
+.divider-row span {
   position: relative;
   background-color: #0c1428;
   padding: 0 0.625rem;
   font-size: 0.6875rem;
-  color: #64748b;
-  text-transform: uppercase;
+  color: #94a3b8;
+  font-weight: 600;
 }
 
 /* SSO Providers */
-.sso-grid {
+.sso-actions-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 0.625rem;
+  margin-bottom: 0.5rem;
 }
-.sso-provider-btn {
+.sso-action-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem;
-  padding: 0.5625rem;
-  background-color: rgba(2, 6, 23, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  gap: 0.5rem;
+  padding: 0.625rem;
+  background-color: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 0.75rem;
-  color: #e2e8f0;
+  color: #f1f5f9;
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   touch-action: manipulation;
   transition: all 0.15s ease;
 }
-.sso-provider-btn:hover { background-color: rgba(255, 255, 255, 0.05); }
-.sso-provider-btn:active { transform: scale(0.97); }
-
-/* Register Callout */
-.register-callout {
-  margin-top: 0.875rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
-  text-align: center;
-}
+.sso-action-btn:hover { background-color: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.2); }
+.sso-action-btn:active { transform: scale(0.97); }
 
 /* Loading State */
 .auth-loading-state {
@@ -1304,18 +1341,25 @@ onUnmounted(() => {
   100% { transform: translateX(100%) scaleX(0.2); }
 }
 
-/* Footer */
-.lms-footer {
+/* Institutional Footer (Optimized for Mobile Touch & Readability) */
+.footer-block {
   text-align: center;
-  font-size: 0.6875rem;
-  color: #64748b;
-  padding-top: 0.5rem;
   z-index: 20;
+  padding-top: 0.75rem;
 }
 .footer-links {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-bottom: 0.25rem;
+}
+.footer-links a { color: #94a3b8; text-decoration: none; transition: color 0.15s; }
+.footer-links a:hover { color: #60a5fa; }
+.copyright-note {
+  font-size: 0.6875rem;
+  color: #64748b;
 }
 </style>
