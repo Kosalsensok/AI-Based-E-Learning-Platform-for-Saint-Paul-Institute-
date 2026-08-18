@@ -20,9 +20,10 @@ RUN docker-php-ext-install pdo_mysql mbstring gd zip bcmath intl opcache pcntl p
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Configure Composer environment for resilient network downloads & avoid GitHub Rate Limits
-ENV COMPOSER_ALLOW_SUPERUSER=1 \
-    COMPOSER_PROCESS_TIMEOUT=2000 \
-    COMPOSER_MAX_PARALLEL_HTTP=2 \
+ARG GITHUB_TOKEN
+ENV GITHUB_TOKEN=$GITHUB_TOKEN \
+    COMPOSER_ALLOW_SUPERUSER=1 \
+    COMPOSER_PROCESS_TIMEOUT=600 \
     COMPOSER_MEMORY_LIMIT=-1
 
 WORKDIR /var/www/html
@@ -30,17 +31,18 @@ WORKDIR /var/www/html
 # Copy composer files first for optimal Docker layer caching
 COPY composer.json composer.lock ./
 
-# Install composer dependencies with automated retry loop to handle transient GitHub rate limits (HTTP 429)
-RUN for i in 1 2 3 4 5; do \
-        composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs --prefer-dist --no-scripts && break || \
-        (echo "Composer install attempt $i failed due to GitHub rate limits, retrying in 12s..." && sleep 12); \
-    done
+# Configure GitHub OAuth token if provided, and install composer dependencies with fallback to --prefer-source on rate limits
+RUN if [ -n "$GITHUB_TOKEN" ]; then composer config -g github-oauth.github.com "$GITHUB_TOKEN"; fi \
+    && ( \
+        composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs --prefer-dist --no-scripts \
+        || composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs --prefer-source --no-scripts \
+    )
 
 # Copy remaining application code (including pre-built assets in public/build)
 COPY . .
 
-# Generate optimized classmap & autoloader
-RUN composer dump-autoload --optimize --no-dev --classmap-authoritative
+# Generate optimized classmap & autoloader without triggering runtime artisan scripts during build
+RUN composer dump-autoload --optimize --no-dev --classmap-authoritative --no-scripts
 
 # Set directory permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
@@ -56,3 +58,4 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 EXPOSE 80
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
