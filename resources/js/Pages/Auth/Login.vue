@@ -101,52 +101,7 @@ const handleClickOutside = (e: MouseEvent) => {
   } catch (e) {}
 }
 
-onMounted(() => {
-  try {
-    initTheme()
-  } catch (e) {}
 
-  window.addEventListener('keydown', handleKeyCheck)
-  window.addEventListener('keyup', handleKeyCheck)
-  document.addEventListener('click', handleClickOutside)
-
-  // Register Telegram OAuth global callback
-  ;(window as any).onTelegramAuth = (user: any) => {
-    try {
-      handleTelegramAuthSuccess(user)
-    } catch (e) {}
-  }
-
-  // Pre-check Clerk session if returning from Google OAuth
-  try {
-    if (clerkPublishableKey.value) {
-      checkClerkOAuthCallback()
-    }
-  } catch (e) {}
-
-  try {
-    const flashStatus = props.status || (page.props as any).status || (page.props as any).flash?.status
-    if (flashStatus) {
-      statusMessage.value = flashStatus
-      showSuccessModal.value = true
-      setTimeout(() => {
-        showSuccessModal.value = false
-      }, 4500)
-    }
-  } catch (e) {}
-})
-
-onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeyCheck)
-  window.removeEventListener('keyup', handleKeyCheck)
-  document.removeEventListener('click', handleClickOutside)
-  if (typeof window !== 'undefined') {
-    window.removeEventListener('message', handleTelegramPostMessage)
-  }
-  if ((window as any).onTelegramAuth) {
-    delete (window as any).onTelegramAuth
-  }
-})
 
 const clearEmail = () => {
   form.email = ''
@@ -498,6 +453,32 @@ const oauthNotice = ref<{
 
 onMounted(() => {
   if (typeof window !== 'undefined') {
+    try {
+      initTheme()
+    } catch (e) {}
+
+    window.addEventListener('keydown', handleKeyCheck)
+    window.addEventListener('keyup', handleKeyCheck)
+    document.addEventListener('click', handleClickOutside)
+
+    // Register Telegram OAuth global callback
+    ;(window as any).onTelegramAuth = (user: any) => {
+      try {
+        handleTelegramAuthSuccess(user)
+      } catch (e) {}
+    }
+
+    try {
+      const flashStatus = props.status || (page.props as any).status || (page.props as any).flash?.status
+      if (flashStatus) {
+        statusMessage.value = flashStatus
+        showSuccessModal.value = true
+        setTimeout(() => {
+          showSuccessModal.value = false
+        }, 4500)
+      }
+    } catch (e) {}
+
     // Listen for Telegram OAuth PostMessage events (DECLINE or ACCEPT from popup)
     window.addEventListener('message', handleTelegramPostMessage)
 
@@ -571,9 +552,15 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (typeof window !== 'undefined') {
+    window.removeEventListener('keydown', handleKeyCheck)
+    window.removeEventListener('keyup', handleKeyCheck)
+    document.removeEventListener('click', handleClickOutside)
     window.removeEventListener('message', handleTelegramPostMessage)
     window.removeEventListener('focus', checkPopupClosed)
     stopPopupTracking()
+    if ((window as any).onTelegramAuth) {
+      delete (window as any).onTelegramAuth
+    }
   }
 })
 </script>
