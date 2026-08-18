@@ -387,8 +387,6 @@ const handleGoogleAuthSuccess = async (googleUser: any) => {
   isGoogleLoading.value = true
   authLoadingTitle.value = currentLang.value === 'km' ? 'កំពុងផ្ទៀងផ្ទាត់គណនី Google...' : 'Verifying Google Account...'
   authLoadingSubtitle.value = currentLang.value === 'km' ? 'សូមរង់ចាំមួយភ្លែត ប្រព័ន្ធកំពុងរៀបចំ Dashboard ជូនលោកអ្នក' : 'Please wait a moment while setting up your dashboard...'
-  isGoogleVerifying.value = true
-  googleErrorMessage.value = null
 
   try {
     const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || ''
@@ -417,12 +415,20 @@ const handleGoogleAuthSuccess = async (googleUser: any) => {
         router.visit(targetUrl)
       }, 1200)
     } else {
-      isGoogleVerifying.value = false
-      googleErrorMessage.value = data?.message || t('google_login_failed', 'ការផ្ទៀងផ្ទាត់ Google មិនត្រឹមត្រូវទេ។ សូមព្យាយាមម្តងទៀត!')
+      isAuthenticating.value = false
+      isGoogleLoading.value = false
+      oauthNotice.value = {
+        type: 'error',
+        message: data?.message || t('google_login_failed', 'ការផ្ទៀងផ្ទាត់ Google មិនត្រឹមត្រូវទេ។ សូមព្យាយាមម្តងទៀត!')
+      }
     }
   } catch (err: any) {
-    isGoogleVerifying.value = false
-    googleErrorMessage.value = t('google_login_error', 'មានបញ្ហាក្នុងការតភ្ជាប់ទៅកាន់ម៉ាស៊ីនបម្រើ។ សូមព្យាយាមម្តងទៀត!')
+    isAuthenticating.value = false
+    isGoogleLoading.value = false
+    oauthNotice.value = {
+      type: 'error',
+      message: t('google_login_error', 'មានបញ្ហាក្នុងការតភ្ជាប់ទៅកាន់ម៉ាស៊ីនបម្រើ។ សូមព្យាយាមម្តងទៀត!')
+    }
   }
 }
 
