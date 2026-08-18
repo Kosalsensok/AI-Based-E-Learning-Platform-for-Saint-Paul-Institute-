@@ -44,22 +44,33 @@ createInertiaApp({
       )
     } catch (err: any) {
       console.error('Failed to load page chunk:', err)
-      if (typeof window !== 'undefined' && !sessionStorage.getItem('chunk_reload_attempted')) {
-        sessionStorage.setItem('chunk_reload_attempted', '1')
-        window.location.reload()
+      if (typeof window !== 'undefined') {
+        try {
+          if (!sessionStorage.getItem('chunk_reload_attempted')) {
+            sessionStorage.setItem('chunk_reload_attempted', '1')
+            window.location.reload()
+          }
+        } catch (e) {
+          window.location.reload()
+        }
       }
       throw err
     }
   },
   setup({ el, App, props, plugin }) {
-    createApp({ render: () => h(App, props) })
+    const vueApp = createApp({ render: () => h(App, props) })
       .use(plugin)
       .use(createPinia())
       .use(VueQueryPlugin)
       .use(ui)
       .use(PrimeVue, { theme: { preset: Aura } })
       .use(ToastService)
-      .mount(el)
+
+    vueApp.config.errorHandler = (err, instance, info) => {
+      console.error('Vue Runtime Error:', err, info)
+    }
+
+    vueApp.mount(el)
   },
   progress: {
     color: '#3B82F6',

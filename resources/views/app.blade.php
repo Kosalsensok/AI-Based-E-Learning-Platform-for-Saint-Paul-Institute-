@@ -128,34 +128,37 @@
 
 
     <script>
-        // Force cleanup of any stale Service Worker or Corrupt CacheStorage on Mobile
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                for (var i = 0; i < registrations.length; i++) {
-                    registrations[i].unregister();
-                }
-            }).catch(function() {});
+        // Safe Storage Helper (avoids SecurityError in iOS Private Browsing / Telegram WebViews)
+        function safeGetSession(key) {
+            try { return sessionStorage.getItem(key); } catch (e) { return null; }
+        }
+        function safeSetSession(key, val) {
+            try { sessionStorage.setItem(key, val); } catch (e) {}
         }
 
-        if ('caches' in window) {
-            caches.keys().then(function(names) {
-                for (var i = 0; i < names.length; i++) {
-                    caches.delete(names[i]);
-                }
-            }).catch(function() {});
-        }
-
-        window.addEventListener('unhandledrejection', function(e) {
-            if (e.reason && (
-                String(e.reason).includes('dynamically imported module') ||
-                String(e.reason).includes('Importing a module script failed') ||
-                String(e.reason).includes('Failed to fetch')
-            )) {
-                if (!sessionStorage.getItem('chunk_reload_done')) {
-                    sessionStorage.setItem('chunk_reload_done', '1');
+        // Global Error & Chunk Load Recovery for Mobile WebViews
+        function handleChunkError(err) {
+            var msg = String(err || '');
+            if (
+                msg.indexOf('dynamically imported module') !== -1 ||
+                msg.indexOf('Importing a module script failed') !== -1 ||
+                msg.indexOf('Failed to fetch') !== -1 ||
+                msg.indexOf('Loading chunk') !== -1 ||
+                msg.indexOf('Load failed') !== -1
+            ) {
+                if (!safeGetSession('chunk_reload_done')) {
+                    safeSetSession('chunk_reload_done', '1');
                     window.location.reload();
                 }
             }
+        }
+
+        window.addEventListener('unhandledrejection', function(e) {
+            handleChunkError(e.reason);
+        });
+
+        window.addEventListener('error', function(e) {
+            handleChunkError(e.message || (e.error && e.error.message));
         });
     </script>
 
