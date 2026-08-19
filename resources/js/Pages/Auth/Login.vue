@@ -944,7 +944,7 @@ onUnmounted(() => {
                     </div>
                     <span class="text-slate-800 dark:text-slate-100 font-bold text-[11px] sm:text-xs">{{ t('login_remember_me', 'Remember me') }}</span>
                   </label>
-                  <Link href="/forgot-password" class="text-xs font-bold text-blue-600 dark:text-sky-400 hover:underline">{{ t('login_forgot_password', 'Forgot Password?') }}</Link>
+                  <Link href="/forgot-password" class="text-xs font-bold text-blue-600 dark:text-sky-400 hover:text-blue-700 dark:hover:text-sky-300 no-underline transition-colors">{{ t('login_forgot_password', 'Forgot Password?') }}</Link>
                 </div>
 
                 <button type="submit" :disabled="isSubmitting || form.processing" class="h-11 group w-full py-2.5 px-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm hover:shadow-md transition-all duration-200 inline-flex items-center justify-center gap-2.5 disabled:opacity-50 text-xs sm:text-sm tracking-wide cursor-pointer">
@@ -960,7 +960,7 @@ onUnmounted(() => {
             <!-- Email OTP Flow -->
             <div v-else class="space-y-4">
               <div class="flex items-center justify-between pb-1 border-b border-slate-200/80 dark:border-slate-700/80">
-                <button type="button" @click="authMode = 'password'" class="text-xs font-semibold text-blue-600 dark:text-sky-400 hover:underline flex items-center gap-1.5 cursor-pointer py-1">
+                <button type="button" @click="authMode = 'password'" class="text-xs font-semibold text-blue-600 dark:text-sky-400 hover:text-blue-700 dark:hover:text-sky-300 no-underline flex items-center gap-1.5 cursor-pointer py-1 transition-colors select-none">
                   <i class="pi pi-arrow-left text-[10px]"></i>
                   <span>{{ currentLang === 'km' ? 'ត្រឡប់ទៅ Password' : 'Back to Password' }}</span>
                 </button>
@@ -990,7 +990,7 @@ onUnmounted(() => {
                 <div class="space-y-1.5">
                   <div class="flex items-center justify-between">
                     <label class="block text-xs font-bold text-slate-800 dark:text-slate-100">{{ currentLang === 'km' ? 'វាយបញ្ចូលលេខកូដ OTP ៦ ខ្ទង់' : 'Enter 6-digit OTP Code' }}</label>
-                    <button type="button" @click="otpStep = 1" class="text-[11px] text-blue-600 dark:text-sky-400 hover:underline font-medium cursor-pointer">{{ currentLang === 'km' ? 'ប្តូរ Email' : 'Edit email' }}</button>
+                    <button type="button" @click="otpStep = 1" class="text-[11px] text-blue-600 dark:text-sky-400 hover:text-blue-700 dark:hover:text-sky-300 no-underline font-medium cursor-pointer transition-colors">{{ currentLang === 'km' ? 'ប្តូរ Email' : 'Edit email' }}</button>
                   </div>
                   <p class="text-[11px] text-slate-500 dark:text-slate-400">{{ currentLang === 'km' ? 'ផ្ញើទៅកាន់:' : 'Sent to:' }} <strong class="text-blue-600 dark:text-sky-300">{{ otpEmail }}</strong></p>
                   <div class="relative">
@@ -999,7 +999,7 @@ onUnmounted(() => {
                   <div class="flex items-center justify-between text-[11px] pt-1">
                     <span v-if="otpCountdown > 0" class="text-slate-500 dark:text-slate-400">{{ currentLang === 'km' ? 'ផុតកំណត់ក្នុងរយៈពេល:' : 'Expires in:' }} <span class="font-bold text-amber-500">{{ formattedOtpTime }}</span></span>
                     <span v-else class="text-rose-500 font-bold">{{ currentLang === 'km' ? 'កូដផុតកំណត់ហើយ' : 'Code expired' }}</span>
-                    <button type="button" @click="sendEmailOtp" :disabled="isOtpSending" class="text-blue-600 dark:text-sky-400 hover:underline font-bold disabled:opacity-50 cursor-pointer">{{ currentLang === 'km' ? 'ផ្ញើម្តងទៀត' : 'Resend Code' }}</button>
+                    <button type="button" @click="sendEmailOtp" :disabled="isOtpSending" class="text-blue-600 dark:text-sky-400 hover:text-blue-700 dark:hover:text-sky-300 no-underline font-bold disabled:opacity-50 cursor-pointer transition-colors">{{ currentLang === 'km' ? 'ផ្ញើម្តងទៀត' : 'Resend Code' }}</button>
                   </div>
                 </div>
                 <button type="button" @click="verifyEmailOtp" :disabled="isOtpVerifying || otpCode.length < 6" class="h-11 w-full py-2.5 px-5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-xl shadow-md transition-all duration-200 inline-flex items-center justify-center gap-2 disabled:opacity-50 text-xs sm:text-sm cursor-pointer">
