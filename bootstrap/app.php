@@ -28,6 +28,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'auth/clerk/*',
             'auth/google',
             'auth/google/*',
+            'auth/email-otp/*',
+            'auth/email-otp',
+            'api/auth/email-otp/*',
+            'api/auth/email-otp',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

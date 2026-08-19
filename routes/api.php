@@ -15,3 +15,8 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::post('/sync/progress', [Api\SyncController::class, 'progress']);
     Route::post('/sync/quiz-attempt', [Api\SyncController::class, 'quizAttempt']);
 });
+
+// Email OTP Authentication via Resend
+Route::post('/auth/email-otp/send', [\App\Http\Controllers\AuthController::class, 'sendEmailOtp']);
+Route::post('/auth/email-otp/verify', [\App\Http\Controllers\AuthController::class, 'verifyEmailOtp']);
+

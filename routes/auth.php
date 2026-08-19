@@ -19,6 +19,10 @@ Route::middleware('guest')->group(function () {
     Route::post('api/auth/forgot-password', [PasswordResetLinkController::class, 'store'])->name('api.password.email');
     Route::post('api/auth/verify-reset-otp', [PasswordResetLinkController::class, 'verifyOtp'])->name('api.password.verify_otp');
     Route::post('api/auth/reset-password', [PasswordResetLinkController::class, 'resetPassword'])->name('api.password.update');
+
+    // Email OTP Authentication via Resend
+    Route::post('auth/email-otp/send', [\App\Http\Controllers\AuthController::class, 'sendEmailOtp'])->name('auth.email-otp.send');
+    Route::post('auth/email-otp/verify', [\App\Http\Controllers\AuthController::class, 'verifyEmailOtp'])->name('auth.email-otp.verify');
 });
 
 // ─── Telegram OAuth Widget & Direct Redirect Routes ───

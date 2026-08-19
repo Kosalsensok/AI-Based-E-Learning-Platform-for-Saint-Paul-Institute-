@@ -31,6 +31,129 @@ const showSuccessModal = ref(false)
 const showErrorModal = ref(false)
 const statusMessage = ref<string | null>(null)
 
+// Email OTP State
+const authMode = ref<'password' | 'otp'>('password')
+const otpStep = ref<1 | 2>(1)
+const otpEmail = ref('')
+const otpCode = ref('')
+const isOtpSending = ref(false)
+const isOtpVerifying = ref(false)
+const otpCountdown = ref(0)
+let otpCountdownTimer: any = null
+
+const formattedOtpTime = computed(() => {
+  const mins = Math.floor(otpCountdown.value / 60).toString().padStart(2, '0')
+  const secs = (otpCountdown.value % 60).toString().padStart(2, '0')
+  return `${mins}:${secs}`
+})
+
+const startOtpTimer = (seconds = 300) => {
+  otpCountdown.value = seconds
+  if (otpCountdownTimer) clearInterval(otpCountdownTimer)
+  otpCountdownTimer = setInterval(() => {
+    if (otpCountdown.value > 0) {
+      otpCountdown.value--
+    } else {
+      clearInterval(otpCountdownTimer)
+    }
+  }, 1000)
+}
+
+const sendEmailOtp = async () => {
+  if (!otpEmail.value || isOtpSending.value) return
+  isOtpSending.value = true
+  oauthNotice.value = null
+
+  try {
+    const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || ''
+    const response = await fetch('/auth/email-otp/send', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': csrfToken,
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+      body: JSON.stringify({ email: otpEmail.value }),
+    })
+
+    const data = await response.json()
+    if (response.ok && data.success) {
+      otpStep.value = 2
+      startOtpTimer(300)
+      oauthNotice.value = {
+        type: 'warning',
+        message: data.message || (currentLang.value === 'km' ? 'លេខកូដ OTP ត្រូវបានផ្ញើចូលប្រអប់សំបុត្រ Gmail របស់អ្នកហើយ!' : 'OTP code has been sent to your email!')
+      }
+    } else {
+      oauthNotice.value = {
+        type: 'error',
+        message: data.message || (currentLang.value === 'km' ? 'មិនអាចផ្ញើលេខកូដបានទេ!' : 'Failed to send OTP code!')
+      }
+    }
+  } catch (err: any) {
+    oauthNotice.value = {
+      type: 'error',
+      message: currentLang.value === 'km' ? 'មានបញ្ហាក្នុងការតភ្ជាប់ទៅកាន់ម៉ាស៊ីនបម្រើ' : 'Connection error'
+    }
+  } finally {
+    isOtpSending.value = false
+  }
+}
+
+const verifyEmailOtp = async () => {
+  if (!otpCode.value || otpCode.value.length < 6 || isOtpVerifying.value) return
+  isOtpVerifying.value = true
+  isAuthenticating.value = true
+  authLoadingTitle.value = currentLang.value === 'km' ? 'កំពុងផ្ទៀងផ្ទាត់ OTP...' : 'Verifying OTP...'
+  authLoadingSubtitle.value = currentLang.value === 'km' ? 'សូមរង់ចាំមួយភ្លែត ប្រព័ន្ធកំពុងផ្ទៀងផ្ទាត់ និងនាំអ្នកទៅកាន់ Dashboard' : 'Please wait a moment while verifying your OTP...'
+
+  try {
+    const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || ''
+    const response = await fetch('/auth/email-otp/verify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': csrfToken,
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+      body: JSON.stringify({
+        email: otpEmail.value,
+        otp: otpCode.value,
+      }),
+    })
+
+    const data = await response.json()
+    if (response.ok && data.success) {
+      if (data.token) {
+        try { localStorage.setItem('auth_token', data.token) } catch (e) {}
+      }
+      setTimeout(() => {
+        window.location.assign(data.redirect || '/student/dashboard')
+      }, 500)
+    } else {
+      isAuthenticating.value = false
+      oauthNotice.value = {
+        type: 'error',
+        message: data.message || (currentLang.value === 'km' ? 'លេខកូដ OTP មិនត្រឹមត្រូវ!' : 'Invalid OTP code!')
+      }
+    }
+  } catch (err: any) {
+    isAuthenticating.value = false
+    oauthNotice.value = {
+      type: 'error',
+      message: currentLang.value === 'km' ? 'មានបញ្ហាក្នុងការផ្ទៀងផ្ទាត់ OTP' : 'OTP verification error'
+    }
+  } finally {
+    isOtpVerifying.value = false
+  }
+}
+
+onUnmounted(() => {
+  if (otpCountdownTimer) clearInterval(otpCountdownTimer)
+})
+
 const languages = [
   { code: 'km' as LanguageCode, name: 'ភាសាខ្មែរ', label: 'ខ្មែរ', short: 'KH', flagUrl: '/images/flags/km.svg' },
   { code: 'en' as LanguageCode, name: 'English', label: 'English', short: 'EN', flagUrl: '/images/flags/en.svg' },
@@ -766,8 +889,38 @@ onUnmounted(() => {
               </button>
             </div>
 
-            <!-- Role Selection Segmented Tabs (Attractive Soft Pastel Blue Active State) -->
-            <div class="p-1 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 grid grid-cols-3 gap-1">
+            <!-- Auth Method Switcher (Password vs Email OTP) -->
+            <div class="p-1 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 grid grid-cols-2 gap-1 mb-1">
+              <button
+                type="button"
+                @click="authMode = 'password'"
+                :class="[
+                  'flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer select-none',
+                  authMode === 'password'
+                    ? 'bg-blue-600 text-white shadow-xs shadow-blue-500/20'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white'
+                ]"
+              >
+                <i class="pi pi-key text-xs"></i>
+                <span>{{ currentLang === 'km' ? 'ពាក្យសម្ងាត់' : 'Password' }}</span>
+              </button>
+              <button
+                type="button"
+                @click="authMode = 'otp'"
+                :class="[
+                  'flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer select-none',
+                  authMode === 'otp'
+                    ? 'bg-blue-600 text-white shadow-xs shadow-blue-500/20'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white'
+                ]"
+              >
+                <i class="pi pi-envelope text-xs"></i>
+                <span>{{ currentLang === 'km' ? 'Gmail OTP' : 'Email OTP' }}</span>
+              </button>
+            </div>
+
+            <!-- Role Selection Segmented Tabs (For Password Mode) -->
+            <div v-if="authMode === 'password'" class="p-1 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 grid grid-cols-3 gap-1">
               <!-- Student Tab -->
               <button
                 type="button"
@@ -814,8 +967,8 @@ onUnmounted(() => {
               </button>
             </div>
 
-            <!-- Main Login Form -->
-            <form @submit.prevent="submit" class="space-y-3.5">
+            <!-- 1. Main Password Form -->
+            <form v-if="authMode === 'password'" @submit.prevent="submit" class="space-y-3.5">
               
               <!-- Email / ID / Phone Input with High-Contrast Readable Placeholder -->
               <div class="space-y-1">
@@ -922,7 +1075,7 @@ onUnmounted(() => {
                 </Link>
               </div>
 
-              <!-- Primary Sign In Button (Matching Soft Blue Active Tab Aesthetic) -->
+              <!-- Primary Sign In Button -->
               <button
                 type="submit"
                 :disabled="isSubmitting || form.processing"
@@ -939,6 +1092,112 @@ onUnmounted(() => {
                 </template>
               </button>
             </form>
+
+            <!-- 2. Email OTP Form (Gmail Resend Mode) -->
+            <div v-else class="space-y-3.5">
+              <!-- Step 1: Input Gmail & Send Code -->
+              <div v-if="otpStep === 1" class="space-y-3">
+                <div class="space-y-1">
+                  <label class="block text-xs font-bold text-slate-800 dark:text-slate-100">
+                    {{ currentLang === 'km' ? 'អាសយដ្ឋាន Gmail / អ៊ីមែលរបស់អ្នក' : 'Your Official Gmail / Email' }}
+                  </label>
+                  <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-300 group-focus-within:text-blue-600 dark:group-focus-within:text-sky-400 transition-colors">
+                      <i class="pi pi-envelope text-sm"></i>
+                    </div>
+                    <input
+                      v-model="otpEmail"
+                      type="email"
+                      required
+                      placeholder="student@gmail.com"
+                      class="h-11 w-full pl-10 pr-4 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-800/80 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-300 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-xs sm:text-sm font-medium shadow-2xs"
+                      @keydown.enter.prevent="sendEmailOtp"
+                    />
+                  </div>
+                  <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                    {{ currentLang === 'km' ? 'ប្រព័ន្ធនឹងផ្ញើលេខសម្ងាត់ ៦ ខ្ទង់ពី info@spilms.tech ចូល Gmail' : 'We will send a 6-digit verification code from info@spilms.tech to your Gmail.' }}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  @click="sendEmailOtp"
+                  :disabled="isOtpSending || !otpEmail"
+                  class="h-11 w-full py-2.5 px-5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-xl shadow-md shadow-blue-500/20 transition-all duration-200 inline-flex items-center justify-center gap-2 disabled:opacity-50 text-xs sm:text-sm cursor-pointer"
+                >
+                  <i v-if="isOtpSending" class="pi pi-spin pi-spinner text-sm"></i>
+                  <template v-else>
+                    <i class="pi pi-send text-xs"></i>
+                    <span>{{ currentLang === 'km' ? 'ផ្ញើលេខកូដ OTP ទៅកាន់ Gmail' : 'Send OTP to Gmail' }}</span>
+                  </template>
+                </button>
+              </div>
+
+              <!-- Step 2: Enter 6-digit OTP Code -->
+              <div v-else class="space-y-3">
+                <div class="text-center space-y-1">
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="font-bold text-slate-800 dark:text-slate-100">
+                      {{ currentLang === 'km' ? 'បញ្ចូលលេខកូដ ៦ ខ្ទង់ពី Gmail' : 'Enter 6-digit OTP Code' }}
+                    </span>
+                    <button
+                      type="button"
+                      @click="otpStep = 1"
+                      class="text-blue-600 dark:text-sky-400 hover:underline text-[11px] font-semibold cursor-pointer"
+                    >
+                      {{ currentLang === 'km' ? 'ប្តូរអ៊ីមែល' : 'Edit email' }}
+                    </button>
+                  </div>
+                  <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                    {{ currentLang === 'km' ? 'ផ្ញើទៅកាន់៖' : 'Sent to:' }} <strong class="text-slate-800 dark:text-slate-200">{{ otpEmail }}</strong>
+                  </p>
+                  
+                  <!-- 6-digit OTP Input -->
+                  <div class="pt-2">
+                    <input
+                      v-model="otpCode"
+                      type="text"
+                      maxlength="6"
+                      placeholder="••••••"
+                      class="h-12 w-full text-center text-xl font-black tracking-[0.5em] rounded-xl border border-blue-400/50 bg-blue-50/30 dark:bg-slate-800/90 text-blue-600 dark:text-sky-400 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-inner"
+                      @keydown.enter.prevent="verifyEmailOtp"
+                    />
+                  </div>
+
+                  <!-- Countdown & Resend -->
+                  <div class="flex items-center justify-between text-[11px] pt-1">
+                    <span v-if="otpCountdown > 0" class="text-slate-500 dark:text-slate-400">
+                      {{ currentLang === 'km' ? 'ផុតកំណត់ក្នុងរយៈពេល:' : 'Expires in:' }} <span class="font-bold text-amber-500">{{ formattedOtpTime }}</span>
+                    </span>
+                    <span v-else class="text-rose-500 font-bold">
+                      {{ currentLang === 'km' ? 'កូដផុតកំណត់ហើយ' : 'Code expired' }}
+                    </span>
+
+                    <button
+                      type="button"
+                      @click="sendEmailOtp"
+                      :disabled="isOtpSending"
+                      class="text-blue-600 dark:text-sky-400 hover:underline font-bold disabled:opacity-50 cursor-pointer"
+                    >
+                      {{ currentLang === 'km' ? 'ផ្ញើម្តងទៀត' : 'Resend Code' }}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  @click="verifyEmailOtp"
+                  :disabled="isOtpVerifying || otpCode.length < 6"
+                  class="h-11 w-full py-2.5 px-5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl shadow-md shadow-emerald-500/20 transition-all duration-200 inline-flex items-center justify-center gap-2 disabled:opacity-50 text-xs sm:text-sm cursor-pointer"
+                >
+                  <i v-if="isOtpVerifying" class="pi pi-spin pi-spinner text-sm"></i>
+                  <template v-else>
+                    <i class="pi pi-check-circle text-sm"></i>
+                    <span>{{ currentLang === 'km' ? 'ផ្ទៀងផ្ទាត់ & ចូលប្រើប្រព័ន្ធ' : 'Verify & Sign In' }}</span>
+                  </template>
+                </button>
+              </div>
+            </div>
 
             <!-- Social Logins Section (Crisp High-Contrast Divider & Interactive Hover States) -->
             <div class="space-y-2 pt-0.5">

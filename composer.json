@@ -17,6 +17,7 @@
         "laravel/tinker": "^3.0",
         "maatwebsite/excel": "*",
         "predis/predis": "*",
+        "resend/resend-laravel": "^1.4",
         "tightenco/ziggy": "^2.6",
         "tymon/jwt-auth": "^2.3"
     },
