@@ -159,6 +159,7 @@ class TelegramAuthController extends Controller
                 'telegram_username' => $telegramUsername,
                 'telegram_photo_url' => $photoUrl,
                 'avatar' => $photoUrl,
+                'email_verified_at' => now(),
                 'is_active' => true,
                 'status' => 'active',
             ]);
