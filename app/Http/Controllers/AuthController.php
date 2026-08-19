@@ -7,15 +7,17 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Resend\Laravel\Facades\Resend;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
     /**
      * Send 6-digit OTP to user's Email via Resend.
+     * Supports both existing users and new Gmail users (Auto-Registration).
      */
     public function sendEmailOtp(Request $request)
     {
@@ -25,28 +27,24 @@ class AuthController extends Controller
 
         $email = strtolower(trim($request->email));
 
-        // Check if user exists in database
-        $user = User::where('email', $email)->first();
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'អ៊ីមែលនេះមិនទាន់មាននៅក្នុងប្រព័ន្ធ E-LMS ទេ! សូមទាក់ទងរដ្ឋបាល ឬចុះឈ្មោះគណនីថ្មី។',
-            ], 404);
-        }
-
         // Generate 6-digit random code
         $otp = (string) rand(100000, 999999);
         $expiresAt = now()->addMinutes(5);
 
-        // Store OTP in Cache and User model (valid for 5 minutes)
+        // Store OTP in Cache (valid for 5 minutes)
         Cache::put('otp_' . $email, $otp, $expiresAt);
-        try {
-            $user->update([
-                'otp_code' => $otp,
-                'otp_expires_at' => $expiresAt,
-            ]);
-        } catch (\Throwable $e) {
-            Log::warning('OTP Database update note: ' . $e->getMessage());
+
+        // If user already exists, update OTP on model
+        $user = User::where('email', $email)->first();
+        if ($user) {
+            try {
+                $user->update([
+                    'otp_code' => $otp,
+                    'otp_expires_at' => $expiresAt,
+                ]);
+            } catch (\Throwable $e) {
+                Log::warning('OTP Database update note: ' . $e->getMessage());
+            }
         }
 
         $resendApiKey = config('services.resend.key') ?: env('RESEND_API_KEY');
@@ -141,7 +139,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Verify 6-digit OTP and login user.
+     * Verify 6-digit OTP and login or auto-register user.
      */
     public function verifyEmailOtp(Request $request)
     {
@@ -156,13 +154,6 @@ class AuthController extends Controller
         $cachedOtp = Cache::get('otp_' . $email);
         $user = User::where('email', $email)->first();
 
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'រកមិនឃើញគណនីដែលប្រើប្រាស់អ៊ីមែលនេះទេ!',
-            ], 404);
-        }
-
         $isValidOtp = false;
 
         // 1. Verify against Cache
@@ -171,7 +162,7 @@ class AuthController extends Controller
         }
 
         // 2. Verify against database fallback
-        if (!$isValidOtp && !empty($user->otp_code) && (string) $user->otp_code === $otp) {
+        if (!$isValidOtp && $user && !empty($user->otp_code) && (string) $user->otp_code === $otp) {
             if (!$user->otp_expires_at || $user->otp_expires_at->isFuture()) {
                 $isValidOtp = true;
             }
@@ -184,18 +175,43 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // Clean up OTP after successful verification
+        // Clean up OTP from cache
         Cache::forget('otp_' . $email);
-        try {
-            $user->update([
-                'otp_code' => null,
-                'otp_expires_at' => null,
-                'email_verified_at' => $user->email_verified_at ?: now(),
-                'is_active' => true,
-                'status' => 'active',
-                'login_attempts' => 0,
+
+        // 3. User Resolution: Find or Auto-Create Student Account
+        if (!$user) {
+            $studentCode = 'STU' . date('y') . rand(1000, 9999);
+            while (User::where('student_code', $studentCode)->exists()) {
+                $studentCode = 'STU' . date('y') . rand(1000, 9999);
+            }
+
+            $emailPrefix = explode('@', $email)[0];
+            $formattedName = ucwords(str_replace(['.', '_', '-'], ' ', $emailPrefix));
+
+            $user = User::create([
+                'name'              => $formattedName ?: 'Student',
+                'name_kh'           => $formattedName ?: 'Student',
+                'email'             => $email,
+                'password'          => Hash::make(Str::random(32)),
+                'role'              => 'student',
+                'student_code'      => $studentCode,
+                'study_type'        => 'on_campus',
+                'email_verified_at' => now(),
+                'is_active'         => true,
+                'status'            => 'active',
             ]);
-        } catch (\Throwable $e) {}
+        } else {
+            try {
+                $user->update([
+                    'otp_code'          => null,
+                    'otp_expires_at'    => null,
+                    'email_verified_at' => $user->email_verified_at ?: now(),
+                    'is_active'         => true,
+                    'status'            => 'active',
+                    'login_attempts'    => 0,
+                ]);
+            } catch (\Throwable $e) {}
+        }
 
         // Log user into Laravel session
         if ($request->hasSession()) {
