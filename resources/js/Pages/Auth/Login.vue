@@ -133,7 +133,9 @@ const verifyEmailOtp = async () => {
         window.location.assign('/dashboard')
         return
       }
-      data = { message: rawText }
+      data = {
+        message: currentLang.value === 'km' ? 'មានបញ្ហាបច្ចេកទេសលើ Server' : 'Technical server error'
+      }
     }
 
     if (response.ok && data.success) {
@@ -145,9 +147,13 @@ const verifyEmailOtp = async () => {
       }, 300)
     } else {
       isAuthenticating.value = false
+      let errMsg = data.message || ''
+      if (typeof errMsg === 'string' && (errMsg.startsWith('<') || errMsg.includes('<!DOCTYPE'))) {
+        errMsg = currentLang.value === 'km' ? 'មានបញ្ហាបច្ចេកទេសលើ Server សូមព្យាយាមម្តងទៀត' : 'Server error, please try again'
+      }
       oauthNotice.value = {
         type: 'error',
-        message: data.message || (currentLang.value === 'km' ? 'លេខកូដ OTP មិនត្រឹមត្រូវ ឬផុតកំណត់!' : 'Invalid or expired OTP code!')
+        message: errMsg || (currentLang.value === 'km' ? 'លេខកូដ OTP មិនត្រឹមត្រូវ ឬផុតកំណត់!' : 'Invalid or expired OTP code!')
       }
     }
   } catch (err: any) {

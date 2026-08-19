@@ -190,113 +190,151 @@ class AuthController extends Controller
      */
     public function verifyEmailOtp(Request $request)
     {
-        $request->validate([
-            'email' => 'required|email',
-            'otp'   => 'required|string',
-        ]);
+        try {
+            $request->validate([
+                'email' => 'required|email',
+                'otp'   => 'required|string',
+            ]);
 
-        $email = strtolower(trim($request->email));
-        $otp = trim((string) $request->otp);
+            $email = strtolower(trim($request->email));
+            $otp = trim((string) $request->otp);
 
-        $cachedOtp = trim((string) Cache::get('otp_' . $email));
-        $user = User::where('email', $email)->first();
+            $cachedOtp = trim((string) Cache::get('otp_' . $email));
+            $user = User::where('email', $email)->first();
 
-        $isValidOtp = false;
+            $isValidOtp = false;
 
-        // 1. Verify against Cache
-        if (!empty($cachedOtp) && $cachedOtp === $otp) {
-            $isValidOtp = true;
-        }
-
-        // 2. Verify against database fallback
-        if (!$isValidOtp && $user && !empty($user->otp_code) && trim((string) $user->otp_code) === $otp) {
-            if (!$user->otp_expires_at || $user->otp_expires_at->isFuture()) {
+            // 1. Verify against Cache
+            if (!empty($cachedOtp) && $cachedOtp === $otp) {
                 $isValidOtp = true;
             }
-        }
 
-        if (!$isValidOtp) {
-            return response()->json([
-                'success' => false,
-                'message' => 'លេខកូដ OTP មិនត្រឹមត្រូវ ឬផុតកំណត់ ៥ នាទីហើយ!',
-            ], 422);
-        }
-
-        // Clean up OTP from cache
-        try { Cache::forget('otp_' . $email); } catch (\Throwable $e) {}
-
-        // 3. User Resolution: Find or Auto-Create Student Account
-        if (!$user) {
-            $studentCode = 'STU' . date('y') . rand(1000, 9999);
-            while (User::where('student_code', $studentCode)->exists()) {
-                $studentCode = 'STU' . date('y') . rand(1000, 9999);
+            // 2. Verify against database fallback
+            if (!$isValidOtp && $user && !empty($user->otp_code) && trim((string) $user->otp_code) === $otp) {
+                if (!$user->otp_expires_at || $user->otp_expires_at->isFuture()) {
+                    $isValidOtp = true;
+                }
             }
 
-            $emailPrefix = explode('@', $email)[0];
-            $formattedName = ucwords(str_replace(['.', '_', '-'], ' ', $emailPrefix));
+            if (!$isValidOtp) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'លេខកូដ OTP មិនត្រឹមត្រូវ ឬផុតកំណត់ ៥ នាទីហើយ!',
+                ], 422);
+            }
 
-            $user = User::create([
-                'name'              => $formattedName ?: 'Student',
-                'name_kh'           => $formattedName ?: 'Student',
-                'email'             => $email,
-                'password'          => Hash::make(Str::random(32)),
-                'role'              => 'student',
-                'student_code'      => $studentCode,
-                'study_type'        => 'on_campus',
-                'email_verified_at' => now(),
-                'is_active'         => true,
-                'status'            => 'active',
-            ]);
-        } else {
+            // Clean up OTP from cache
+            try { Cache::forget('otp_' . $email); } catch (\Throwable $e) {}
+
+            // 3. User Resolution: Find or Auto-Create Student Account
+            if (!$user) {
+                $studentCode = 'STU' . date('y') . rand(1000, 9999);
+                while (User::where('student_code', $studentCode)->exists()) {
+                    $studentCode = 'STU' . date('y') . rand(1000, 9999);
+                }
+
+                $emailPrefix = explode('@', $email)[0];
+                $formattedName = ucwords(str_replace(['.', '_', '-'], ' ', $emailPrefix));
+
+                try {
+                    $user = User::create([
+                        'name'              => $formattedName ?: 'Student',
+                        'name_kh'           => $formattedName ?: 'Student',
+                        'email'             => $email,
+                        'password'          => Hash::make(Str::random(32)),
+                        'role'              => 'student',
+                        'student_code'      => $studentCode,
+                        'study_type'        => 'on_campus',
+                        'email_verified_at' => now(),
+                        'is_active'         => true,
+                        'status'            => 'active',
+                    ]);
+                } catch (\Throwable $createEx) {
+                    Log::error('User creation failed in verifyEmailOtp: ' . $createEx->getMessage());
+                    $user = User::where('email', $email)->first();
+                }
+            } else {
+                try {
+                    $user->otp_code = null;
+                    $user->otp_expires_at = null;
+                    if (!$user->email_verified_at) {
+                        $user->email_verified_at = now();
+                    }
+                    $user->is_active = true;
+                    $user->status = 'active';
+                    $user->save();
+                } catch (\Throwable $e) {
+                    Log::warning('User OTP reset note: ' . $e->getMessage());
+                }
+            }
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'មិនអាចបង្កើតគណនីបានទេ សូមព្យាយាមម្តងទៀត!',
+                ], 500);
+            }
+
+            // Log user into Laravel session
             try {
-                $user->update([
-                    'otp_code'          => null,
-                    'otp_expires_at'    => null,
-                    'email_verified_at' => $user->email_verified_at ?: now(),
-                    'is_active'         => true,
-                    'status'            => 'active',
-                    'login_attempts'    => 0,
+                if ($request->hasSession()) {
+                    $request->session()->regenerate();
+                }
+                Auth::login($user, true);
+                if ($request->hasSession()) {
+                    $request->session()->save();
+                }
+            } catch (\Throwable $loginEx) {
+                Log::warning('Session Auth login notice: ' . $loginEx->getMessage());
+            }
+
+            // Create Sanctum API Token with safe fallback
+            $token = null;
+            try {
+                if (method_exists($user, 'createToken')) {
+                    $token = $user->createToken('auth_token')->plainTextToken;
+                }
+            } catch (\Throwable $tokenEx) {
+                Log::warning('Sanctum token generation skipped: ' . $tokenEx->getMessage());
+            }
+
+            // Record AuthLog
+            try {
+                AuthLog::create([
+                    'user_id'    => $user->id,
+                    'email'      => $user->email,
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent() ?? '',
+                    'device'     => str_contains(strtolower($request->userAgent() ?? ''), 'mobile') ? 'Mobile' : 'Desktop',
+                    'browser'    => 'Browser (Email OTP)',
+                    'status'     => 'success',
                 ]);
             } catch (\Throwable $e) {}
-        }
 
-        // Log user into Laravel session
-        if ($request->hasSession()) {
-            $request->session()->regenerate();
-        }
-        Auth::login($user, true);
-        if ($request->hasSession()) {
-            $request->session()->save();
-        }
+            $redirectUrl = match ($user->role) {
+                'admin'   => '/admin/dashboard',
+                'teacher' => '/teacher/dashboard',
+                default   => '/student/dashboard',
+            };
 
-        // Create Sanctum API Token
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        // Record AuthLog
-        try {
-            AuthLog::create([
-                'user_id'    => $user->id,
-                'email'      => $user->email,
-                'ip_address' => $request->ip(),
-                'user_agent' => $request->userAgent() ?? '',
-                'device'     => str_contains(strtolower($request->userAgent() ?? ''), 'mobile') ? 'Mobile' : 'Desktop',
-                'browser'    => 'Browser (Email OTP)',
-                'status'     => 'success',
+            return response()->json([
+                'success'  => true,
+                'message'  => 'ផ្ទៀងផ្ទាត់ OTP ត្រឹមត្រូវ! កំពុងនាំអ្នកទៅកាន់ Dashboard...',
+                'token'    => $token,
+                'user'     => [
+                    'id'    => $user->id,
+                    'name'  => $user->name,
+                    'email' => $user->email,
+                    'role'  => $user->role,
+                ],
+                'redirect' => $redirectUrl,
             ]);
-        } catch (\Throwable $e) {}
-
-        $redirectUrl = match ($user->role) {
-            'admin'   => '/admin/dashboard',
-            'teacher' => '/teacher/dashboard',
-            default   => '/student/dashboard',
-        };
-
-        return response()->json([
-            'success'  => true,
-            'message'  => 'ផ្ទៀងផ្ទាត់ OTP ត្រឹមត្រូវ! កំពុងនាំអ្នកទៅកាន់ Dashboard...',
-            'token'    => $token,
-            'user'     => $user,
-            'redirect' => $redirectUrl,
-        ]);
+        } catch (\Throwable $fatalEx) {
+            Log::error('Fatal error in verifyEmailOtp: ' . $fatalEx->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'មានបញ្ហាបច្ចេកទេសក្នុងការផ្ទៀងផ្ទាត់៖ ' . $fatalEx->getMessage(),
+            ], 500);
+        }
     }
 }
