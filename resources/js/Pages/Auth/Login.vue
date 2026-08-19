@@ -124,26 +124,37 @@ const verifyEmailOtp = async () => {
       }),
     })
 
-    const data = await response.json()
+    const rawText = await response.text()
+    let data: any = {}
+    try {
+      data = JSON.parse(rawText)
+    } catch (e) {
+      if (response.ok || response.status === 200 || response.redirected) {
+        window.location.assign('/dashboard')
+        return
+      }
+      data = { message: rawText }
+    }
+
     if (response.ok && data.success) {
       if (data.token) {
         try { localStorage.setItem('auth_token', data.token) } catch (e) {}
       }
       setTimeout(() => {
         window.location.assign(data.redirect || '/student/dashboard')
-      }, 500)
+      }, 300)
     } else {
       isAuthenticating.value = false
       oauthNotice.value = {
         type: 'error',
-        message: data.message || (currentLang.value === 'km' ? 'លេខកូដ OTP មិនត្រឹមត្រូវ!' : 'Invalid OTP code!')
+        message: data.message || (currentLang.value === 'km' ? 'លេខកូដ OTP មិនត្រឹមត្រូវ ឬផុតកំណត់!' : 'Invalid or expired OTP code!')
       }
     }
   } catch (err: any) {
     isAuthenticating.value = false
     oauthNotice.value = {
       type: 'error',
-      message: currentLang.value === 'km' ? 'មានបញ្ហាក្នុងការផ្ទៀងផ្ទាត់ OTP' : 'OTP verification error'
+      message: err?.message || (currentLang.value === 'km' ? 'មានបញ្ហាក្នុងការផ្ទៀងផ្ទាត់ OTP' : 'OTP verification error')
     }
   } finally {
     isOtpVerifying.value = false

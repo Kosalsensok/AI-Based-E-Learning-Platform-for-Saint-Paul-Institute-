@@ -32,24 +32,52 @@ class AuthController extends Controller
         $expiresAt = now()->addMinutes(5);
 
         // Store OTP in Cache (valid for 5 minutes)
-        Cache::put('otp_' . $email, $otp, $expiresAt);
+        try {
+            Cache::put('otp_' . $email, $otp, $expiresAt);
+        } catch (\Throwable $e) {}
 
-        // If user already exists, update OTP on model
+        // User Lookup or Early Creation for Infallible DB Storage
         $user = User::where('email', $email)->first();
         $recipientName = 'និស្សិត / សាស្ត្រាចារ្យ';
-        if ($user) {
+
+        if (!$user) {
+            $studentCode = 'STU' . date('y') . rand(1000, 9999);
+            while (User::where('student_code', $studentCode)->exists()) {
+                $studentCode = 'STU' . date('y') . rand(1000, 9999);
+            }
+
+            $emailPrefix = explode('@', $email)[0];
+            $formattedName = ucwords(str_replace(['.', '_', '-'], ' ', $emailPrefix));
+
+            try {
+                $user = User::create([
+                    'name'              => $formattedName ?: 'Student',
+                    'name_kh'           => $formattedName ?: 'Student',
+                    'email'             => $email,
+                    'password'          => Hash::make(Str::random(32)),
+                    'role'              => 'student',
+                    'student_code'      => $studentCode,
+                    'study_type'        => 'on_campus',
+                    'otp_code'          => $otp,
+                    'otp_expires_at'    => $expiresAt,
+                    'email_verified_at' => null,
+                    'is_active'         => true,
+                    'status'            => 'active',
+                ]);
+            } catch (\Throwable $e) {
+                Log::warning('User auto-creation in sendEmailOtp: ' . $e->getMessage());
+            }
+            $recipientName = $formattedName ?: 'Student';
+        } else {
             $recipientName = $user->name_kh ?: $user->name ?: 'User';
             try {
                 $user->update([
-                    'otp_code' => $otp,
+                    'otp_code'       => $otp,
                     'otp_expires_at' => $expiresAt,
                 ]);
             } catch (\Throwable $e) {
                 Log::warning('OTP Database update note: ' . $e->getMessage());
             }
-        } else {
-            $emailPrefix = explode('@', $email)[0];
-            $recipientName = ucwords(str_replace(['.', '_', '-'], ' ', $emailPrefix));
         }
 
         $resendApiKey = trim((string) (config('services.resend.key') ?: env('RESEND_API_KEY') ?: ''));
@@ -239,24 +267,24 @@ class AuthController extends Controller
     {
         $request->validate([
             'email' => 'required|email',
-            'otp'   => 'required|string|size:6',
+            'otp'   => 'required|string',
         ]);
 
         $email = strtolower(trim($request->email));
-        $otp = trim($request->otp);
+        $otp = trim((string) $request->otp);
 
-        $cachedOtp = Cache::get('otp_' . $email);
+        $cachedOtp = trim((string) Cache::get('otp_' . $email));
         $user = User::where('email', $email)->first();
 
         $isValidOtp = false;
 
         // 1. Verify against Cache
-        if ($cachedOtp && (string) $cachedOtp === $otp) {
+        if (!empty($cachedOtp) && $cachedOtp === $otp) {
             $isValidOtp = true;
         }
 
         // 2. Verify against database fallback
-        if (!$isValidOtp && $user && !empty($user->otp_code) && (string) $user->otp_code === $otp) {
+        if (!$isValidOtp && $user && !empty($user->otp_code) && trim((string) $user->otp_code) === $otp) {
             if (!$user->otp_expires_at || $user->otp_expires_at->isFuture()) {
                 $isValidOtp = true;
             }
@@ -270,7 +298,7 @@ class AuthController extends Controller
         }
 
         // Clean up OTP from cache
-        Cache::forget('otp_' . $email);
+        try { Cache::forget('otp_' . $email); } catch (\Throwable $e) {}
 
         // 3. User Resolution: Find or Auto-Create Student Account
         if (!$user) {

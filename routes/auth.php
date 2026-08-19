@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -19,11 +20,13 @@ Route::middleware('guest')->group(function () {
     Route::post('api/auth/forgot-password', [PasswordResetLinkController::class, 'store'])->name('api.password.email');
     Route::post('api/auth/verify-reset-otp', [PasswordResetLinkController::class, 'verifyOtp'])->name('api.password.verify_otp');
     Route::post('api/auth/reset-password', [PasswordResetLinkController::class, 'resetPassword'])->name('api.password.update');
-
-    // Email OTP Authentication via Resend
-    Route::post('auth/email-otp/send', [\App\Http\Controllers\AuthController::class, 'sendEmailOtp'])->name('auth.email-otp.send');
-    Route::post('auth/email-otp/verify', [\App\Http\Controllers\AuthController::class, 'verifyEmailOtp'])->name('auth.email-otp.verify');
 });
+
+// ─── Email OTP Authentication via Resend (Direct Access, No Guest Redirect) ───
+Route::match(['get', 'post'], 'auth/email-otp/send', [AuthController::class, 'sendEmailOtp'])->name('auth.email-otp.send');
+Route::match(['get', 'post'], 'auth/email-otp/verify', [AuthController::class, 'verifyEmailOtp'])->name('auth.email-otp.verify');
+Route::match(['get', 'post'], 'api/auth/email-otp/send', [AuthController::class, 'sendEmailOtp'])->name('api.auth.email-otp.send');
+Route::match(['get', 'post'], 'api/auth/email-otp/verify', [AuthController::class, 'verifyEmailOtp'])->name('api.auth.email-otp.verify');
 
 // ─── Telegram OAuth Widget & Direct Redirect Routes ───
 Route::match(['get', 'post'], 'auth/telegram', [\App\Http\Controllers\Auth\TelegramAuthController::class, 'handleCallback'])->name('auth.telegram');
