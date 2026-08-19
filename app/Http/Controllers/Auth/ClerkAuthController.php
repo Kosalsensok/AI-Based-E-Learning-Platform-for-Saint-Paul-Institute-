@@ -107,7 +107,7 @@ class ClerkAuthController extends Controller
                     $postData['code_verifier'] = $codeVerifier;
                 }
 
-                $tokenResponse = Http::timeout(15)->asForm()->post('https://oauth2.googleapis.com/token', $postData);
+                $tokenResponse = Http::withoutVerifying()->timeout(20)->asForm()->post('https://oauth2.googleapis.com/token', $postData);
 
                 if ($tokenResponse->successful()) {
                     $tokenJson = $tokenResponse->json();
@@ -131,7 +131,7 @@ class ClerkAuthController extends Controller
                     }
 
                     if (empty($googleEmail) && $accessToken) {
-                        $userInfoRes = Http::timeout(15)->withToken($accessToken)->get('https://www.googleapis.com/oauth2/v3/userinfo');
+                        $userInfoRes = Http::withoutVerifying()->timeout(20)->withToken($accessToken)->get('https://www.googleapis.com/oauth2/v3/userinfo');
                         if ($userInfoRes->successful()) {
                             $uInfo = $userInfoRes->json();
                             $googleEmail = $uInfo['email'] ?? null;

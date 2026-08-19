@@ -107,7 +107,7 @@ class GoogleController extends Controller
                 $postData['code_verifier'] = $codeVerifier;
             }
 
-            $response = Http::timeout(15)->asForm()->post('https://oauth2.googleapis.com/token', $postData);
+            $response = Http::withoutVerifying()->timeout(20)->asForm()->post('https://oauth2.googleapis.com/token', $postData);
 
             if (!$response->successful()) {
                 Log::error('Google Token Exchange Failed: ' . $response->body());
@@ -137,7 +137,7 @@ class GoogleController extends Controller
 
             // 2. Fallback to UserInfo endpoint
             if (empty($email) && $accessToken) {
-                $userInfoRes = Http::timeout(15)->withToken($accessToken)->get('https://www.googleapis.com/oauth2/v3/userinfo');
+                $userInfoRes = Http::withoutVerifying()->timeout(20)->withToken($accessToken)->get('https://www.googleapis.com/oauth2/v3/userinfo');
                 if ($userInfoRes->successful()) {
                     $uInfo = $userInfoRes->json();
                     $email = strtolower(trim($uInfo['email'] ?? ''));
