@@ -106,6 +106,38 @@ class AuthController extends Controller
                 $errorMsg = $resendEx->getMessage();
                 Log::warning("Resend HTTP API exception: " . $errorMsg);
             }
+
+            // 1.1 Infallible direct cURL fallback
+            if (!$sent && function_exists('curl_init')) {
+                try {
+                    $ch = curl_init('https://api.resend.com/emails');
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                    curl_setopt($ch, CURLOPT_POST, true);
+                    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 20);
+                    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                        'Authorization: Bearer ' . $resendApiKey,
+                        'Content-Type: application/json',
+                    ]);
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+                        'from'    => $fromHeader,
+                        'to'      => [$email],
+                        'subject' => 'លេខកូដសម្ងាត់ OTP - វិទ្យាស្ថាន សន្តប៉ូល (SPI E-LMS)',
+                        'html'    => $htmlContent,
+                        'text'    => $plainText,
+                    ]));
+                    $resCurl = curl_exec($ch);
+                    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                    curl_close($ch);
+
+                    if ($httpCode >= 200 && $httpCode < 300) {
+                        $sent = true;
+                    }
+                } catch (\Throwable $curlEx) {
+                    Log::warning("cURL direct fallback error: " . $curlEx->getMessage());
+                }
+            }
         }
 
         // 2. Fallback via Resend Laravel Package / Mail Facade
