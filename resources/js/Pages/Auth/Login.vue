@@ -870,319 +870,147 @@ onUnmounted(() => {
               <span class="text-[11px] font-semibold">{{ t('login_caps_lock_active', 'Caps Lock is ON') }}</span>
             </div>
 
-
-            <!-- Auth Method Switcher (Password vs Email OTP) -->
-            <div class="p-1 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 grid grid-cols-2 gap-1 mb-1">
-              <button
-                type="button"
-                @click="authMode = 'password'"
-                :class="[
-                  'flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer select-none',
-                  authMode === 'password'
-                    ? 'bg-blue-600 text-white shadow-xs shadow-blue-500/20'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white'
-                ]"
-              >
-                <i class="pi pi-key text-xs"></i>
-                <span>{{ currentLang === 'km' ? 'ពាក្យសម្ងាត់' : 'Password' }}</span>
-              </button>
-              <button
-                type="button"
-                @click="authMode = 'otp'"
-                :class="[
-                  'flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer select-none',
-                  authMode === 'otp'
-                    ? 'bg-blue-600 text-white shadow-xs shadow-blue-500/20'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white'
-                ]"
-              >
-                <i class="pi pi-envelope text-xs"></i>
-                <span>{{ currentLang === 'km' ? 'Gmail OTP' : 'Email OTP' }}</span>
-              </button>
-            </div>
-
-            <!-- Role Selection Segmented Tabs (For Password Mode) -->
-            <div v-if="authMode === 'password'" class="p-1 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 grid grid-cols-3 gap-1">
-              <!-- Student Tab -->
-              <button
-                type="button"
-                @click="form.role = 'student'"
-                :class="[
-                  'flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer select-none',
-                  form.role === 'student'
-                    ? 'bg-blue-500/80 text-white shadow-xs shadow-blue-500/20 border border-blue-400/30'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60'
-                ]"
-              >
-                <i class="pi pi-graduation-cap text-xs"></i>
-                <span>{{ t('login_tab_student', 'Student') }}</span>
-              </button>
-
-              <!-- Teacher Tab -->
-              <button
-                type="button"
-                @click="form.role = 'teacher'"
-                :class="[
-                  'flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer select-none',
-                  form.role === 'teacher'
-                    ? 'bg-blue-500/80 text-white shadow-xs shadow-blue-500/20 border border-blue-400/30'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60'
-                ]"
-              >
-                <i class="pi pi-book text-xs"></i>
-                <span>{{ t('login_tab_teacher', 'Teacher') }}</span>
-              </button>
-
-              <!-- Admin Tab -->
-              <button
-                type="button"
-                @click="form.role = 'admin'"
-                :class="[
-                  'flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer select-none',
-                  form.role === 'admin'
-                    ? 'bg-blue-500/80 text-white shadow-xs shadow-blue-500/20 border border-blue-400/30'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60'
-                ]"
-              >
-                <i class="pi pi-shield text-xs"></i>
-                <span>{{ t('login_tab_admin', 'Admin') }}</span>
-              </button>
-            </div>
-
-            <!-- 1. Main Password Form -->
-            <form v-if="authMode === 'password'" @submit.prevent="submit" class="space-y-3.5">
-              
-              <!-- Email / ID / Phone Input with High-Contrast Readable Placeholder -->
-              <div class="space-y-1">
-                <label class="block text-xs font-bold text-slate-800 dark:text-slate-100 transition-colors">
-                  <span>{{ identityLabel }}</span>
-                </label>
-                <div class="relative group">
-                  <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-300 group-focus-within:text-blue-600 dark:group-focus-within:text-sky-400 transition-colors">
-                    <i class="pi pi-id-card text-sm"></i>
-                  </div>
-                  <input
-                    v-model="form.email"
-                    type="text"
-                    required
-                    autocomplete="username"
-                    :placeholder="identityPlaceholder"
-                    class="h-11 w-full pl-10 pr-9 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-800/80 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-300 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-xs sm:text-sm font-medium shadow-2xs"
-                  />
-                  <!-- Quick Clear Button -->
-                  <button
-                    v-if="form.email"
-                    type="button"
-                    @click="clearEmail"
-                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer"
-                    title="Clear"
-                  >
-                    <i class="pi pi-times-circle text-xs"></i>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Password Input with Eye Toggle -->
-              <div class="space-y-1">
-                <label class="block text-xs font-bold text-slate-800 dark:text-slate-100">
-                  <span>{{ t('login_input_password_label', 'Password') }}</span>
-                </label>
-                <div class="relative group">
-                  <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-300 group-focus-within:text-blue-600 dark:group-focus-within:text-sky-400 transition-colors">
-                    <i class="pi pi-lock text-sm"></i>
-                  </div>
-                  <input
-                    v-model="form.password"
-                    :type="showPassword ? 'text' : 'password'"
-                    required
-                    autocomplete="current-password"
-                    :placeholder="t('login_input_password_placeholder', '••••••••••••••••')"
-                    class="h-11 w-full pl-10 pr-10 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-800/80 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-300 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-xs sm:text-sm font-medium shadow-2xs"
-                  />
-                  <!-- Clean Eye Icon Toggle with Hover Feedback -->
-                  <button
-                    type="button"
-                    @click="showPassword = !showPassword"
-                    class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg cursor-pointer"
-                    :title="showPassword ? 'Hide password' : 'Show password'"
-                  >
-                    <i :class="['pi text-sm transition-transform duration-200 hover:scale-110', showPassword ? 'pi-eye-slash text-blue-600 dark:text-sky-400' : 'pi-eye']"></i>
-                  </button>
-                </div>
-                <span v-if="form.errors.password" class="text-[10px] text-rose-600 dark:text-rose-400 block font-semibold">{{ form.errors.password }}</span>
-              </div>
-
-              <!-- Ergonomic Row: Checkbox + High Contrast Forgot Password -->
-              <div class="flex items-center justify-between text-xs pt-0.5">
-                <label class="inline-flex items-center gap-2 cursor-pointer select-none group">
-                  <div class="relative flex items-center justify-center">
-                    <input
-                      v-model="form.remember"
-                      type="checkbox"
-                      class="sr-only"
-                    />
-                    <!-- Standard Box with crisp outline -->
-                    <div
-                      :class="[
-                        'w-4 h-4 rounded-[4px] border-2 transition-all duration-200 flex items-center justify-center shadow-xs select-none',
-                        form.remember
-                          ? 'bg-blue-600 border-blue-600 text-white shadow-xs shadow-blue-500/30'
-                          : 'bg-white dark:bg-slate-900/90 border-slate-400 dark:border-slate-500 group-hover:border-blue-600 dark:group-hover:border-blue-400'
-                      ]"
-                    >
-                      <svg
-                        :class="[
-                          'w-3 h-3 text-white transition-all duration-150',
-                          form.remember ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
-                        ]"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        stroke-width="3.5"
-                      >
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
-                      </svg>
-                    </div>
-                  </div>
-                  <span class="text-slate-800 dark:text-slate-100 group-hover:text-slate-950 dark:group-hover:text-white font-bold text-[11px] sm:text-xs transition-colors">
-                    {{ t('login_remember_me', 'Remember me') }}
-                  </span>
-                </label>
-
-                <Link
-                  href="/forgot-password"
-                  class="text-xs font-bold text-blue-600 dark:text-sky-400 hover:text-blue-700 dark:hover:text-sky-300 hover:underline px-1.5 py-0.5 rounded transition-all duration-150 active:scale-95 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none select-none inline-flex items-center gap-1"
+            <!-- 1. Main Password Form or 2. Email OTP Flow -->
+            <div v-if="authMode === 'password'">
+              <!-- Role Selection Segmented Tabs -->
+              <div class="p-1 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 grid grid-cols-3 gap-1 mb-3.5">
+                <button
+                  v-for="role in ['student', 'teacher', 'admin']"
+                  :key="role"
+                  type="button"
+                  @click="form.role = role"
+                  :class="[
+                    'flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer select-none',
+                    form.role === role
+                      ? 'bg-blue-500/80 text-white shadow-xs shadow-blue-500/20 border border-blue-400/30'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60'
+                  ]"
                 >
-                  <span>{{ t('login_forgot_password', 'Forgot Password?') }}</span>
-                </Link>
+                  <i :class="['pi', role === 'student' ? 'pi-graduation-cap' : role === 'teacher' ? 'pi-book' : 'pi-shield']"></i>
+                  <span>{{ t(`login_tab_${role}`, role.charAt(0).toUpperCase() + role.slice(1)) }}</span>
+                </button>
               </div>
 
-              <!-- Primary Sign In Button -->
-              <button
-                type="submit"
-                :disabled="isSubmitting || form.processing"
-                class="h-11 group w-full py-2.5 px-5 bg-blue-500/85 hover:bg-blue-500 border border-blue-400/30 active:scale-[0.99] text-white font-bold rounded-xl shadow-sm shadow-blue-500/20 hover:shadow-md hover:shadow-blue-500/30 transition-all duration-200 inline-flex items-center justify-center gap-2.5 disabled:opacity-50 text-xs sm:text-sm font-bold tracking-wide cursor-pointer focus:outline-none focus:ring-4 focus:ring-blue-500/20"
-              >
-                <i v-if="isSubmitting || form.processing" class="pi pi-spin pi-spinner text-sm shrink-0"></i>
-                <template v-else>
-                  <span>{{ isSubmitting || form.processing ? t('login_btn_submitting', 'Signing In...') : t('login_btn_submit', 'Sign In') }}</span>
-                  <span class="w-6 h-6 rounded-full bg-white/20 dark:bg-white/15 flex items-center justify-center transition-all duration-300 group-hover:translate-x-1 group-hover:bg-white/30 group-hover:scale-110 shadow-2xs shrink-0">
-                    <svg class="w-3.5 h-3.5 fill-current text-white" viewBox="0 0 24 24">
-                      <path d="M13.293 6.293a1 1 0 0 1 1.414 0l5 5a1 1 0 0 1 0 1.414l-5 5a1 1 0 0 1-1.414-1.414L16.586 13H5a1 1 0 1 1 0-2h11.586l-3.293-3.293a1 1 0 0 1 0-1.414z"/>
-                    </svg>
-                  </span>
-                </template>
-              </button>
-            </form>
-
-            <!-- 2. Email OTP Form (Gmail Resend Mode) -->
-            <div v-else class="space-y-3.5">
-              <!-- Step 1: Input Gmail & Send Code -->
-              <div v-if="otpStep === 1" class="space-y-3">
+              <form @submit.prevent="submit" class="space-y-3.5">
                 <div class="space-y-1">
-                  <label class="block text-xs font-bold text-slate-800 dark:text-slate-100">
-                    {{ currentLang === 'km' ? 'អាសយដ្ឋាន Gmail / អ៊ីមែលរបស់អ្នក' : 'Your Official Gmail / Email' }}
-                  </label>
+                  <label class="block text-xs font-bold text-slate-800 dark:text-slate-100">{{ identityLabel }}</label>
                   <div class="relative group">
-                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-300 group-focus-within:text-blue-600 dark:group-focus-within:text-sky-400 transition-colors">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-300 group-focus-within:text-blue-600 transition-colors">
+                      <i class="pi pi-id-card text-sm"></i>
+                    </div>
+                    <input
+                      v-model="form.email"
+                      type="text"
+                      required
+                      autocomplete="username"
+                      :placeholder="identityPlaceholder"
+                      class="h-11 w-full pl-10 pr-9 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-800/80 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-300 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 text-xs sm:text-sm font-medium shadow-2xs"
+                    />
+                    <button v-if="form.email" type="button" @click="clearEmail" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-700 transition-colors cursor-pointer" title="Clear">
+                      <i class="pi pi-times-circle text-xs"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="space-y-1">
+                  <label class="block text-xs font-bold text-slate-800 dark:text-slate-100">{{ t('login_input_password_label', 'Password') }}</label>
+                  <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-300 group-focus-within:text-blue-600 transition-colors">
+                      <i class="pi pi-lock text-sm"></i>
+                    </div>
+                    <input
+                      v-model="form.password"
+                      :type="showPassword ? 'text' : 'password'"
+                      required
+                      autocomplete="current-password"
+                      :placeholder="t('login_input_password_placeholder', '••••••••••••••••')"
+                      class="h-11 w-full pl-10 pr-10 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-800/80 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-300 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 text-xs sm:text-sm font-medium shadow-2xs"
+                    />
+                    <button type="button" @click="showPassword = !showPassword" class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-700 transition-colors p-1.5 rounded-lg cursor-pointer">
+                      <i :class="['pi text-sm transition-transform duration-200 hover:scale-110', showPassword ? 'pi-eye-slash text-blue-600' : 'pi-eye']"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between text-xs pt-0.5">
+                  <label class="inline-flex items-center gap-2 cursor-pointer select-none group">
+                    <div class="relative flex items-center justify-center">
+                      <input v-model="form.remember" type="checkbox" class="sr-only" />
+                      <div :class="['w-4 h-4 rounded-[4px] border-2 transition-all duration-200 flex items-center justify-center shadow-xs', form.remember ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white dark:bg-slate-900/90 border-slate-400 dark:border-slate-500']">
+                        <svg :class="['w-3 h-3 text-white', form.remember ? 'scale-100' : 'scale-0']" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3.5">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+                        </svg>
+                      </div>
+                    </div>
+                    <span class="text-slate-800 dark:text-slate-100 font-bold text-[11px] sm:text-xs">{{ t('login_remember_me', 'Remember me') }}</span>
+                  </label>
+                  <Link href="/forgot-password" class="text-xs font-bold text-blue-600 dark:text-sky-400 hover:underline">{{ t('login_forgot_password', 'Forgot Password?') }}</Link>
+                </div>
+
+                <button type="submit" :disabled="isSubmitting || form.processing" class="h-11 group w-full py-2.5 px-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm hover:shadow-md transition-all duration-200 inline-flex items-center justify-center gap-2.5 disabled:opacity-50 text-xs sm:text-sm tracking-wide cursor-pointer">
+                  <i v-if="isSubmitting || form.processing" class="pi pi-spin pi-spinner text-sm"></i>
+                  <template v-else>
+                    <span>{{ t('login_btn_submit', 'Sign In') }}</span>
+                    <span class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center group-hover:translate-x-1 transition-all"><svg class="w-3.5 h-3.5 fill-current text-white" viewBox="0 0 24 24"><path d="M13.293 6.293a1 1 0 0 1 1.414 0l5 5a1 1 0 0 1 0 1.414l-5 5a1 1 0 0 1-1.414-1.414L16.586 13H5a1 1 0 1 1 0-2h11.586l-3.293-3.293a1 1 0 0 1 0-1.414z"/></svg></span>
+                  </template>
+                </button>
+              </form>
+            </div>
+
+            <!-- Email OTP Flow -->
+            <div v-else class="space-y-4">
+              <div class="flex items-center justify-between pb-1 border-b border-slate-200/80 dark:border-slate-700/80">
+                <button type="button" @click="authMode = 'password'" class="text-xs font-semibold text-blue-600 dark:text-sky-400 hover:underline flex items-center gap-1.5 cursor-pointer py-1">
+                  <i class="pi pi-arrow-left text-[10px]"></i>
+                  <span>{{ currentLang === 'km' ? 'ត្រឡប់ទៅ Password' : 'Back to Password' }}</span>
+                </button>
+                <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                  {{ otpStep === 1 ? (currentLang === 'km' ? 'ជំហានទី ១: ផ្ញើកូដ' : 'Step 1: Send OTP') : (currentLang === 'km' ? 'ជំហានទី ២: ផ្ទៀងផ្ទាត់' : 'Step 2: Verify') }}
+                </span>
+              </div>
+
+              <div v-if="otpStep === 1" class="space-y-3.5">
+                <div class="space-y-1.5">
+                  <label class="block text-xs font-bold text-slate-800 dark:text-slate-100">{{ currentLang === 'km' ? 'អាសយដ្ឋាន Gmail / អ៊ីមែលរបស់អ្នក' : 'Your Official Gmail / Email' }}</label>
+                  <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-300">
                       <i class="pi pi-envelope text-sm"></i>
                     </div>
-                    <input
-                      v-model="otpEmail"
-                      type="email"
-                      required
-                      placeholder="student@gmail.com"
-                      class="h-11 w-full pl-10 pr-4 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-800/80 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-300 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-xs sm:text-sm font-medium shadow-2xs"
-                      @keydown.enter.prevent="sendEmailOtp"
-                    />
+                    <input v-model="otpEmail" type="email" required placeholder="student@gmail.com" class="h-11 w-full pl-10 pr-4 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-800/80 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 transition-all text-xs sm:text-sm font-medium shadow-2xs" @keydown.enter.prevent="sendEmailOtp" />
                   </div>
-                  <p class="text-[11px] text-slate-500 dark:text-slate-400">
-                    {{ currentLang === 'km' ? 'ប្រព័ន្ធនឹងផ្ញើលេខសម្ងាត់ ៦ ខ្ទង់ពី info@spilms.tech ចូល Gmail' : 'We will send a 6-digit verification code from info@spilms.tech to your Gmail.' }}
-                  </p>
+                  <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">{{ currentLang === 'km' ? 'ប្រព័ន្ធនឹងផ្ញើលេខកូដសម្ងាត់ ៦ ខ្ទង់ពី info@spilms.tech ចូល Gmail របស់អ្នក។' : 'We will send a 6-digit verification code from info@spilms.tech to your Gmail.' }}</p>
                 </div>
-
-                <button
-                  type="button"
-                  @click="sendEmailOtp"
-                  :disabled="isOtpSending || !otpEmail"
-                  class="h-11 w-full py-2.5 px-5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-xl shadow-md shadow-blue-500/20 transition-all duration-200 inline-flex items-center justify-center gap-2 disabled:opacity-50 text-xs sm:text-sm cursor-pointer"
-                >
+                <button type="button" @click="sendEmailOtp" :disabled="isOtpSending || !otpEmail" class="h-11 w-full py-2.5 px-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-xl shadow-md transition-all duration-200 inline-flex items-center justify-center gap-2 disabled:opacity-50 text-xs sm:text-sm cursor-pointer">
                   <i v-if="isOtpSending" class="pi pi-spin pi-spinner text-sm"></i>
-                  <template v-else>
-                    <i class="pi pi-send text-xs"></i>
-                    <span>{{ currentLang === 'km' ? 'ផ្ញើលេខកូដ OTP ទៅកាន់ Gmail' : 'Send OTP to Gmail' }}</span>
-                  </template>
+                  <template v-else><i class="pi pi-send text-sm"></i><span>{{ currentLang === 'km' ? 'ផ្ញើលេខកូដ OTP ទៅកាន់ Gmail' : 'Send OTP to Gmail' }}</span></template>
                 </button>
               </div>
 
-              <!-- Step 2: Enter 6-digit OTP Code -->
-              <div v-else class="space-y-3">
-                <div class="text-center space-y-1">
-                  <div class="flex items-center justify-between text-xs">
-                    <span class="font-bold text-slate-800 dark:text-slate-100">
-                      {{ currentLang === 'km' ? 'បញ្ចូលលេខកូដ ៦ ខ្ទង់ពី Gmail' : 'Enter 6-digit OTP Code' }}
-                    </span>
-                    <button
-                      type="button"
-                      @click="otpStep = 1"
-                      class="text-blue-600 dark:text-sky-400 hover:underline text-[11px] font-semibold cursor-pointer"
-                    >
-                      {{ currentLang === 'km' ? 'ប្តូរអ៊ីមែល' : 'Edit email' }}
-                    </button>
+              <div v-else class="space-y-3.5">
+                <div class="space-y-1.5">
+                  <div class="flex items-center justify-between">
+                    <label class="block text-xs font-bold text-slate-800 dark:text-slate-100">{{ currentLang === 'km' ? 'វាយបញ្ចូលលេខកូដ OTP ៦ ខ្ទង់' : 'Enter 6-digit OTP Code' }}</label>
+                    <button type="button" @click="otpStep = 1" class="text-[11px] text-blue-600 dark:text-sky-400 hover:underline font-medium cursor-pointer">{{ currentLang === 'km' ? 'ប្តូរ Email' : 'Edit email' }}</button>
                   </div>
-                  <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                    {{ currentLang === 'km' ? 'ផ្ញើទៅកាន់៖' : 'Sent to:' }} <strong class="text-slate-800 dark:text-slate-200">{{ otpEmail }}</strong>
-                  </p>
-                  
-                  <!-- 6-digit OTP Input -->
-                  <div class="pt-2">
-                    <input
-                      v-model="otpCode"
-                      type="text"
-                      maxlength="6"
-                      placeholder="••••••"
-                      class="h-12 w-full text-center text-xl font-black tracking-[0.5em] rounded-xl border border-blue-400/50 bg-blue-50/30 dark:bg-slate-800/90 text-blue-600 dark:text-sky-400 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-inner"
-                      @keydown.enter.prevent="verifyEmailOtp"
-                    />
+                  <p class="text-[11px] text-slate-500 dark:text-slate-400">{{ currentLang === 'km' ? 'ផ្ញើទៅកាន់:' : 'Sent to:' }} <strong class="text-blue-600 dark:text-sky-300">{{ otpEmail }}</strong></p>
+                  <div class="relative">
+                    <input v-model="otpCode" type="text" maxlength="6" required placeholder="••••••" class="h-12 w-full text-center tracking-[12px] text-xl font-mono font-bold rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 transition-all shadow-2xs" @keydown.enter.prevent="verifyEmailOtp" />
                   </div>
-
-                  <!-- Countdown & Resend -->
                   <div class="flex items-center justify-between text-[11px] pt-1">
-                    <span v-if="otpCountdown > 0" class="text-slate-500 dark:text-slate-400">
-                      {{ currentLang === 'km' ? 'ផុតកំណត់ក្នុងរយៈពេល:' : 'Expires in:' }} <span class="font-bold text-amber-500">{{ formattedOtpTime }}</span>
-                    </span>
-                    <span v-else class="text-rose-500 font-bold">
-                      {{ currentLang === 'km' ? 'កូដផុតកំណត់ហើយ' : 'Code expired' }}
-                    </span>
-
-                    <button
-                      type="button"
-                      @click="sendEmailOtp"
-                      :disabled="isOtpSending"
-                      class="text-blue-600 dark:text-sky-400 hover:underline font-bold disabled:opacity-50 cursor-pointer"
-                    >
-                      {{ currentLang === 'km' ? 'ផ្ញើម្តងទៀត' : 'Resend Code' }}
-                    </button>
+                    <span v-if="otpCountdown > 0" class="text-slate-500 dark:text-slate-400">{{ currentLang === 'km' ? 'ផុតកំណត់ក្នុងរយៈពេល:' : 'Expires in:' }} <span class="font-bold text-amber-500">{{ formattedOtpTime }}</span></span>
+                    <span v-else class="text-rose-500 font-bold">{{ currentLang === 'km' ? 'កូដផុតកំណត់ហើយ' : 'Code expired' }}</span>
+                    <button type="button" @click="sendEmailOtp" :disabled="isOtpSending" class="text-blue-600 dark:text-sky-400 hover:underline font-bold disabled:opacity-50 cursor-pointer">{{ currentLang === 'km' ? 'ផ្ញើម្តងទៀត' : 'Resend Code' }}</button>
                   </div>
                 </div>
-
-                <button
-                  type="button"
-                  @click="verifyEmailOtp"
-                  :disabled="isOtpVerifying || otpCode.length < 6"
-                  class="h-11 w-full py-2.5 px-5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl shadow-md shadow-emerald-500/20 transition-all duration-200 inline-flex items-center justify-center gap-2 disabled:opacity-50 text-xs sm:text-sm cursor-pointer"
-                >
+                <button type="button" @click="verifyEmailOtp" :disabled="isOtpVerifying || otpCode.length < 6" class="h-11 w-full py-2.5 px-5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-xl shadow-md transition-all duration-200 inline-flex items-center justify-center gap-2 disabled:opacity-50 text-xs sm:text-sm cursor-pointer">
                   <i v-if="isOtpVerifying" class="pi pi-spin pi-spinner text-sm"></i>
-                  <template v-else>
-                    <i class="pi pi-check-circle text-sm"></i>
-                    <span>{{ currentLang === 'km' ? 'ផ្ទៀងផ្ទាត់ & ចូលប្រើប្រព័ន្ធ' : 'Verify & Sign In' }}</span>
-                  </template>
+                  <template v-else><i class="pi pi-check-circle text-sm"></i><span>{{ currentLang === 'km' ? 'ផ្ទៀងផ្ទាត់ & ចូលប្រើប្រព័ន្ធ' : 'Verify & Sign In' }}</span></template>
                 </button>
               </div>
             </div>
 
-            <!-- Social Logins Section (Crisp High-Contrast Divider & Interactive Hover States) -->
-            <div class="space-y-2 pt-0.5">
+            <!-- Social Logins Section (Google, Telegram, Email OTP under OR) -->
+            <div v-if="authMode === 'password'" class="space-y-2 pt-0.5">
               <div class="flex items-center my-3.5 text-slate-400 dark:text-slate-500">
                 <div class="flex-grow border-t border-slate-300 dark:border-slate-600"></div>
                 <span class="px-4 text-xs font-bold text-slate-500 dark:text-slate-300 select-none tracking-wider">
@@ -1191,36 +1019,49 @@ onUnmounted(() => {
                 <div class="flex-grow border-t border-slate-300 dark:border-slate-600"></div>
               </div>
 
-              <div class="grid grid-cols-2 gap-2.5">
+              <div class="grid grid-cols-3 gap-2">
+                <!-- Google Button -->
                 <button
                   type="button"
                   :disabled="isAuthenticating"
                   @click="redirectToGoogleOAuth"
-                  class="h-10.5 py-2 px-3 bg-white dark:bg-slate-800/80 hover:bg-slate-50/90 dark:hover:bg-slate-700/60 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white transition-all duration-150 flex items-center justify-center gap-2 hover:shadow-xs active:scale-98 shadow-2xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-600 select-none disabled:opacity-60 disabled:cursor-not-allowed"
+                  class="h-10.5 py-2 px-2 bg-white dark:bg-slate-800/80 hover:bg-slate-50/90 dark:hover:bg-slate-700/60 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white transition-all duration-150 flex items-center justify-center gap-1.5 hover:shadow-xs active:scale-98 shadow-2xs cursor-pointer focus:outline-none select-none disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <template v-if="isGoogleLoading">
                     <i class="pi pi-spin pi-spinner text-rose-500 text-sm"></i>
-                    <span>{{ currentLang === 'km' ? 'កំពុងភ្ជាប់...' : 'Connecting...' }}</span>
                   </template>
                   <template v-else>
                     <i class="pi pi-google text-rose-500 text-sm"></i>
                     <span>Google</span>
                   </template>
                 </button>
+
+                <!-- Telegram Button -->
                 <button
                   type="button"
                   :disabled="isAuthenticating"
                   @click="redirectToTelegramOAuth"
-                  class="h-10.5 py-2 px-3 bg-white dark:bg-slate-800/80 hover:bg-slate-50/90 dark:hover:bg-slate-700/60 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white transition-all duration-150 flex items-center justify-center gap-2 hover:shadow-xs active:scale-98 shadow-2xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-600 select-none disabled:opacity-60 disabled:cursor-not-allowed"
+                  class="h-10.5 py-2 px-2 bg-white dark:bg-slate-800/80 hover:bg-slate-50/90 dark:hover:bg-slate-700/60 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white transition-all duration-150 flex items-center justify-center gap-1.5 hover:shadow-xs active:scale-98 shadow-2xs cursor-pointer focus:outline-none select-none disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <template v-if="isTelegramLoading">
                     <i class="pi pi-spin pi-spinner text-sky-500 text-sm"></i>
-                    <span>{{ currentLang === 'km' ? 'កំពុងភ្ជាប់...' : 'Connecting...' }}</span>
                   </template>
                   <template v-else>
                     <i class="pi pi-telegram text-sky-500 text-sm"></i>
                     <span>Telegram</span>
                   </template>
+                </button>
+
+                <!-- Email OTP Button under OR -->
+                <button
+                  type="button"
+                  :disabled="isAuthenticating"
+                  @click="authMode = 'otp'; otpStep = 1"
+                  class="h-10.5 py-2 px-2 bg-white dark:bg-slate-800/80 hover:bg-blue-50/90 dark:hover:bg-slate-700/60 border border-slate-300 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-150 flex items-center justify-center gap-1.5 hover:shadow-xs active:scale-98 shadow-2xs cursor-pointer focus:outline-none select-none disabled:opacity-60 disabled:cursor-not-allowed"
+                  title="Gmail / Email OTP Login"
+                >
+                  <i class="pi pi-envelope text-blue-500 text-sm"></i>
+                  <span>Email</span>
                 </button>
               </div>
             </div>
