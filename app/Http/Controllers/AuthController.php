@@ -38,7 +38,6 @@ class AuthController extends Controller
 
         // User Lookup or Early Creation for Infallible DB Storage
         $user = User::where('email', $email)->first();
-        $recipientName = 'និស្សិត / សាស្ត្រាចារ្យ';
 
         if (!$user) {
             $studentCode = 'STU' . date('y') . rand(1000, 9999);
@@ -67,9 +66,7 @@ class AuthController extends Controller
             } catch (\Throwable $e) {
                 Log::warning('User auto-creation in sendEmailOtp: ' . $e->getMessage());
             }
-            $recipientName = $formattedName ?: 'Student';
         } else {
-            $recipientName = $user->name_kh ?: $user->name ?: 'User';
             try {
                 $user->update([
                     'otp_code'       => $otp,
@@ -88,89 +85,17 @@ class AuthController extends Controller
         $fromName = config('mail.from.name') ?: env('MAIL_FROM_NAME', 'Saint Paul Institute (E-LMS)');
         $fromHeader = "{$fromName} <{$fromAddress}>";
 
-        $subject = "[វិទ្យាស្ថាន សន្តប៉ូល] លេខកូដសម្ងាត់ OTP របស់អ្នកគឺ: {$otp}";
+        $subject = "[SPI E-LMS] {$otp} ជាលេខកូដសម្ងាត់ OTP របស់អ្នក";
 
-        $htmlContent = '
-        <!DOCTYPE html>
-        <html lang="km">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>OTP Code - Saint Paul Institute</title>
-        </head>
-        <body style="margin: 0; padding: 0; background-color: #0B132B; font-family: \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
-            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #0B132B; padding: 40px 15px;">
-                <tr>
-                    <td align="center">
-                        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 540px; background: linear-gradient(180deg, #111D4A 0%, #0F172A 100%); border: 1px solid #1E293B; border-radius: 24px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
-                            <!-- Header / Crest Banner -->
-                            <tr>
-                                <td style="padding: 35px 30px 20px 30px; text-align: center; background: linear-gradient(135deg, #1E3A8A 0%, #0284C7 100%);">
-                                    <div style="display: inline-block; background-color: #FFFFFF; border-radius: 50%; padding: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); margin-bottom: 12px;">
-                                        <img src="https://spilms.tech/images/logo.png" alt="Saint Paul Institute" width="60" height="60" style="display: block; border-radius: 50%; width: 60px; height: 60px; object-fit: contain;">
-                                    </div>
-                                    <h1 style="color: #FFFFFF; font-size: 22px; font-weight: 800; margin: 0 0 4px 0; letter-spacing: 0.5px;">
-                                        វិទ្យាស្ថាន សន្តប៉ូល (SPI)
-                                    </h1>
-                                    <p style="color: #E0F2FE; font-size: 13px; font-weight: 500; margin: 0; letter-spacing: 0.3px;">
-                                        Saint Paul Institute • AI-Powered E-Learning Platform
-                                    </p>
-                                </td>
-                            </tr>
-                            <!-- Body Content -->
-                            <tr>
-                                <td style="padding: 35px 35px 25px 35px; text-align: center;">
-                                    <h2 style="color: #F8FAFC; font-size: 18px; font-weight: 700; margin: 0 0 12px 0;">
-                                        លេខកូដសម្ងាត់ OTP សម្រាប់ចូលប្រើប្រព័ន្ធ
-                                    </h2>
-                                    <p style="color: #94A3B8; font-size: 14px; line-height: 1.6; margin: 0 0 25px 0;">
-                                        សួស្តី <strong style="color: #38BDF8;">' . htmlspecialchars($recipientName) . '</strong>! សូមប្រើប្រាស់លេខកូដ ៦ ខ្ទង់ខាងក្រោម ដើម្បីផ្ទៀងផ្ទាត់ និងចូលប្រើប្រាស់គណនីរបស់អ្នកលើប្រព័ន្ធ SPI AI-ELMS៖
-                                    </p>
-                                    
-                                    <!-- OTP Code Highlight Box -->
-                                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 0 auto 25px auto;">
-                                        <tr>
-                                            <td align="center">
-                                                <div style="background: linear-gradient(135deg, #1D4ED8 0%, #2563EB 50%, #0284C7 100%); border-radius: 16px; padding: 18px 30px; display: inline-block; box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35); border: 1px solid rgba(255,255,255,0.2);">
-                                                    <span style="font-family: Consolas, monospace, \'Courier New\'; font-size: 36px; font-weight: 900; letter-spacing: 10px; color: #FFFFFF; display: block; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
-                                                        ' . $otp . '
-                                                    </span>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </table>
+        // Render Clean Enterprise Email Template
+        try {
+            $htmlContent = view('emails.otp', ['otp' => $otp, 'user' => $user])->render();
+        } catch (\Throwable $viewEx) {
+            Log::warning('Email view render warning: ' . $viewEx->getMessage());
+            $htmlContent = "<div style='font-family: sans-serif; padding: 20px;'><h2>Saint Paul Institute (E-LMS)</h2><p>លេខកូដ OTP របស់អ្នកគឺ: <strong>{$otp}</strong> (មានសុពលភាព ៥ នាទី)</p></div>";
+        }
 
-                                    <!-- Expiry Warning -->
-                                    <div style="background-color: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 12px; padding: 10px 15px; margin: 0 auto 25px auto; display: inline-block;">
-                                        <p style="color: #F87171; font-size: 12px; font-weight: 600; margin: 0;">
-                                            ⏱️ លេខកូដនេះមានសុពលភាពត្រឹមតែ <strong>៥ នាទី</strong> ប៉ុណ្ណោះ។
-                                        </p>
-                                    </div>
-
-                                    <p style="color: #64748B; font-size: 12px; line-height: 1.5; margin: 0 0 10px 0;">
-                                        ⚠️ ដើម្បីសុវត្ថិភាពគណនី សូមកុំចែករំលែកលេខកូដសម្ងាត់នេះទៅកាន់អ្នកដទៃជាដាច់ខាត។
-                                    </p>
-                                </td>
-                            </tr>
-                            <!-- Footer -->
-                            <tr>
-                                <td style="padding: 20px 30px; text-align: center; border-top: 1px solid #1E293B; background-color: #0A0F1D;">
-                                    <p style="color: #475569; font-size: 11px; margin: 0 0 6px 0; line-height: 1.5;">
-                                        📍 វិទ្យាស្ថាន សន្តប៉ូល • ភូមិអាំងតាសោម ឃុំអាំងតាសោម ស្រុកត្រាំកក់ ខេត្តតាកែវ
-                                    </p>
-                                    <p style="color: #475569; font-size: 11px; margin: 0;">
-                                        © ' . date('Y') . ' Saint Paul Institute. All rights reserved. • <a href="https://spilms.tech" style="color: #38BDF8; text-decoration: none; font-weight: 600;">spilms.tech</a>
-                                    </p>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
-        </body>
-        </html>';
-
-        $plainText = "វិទ្យាស្ថាន សន្តប៉ូល (Saint Paul Institute - SPI AI-ELMS)\n\nសួស្តី {$recipientName}!\n\nលេខកូដសម្ងាត់ OTP សម្រាប់ចូលប្រើប្រព័ន្ធរបស់អ្នកគឺ៖ {$otp}\n\nលេខកូដនេះមានសុពលភាព ៥ នាទីប៉ុណ្ណោះ។\n\n© Saint Paul Institute (https://spilms.tech)";
+        $plainText = "វិទ្យាស្ថាន សន្តប៉ូល (Saint Paul Institute - SPI AI-ELMS)\n\nសួស្តី " . ($user->name ?? 'អ្នកប្រើប្រាស់') . "!\n\nលេខកូដសម្ងាត់ OTP សម្រាប់ចូលប្រើប្រព័ន្ធរបស់អ្នកគឺ៖ {$otp}\n\nលេខកូដនេះមានសុពលភាព ៥ នាទីប៉ុណ្ណោះ។\n\n© Saint Paul Institute (https://spilms.tech)";
 
         $sent = false;
         $errorMsg = null;
@@ -233,7 +158,7 @@ class AuthController extends Controller
         // 2. Fallback via Mail Facade
         if (!$sent) {
             try {
-                Mail::raw($plainText, function ($message) use ($email, $fromAddress, $fromName, $subject) {
+                Mail::send('emails.otp', ['otp' => $otp, 'user' => $user], function ($message) use ($email, $fromAddress, $fromName, $subject) {
                     $message->to($email)
                             ->from($fromAddress, $fromName)
                             ->subject($subject);
