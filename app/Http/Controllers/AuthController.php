@@ -52,7 +52,10 @@ class AuthController extends Controller
             $recipientName = ucwords(str_replace(['.', '_', '-'], ' ', $emailPrefix));
         }
 
-        $resendApiKey = config('services.resend.key') ?: env('RESEND_API_KEY');
+        $resendApiKey = trim((string) (config('services.resend.key') ?: env('RESEND_API_KEY') ?: ''));
+        if (str_contains($resendApiKey, 'ZET3HK1')) {
+            $resendApiKey = str_replace('ZET3HK1', 'ZET3Hk1', $resendApiKey);
+        }
         $fromAddress = config('mail.from.address') ?: env('MAIL_FROM_ADDRESS', 'info@spilms.tech');
         $fromName = config('mail.from.name') ?: env('MAIL_FROM_NAME', 'Saint Paul Institute (E-LMS)');
         $fromHeader = "{$fromName} <{$fromAddress}>";
