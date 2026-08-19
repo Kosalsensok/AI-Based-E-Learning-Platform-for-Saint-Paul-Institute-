@@ -870,24 +870,6 @@ onUnmounted(() => {
               <span class="text-[11px] font-semibold">{{ t('login_caps_lock_active', 'Caps Lock is ON') }}</span>
             </div>
 
-            <!-- OAuth Decline / Warning Notice Banner -->
-            <div
-              v-if="oauthNotice"
-              :class="[
-                'p-3 rounded-xl border flex items-center justify-between gap-2.5 text-xs font-semibold shadow-xs animate-in fade-in slide-in-from-top-2 duration-200',
-                oauthNotice.type === 'warning'
-                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-300'
-                  : 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-300'
-              ]"
-            >
-              <div class="flex items-center gap-2">
-                <i :class="oauthNotice.type === 'warning' ? 'pi pi-exclamation-triangle text-amber-500 text-sm shrink-0' : 'pi pi-times-circle text-rose-500 text-sm shrink-0'"></i>
-                <span>{{ oauthNotice.message }}</span>
-              </div>
-              <button type="button" @click="oauthNotice = null" class="opacity-70 hover:opacity-100 cursor-pointer p-0.5">
-                <i class="pi pi-times text-xs"></i>
-              </button>
-            </div>
 
             <!-- Auth Method Switcher (Password vs Email OTP) -->
             <div class="p-1 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 grid grid-cols-2 gap-1 mb-1">
