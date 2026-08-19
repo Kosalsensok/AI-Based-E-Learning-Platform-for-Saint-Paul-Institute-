@@ -11,12 +11,31 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $enrollments = Enrollment::where('student_id', $request->user()->id)
-            ->with(['course.teacher'])
-            ->get();
+        $user = $request->user();
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        try {
+            $enrollments = Enrollment::where('student_id', $user->id)
+                ->with(['course.teacher'])
+                ->get();
+        } catch (\Throwable $e) {
+            $enrollments = collect();
+        }
+
+        $stats = [
+            'enrolledCount'     => $enrollments->count(),
+            'inProgressCount'   => $enrollments->where('status', 'active')->count(),
+            'completedCount'    => $enrollments->where('status', 'completed')->count(),
+            'certificatesCount' => 0,
+            'learningTime'      => '0h 00m',
+            'averageScore'      => 0,
+        ];
 
         return Inertia::render('Student/Dashboard', [
             'enrollments' => $enrollments,
+            'stats'       => $stats,
         ]);
     }
 }
