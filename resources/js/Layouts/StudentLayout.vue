@@ -132,19 +132,19 @@ const handleKeydown = (e: KeyboardEvent) => {
 // Dynamic Breadcrumb Calculation
 const currentBreadcrumb = computed(() => {
   const url = page.url
-  if (url.startsWith('/student/dashboard')) return ['Student', '1. Dashboard']
-  if (url.startsWith('/student/browse') || url.startsWith('/student/courses') || url.startsWith('/student/my-courses')) return ['Student', '2. My Courses']
-  if (url.startsWith('/student/learn') || url.startsWith('/student/content') || url.startsWith('/student/learning-content')) return ['Student', '3. Learning Content']
-  if (url.startsWith('/student/quizzes') || url.startsWith('/student/quiz')) return ['Student', '4. Quiz & Assessment']
-  if (url.startsWith('/student/ai-path')) return ['Student', '5. AI Learning Path']
-  if (url.startsWith('/student/ai-tutor')) return ['Student', '6. AI Assistant / Tutor']
-  if (url.startsWith('/student/practice-lab')) return ['Student', '7. Practice Lab']
-  if (url.startsWith('/student/progress')) return ['Student', '8. Progress Tracking']
-  if (url.startsWith('/student/certificates')) return ['Student', '9. Certificates']
-  if (url.startsWith('/student/payments')) return ['Student', '10. Payment & ABA']
-  if (url.startsWith('/student/notifications')) return ['Student', '11. Notifications']
-  if (url.startsWith('/student/calendar')) return ['Student', '12. Calendar & Schedule']
-  if (url.startsWith('/student/profile')) return ['Student', '13. Profile Settings']
+  if (url.startsWith('/student/dashboard')) return ['Student', 'Dashboard']
+  if (url.startsWith('/student/browse') || url.startsWith('/student/courses') || url.startsWith('/student/my-courses')) return ['Student', 'My Courses']
+  if (url.startsWith('/student/learn') || url.startsWith('/student/content') || url.startsWith('/student/learning-content')) return ['Student', 'Learning Content']
+  if (url.startsWith('/student/quizzes') || url.startsWith('/student/quiz')) return ['Student', 'Quiz & Assessment']
+  if (url.startsWith('/student/ai-path')) return ['Student', 'AI Learning Path']
+  if (url.startsWith('/student/ai-tutor')) return ['Student', 'AI Assistant / Tutor']
+  if (url.startsWith('/student/practice-lab')) return ['Student', 'Practice Lab']
+  if (url.startsWith('/student/progress')) return ['Student', 'Progress Tracking']
+  if (url.startsWith('/student/certificates')) return ['Student', 'Certificates']
+  if (url.startsWith('/student/payments')) return ['Student', 'Payment & ABA']
+  if (url.startsWith('/student/notifications')) return ['Student', 'Notifications']
+  if (url.startsWith('/student/calendar')) return ['Student', 'Calendar & Schedule']
+  if (url.startsWith('/student/profile')) return ['Student', 'Profile Settings']
   if (url.startsWith('/student/discussions')) return ['Student', 'Discussions & Support']
   return ['Student', 'Student Panel']
 })
@@ -212,20 +212,20 @@ const markNotificationRead = (id: number) => {
 
 // Global Command Search Links for Student (Covering 13 modules)
 const searchableLinks = computed(() => [
-  { name: '1. Dashboard (ផ្ទាំងទិដ្ឋភាពសរុប)', category: '1. Dashboard', href: '/student/dashboard', iconUrl: '/images/nav/dashboard.svg' },
-  { name: '2. My Courses (Enrolled & Current)', category: '2. My Courses', href: '/student/my-courses/enrolled', iconUrl: '/images/nav/courses.svg' },
-  { name: '2. Browse & Filter Courses', category: '2. My Courses', href: '/student/browse', iconUrl: '/images/nav/sub/all-courses.svg' },
-  { name: '3. Learning Content (Videos, PDFs, Slides, Notes)', category: '3. Content', href: '/student/content', iconUrl: '/images/nav/content.svg' },
-  { name: '4. Quiz & Assessment (Pre, Practice, Post, Assignments)', category: '4. Assessment', href: '/student/quizzes', iconUrl: '/images/nav/quiz.svg' },
-  { name: '5. AI Learning Path (Personalized Path)', category: '5. AI Path', href: '/student/ai-path', iconUrl: '/images/nav/ai.svg' },
-  { name: '6. AI Assistant / Tutor (English, 24/7 Chat, Feedback)', category: '6. AI Assistant', href: '/student/ai-tutor', iconUrl: '/images/nav/ai.svg' },
-  { name: '7. Practice Lab (IT, Tourism, English, Agronomy, Social Work)', category: '7. Practice Lab', href: '/student/practice-lab', iconUrl: '/images/nav/sub/import-export.svg' },
-  { name: '8. Progress Tracking & Badges', category: '8. Progress', href: '/student/progress/overview', iconUrl: '/images/nav/progress.svg' },
-  { name: '9. Certificates (View, Download, QR Verify)', category: '9. Certificates', href: '/student/certificates/my-certificates', iconUrl: '/images/nav/certificate.svg' },
-  { name: '10. Payment & ABA (Fees, KHQR, Receipts)', category: '10. Payments', href: '/student/payments/my-payments', iconUrl: '/images/nav/payment.svg' },
-  { name: '11. Notifications & Alerts', category: '11. Notifications', href: '/student/notifications/announcements', iconUrl: '/images/nav/notification.svg' },
-  { name: '12. Calendar & Schedule (Quiz dates, Deadlines)', category: '12. Calendar', href: '/student/calendar/live-class', iconUrl: '/images/actions/announcement.svg' },
-  { name: '13. Profile Settings & Academic Info', category: '13. Profile', href: '/student/profile?tab=personal', iconUrl: '/images/nav/sub/students.svg' },
+  { name: 'Dashboard (ផ្ទាំងគ្រប់គ្រងដើម)', category: 'Dashboard', href: '/student/dashboard', iconUrl: '/images/nav/dashboard.svg' },
+  { name: 'My Courses (Enrolled & Current)', category: 'My Courses', href: '/student/my-courses/enrolled', iconUrl: '/images/nav/courses.svg' },
+  { name: 'Browse & Filter Courses', category: 'My Courses', href: '/student/browse', iconUrl: '/images/nav/sub/all-courses.svg' },
+  { name: 'Learning Content (Videos, PDFs, Slides, Notes)', category: 'Content', href: '/student/content', iconUrl: '/images/nav/content.svg' },
+  { name: 'Quiz & Assessment (Pre, Practice, Post, Assignments)', category: 'Assessment', href: '/student/quizzes', iconUrl: '/images/nav/quiz.svg' },
+  { name: 'AI Learning Path (Personalized Path)', category: 'AI Path', href: '/student/ai-path', iconUrl: '/images/nav/ai.svg' },
+  { name: 'AI Assistant / Tutor (English, 24/7 Chat, Feedback)', category: 'AI Assistant', href: '/student/ai-tutor', iconUrl: '/images/nav/ai.svg' },
+  { name: 'Practice Lab (IT, Tourism, English, Agronomy, Social Work)', category: 'Practice Lab', href: '/student/practice-lab', iconUrl: '/images/nav/sub/import-export.svg' },
+  { name: 'Progress Tracking & Badges', category: 'Progress', href: '/student/progress/overview', iconUrl: '/images/nav/progress.svg' },
+  { name: 'Certificates (View, Download, QR Verify)', category: 'Certificates', href: '/student/certificates/my-certificates', iconUrl: '/images/nav/certificate.svg' },
+  { name: 'Payment & ABA (Fees, KHQR, Receipts)', category: 'Payments', href: '/student/payments/my-payments', iconUrl: '/images/nav/payment.svg' },
+  { name: 'Notifications & Alerts', category: 'Notifications', href: '/student/notifications/announcements', iconUrl: '/images/nav/notification.svg' },
+  { name: 'Calendar & Schedule (Quiz dates, Deadlines)', category: 'Calendar', href: '/student/calendar/live-class', iconUrl: '/images/actions/announcement.svg' },
+  { name: 'Profile Settings & Academic Info', category: 'Profile', href: '/student/profile?tab=personal', iconUrl: '/images/nav/sub/students.svg' },
 ])
 
 const filteredSearchLinks = computed(() => {
@@ -271,20 +271,20 @@ const expandedModules = ref<Record<string, boolean>>({
   discussions: false,
 })
 
-// E.LMS Student - 13 Complete Modules matching User Tree Structure
+// E.LMS Student - 13 Complete Modules matching Modern Standards
 const studentNav: NavItem[] = [
   {
     key: 'dashboard',
-    name: '1. Dashboard',
-    khName: '១. ផ្ទាំងព័ត៌មានដើម',
+    name: 'Dashboard',
+    khName: 'ផ្ទាំងគ្រប់គ្រង',
     href: '/student/dashboard',
     iconUrl: '/images/nav/dashboard.svg',
     icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6'
   },
   {
     key: 'courses',
-    name: '2. My Courses',
-    khName: '២. មុខវិជ្ជារបស់ខ្ញុំ',
+    name: 'My Courses',
+    khName: 'វគ្គសិក្សារបស់ខ្ញុំ',
     iconUrl: '/images/nav/courses.svg',
     icon: 'M12 14l9-5-9-5-9 5 9 5z',
     children: [
@@ -301,8 +301,8 @@ const studentNav: NavItem[] = [
   },
   {
     key: 'content',
-    name: '3. Learning Content',
-    khName: '៣. មាតិកាសិក្សា',
+    name: 'Learning Content',
+    khName: 'មាតិកាសិក្សា',
     iconUrl: '/images/nav/content.svg',
     icon: 'M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4',
     children: [
@@ -314,8 +314,8 @@ const studentNav: NavItem[] = [
   },
   {
     key: 'quizzes',
-    name: '4. Quiz & Assessment',
-    khName: '៤. ការប្រឡង & Quiz',
+    name: 'Quiz & Assessment',
+    khName: 'តេស្ត & ការវាយតម្លៃ',
     iconUrl: '/images/nav/quiz.svg',
     icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
     children: [
@@ -329,8 +329,8 @@ const studentNav: NavItem[] = [
   },
   {
     key: 'aiPath',
-    name: '5. AI Learning Path',
-    khName: '៥. ផ្លូវសិក្សា AI',
+    name: 'AI Learning Path',
+    khName: 'AI Learning Path',
     iconUrl: '/images/nav/ai.svg',
     icon: 'M13 10V3L4 14h7v7l9-11h-7z',
     badge: { text: 'AI', colorClass: 'bg-purple-500/20 text-purple-300 border-purple-500/30' },
@@ -344,8 +344,8 @@ const studentNav: NavItem[] = [
   },
   {
     key: 'aiTutor',
-    name: '6. AI Assistant / Tutor',
-    khName: '៦. ជំនួយការ & គ្រូ AI',
+    name: 'AI Assistant / Tutor',
+    khName: 'ជំនួយការ AI',
     iconUrl: '/images/nav/ai.svg',
     icon: 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
     badge: { text: '24/7', colorClass: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' },
@@ -357,8 +357,8 @@ const studentNav: NavItem[] = [
   },
   {
     key: 'practiceLab',
-    name: '7. Practice Lab (5 Majors)',
-    khName: '៧. បន្ទប់អនុវត្តជាក់ស្តែង',
+    name: 'Practice Lab (5 Majors)',
+    khName: 'បន្ទប់អនុវត្តជាក់ស្តែង',
     iconUrl: '/images/nav/sub/import-export.svg',
     icon: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4',
     badge: { text: 'Labs', colorClass: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30' },
@@ -372,8 +372,8 @@ const studentNav: NavItem[] = [
   },
   {
     key: 'progress',
-    name: '8. Progress Tracking',
-    khName: '៨. តាមដានវឌ្ឍនភាព',
+    name: 'Progress Tracking',
+    khName: 'តាមដានវឌ្ឍនភាព',
     iconUrl: '/images/nav/progress.svg',
     icon: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6',
     children: [
@@ -385,8 +385,8 @@ const studentNav: NavItem[] = [
   },
   {
     key: 'certificates',
-    name: '9. Certificates',
-    khName: '៩. វិញ្ញាបនបត្រ',
+    name: 'Certificates',
+    khName: 'វិញ្ញាបនបត្រ',
     iconUrl: '/images/nav/certificate.svg',
     icon: 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z',
     children: [
@@ -397,8 +397,8 @@ const studentNav: NavItem[] = [
   },
   {
     key: 'payments',
-    name: '10. Payment & ABA',
-    khName: '១០. ការបង់ប្រាក់ & ABA',
+    name: 'Payment & ABA',
+    khName: 'ការបង់ប្រាក់ & ABA',
     iconUrl: '/images/nav/payment.svg',
     icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
     badge: { text: 'KHQR', colorClass: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' },
@@ -411,8 +411,8 @@ const studentNav: NavItem[] = [
   },
   {
     key: 'notificationsModule',
-    name: '11. Notifications',
-    khName: '១១. ការជូនដំណឹង',
+    name: 'Notifications',
+    khName: 'ការជូនដំណឹង',
     iconUrl: '/images/nav/notification.svg',
     icon: 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9',
     children: [
@@ -424,8 +424,8 @@ const studentNav: NavItem[] = [
   },
   {
     key: 'calendar',
-    name: '12. Calendar & Schedule',
-    khName: '១២. កាលវិភាគ & ព្រឹត្តិការណ៍',
+    name: 'Calendar & Schedule',
+    khName: 'កាលវិភាគ & ព្រឹត្តិការណ៍',
     iconUrl: '/images/actions/announcement.svg',
     icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
     children: [
@@ -437,8 +437,8 @@ const studentNav: NavItem[] = [
   },
   {
     key: 'profile',
-    name: '13. Profile Settings',
-    khName: '១៣. កំណត់ព័ត៌មានផ្ទាល់ខ្លួន',
+    name: 'Profile Settings',
+    khName: 'ការកំណត់គណនី',
     iconUrl: '/images/nav/sub/students.svg',
     icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
     children: [
@@ -1108,7 +1108,7 @@ const onIconError = (e: Event) => {
                   @click="isNotificationOpen = false"
                   class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
                 >
-                  View All Notifications (11. Notifications) →
+                  View All Notifications →
                 </Link>
               </div>
             </div>
@@ -1145,28 +1145,28 @@ const onIconError = (e: Event) => {
                 @click="isProfileOpen = false"
                 class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium"
               >
-                <span>👤 13. Profile Settings</span>
+                <span>👤 Profile Settings (ការកំណត់គណនី)</span>
               </Link>
               <Link
                 href="/student/my-courses/current"
                 @click="isProfileOpen = false"
                 class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium"
               >
-                <span>📚 2. My Courses</span>
+                <span>📚 My Courses (វគ្គសិក្សារបស់ខ្ញុំ)</span>
               </Link>
               <Link
                 href="/student/certificates/my-certificates"
                 @click="isProfileOpen = false"
                 class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium"
               >
-                <span>🏆 9. My Certificates</span>
+                <span>🏆 My Certificates (វិញ្ញាបនបត្រ)</span>
               </Link>
               <Link
                 href="/student/payments/my-payments"
                 @click="isProfileOpen = false"
                 class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium"
               >
-                <span>💳 10. Payment & ABA</span>
+                <span>💳 Payment & ABA (ការបង់ប្រាក់)</span>
               </Link>
 
               <div class="border-t border-slate-100 dark:border-slate-800 pt-1">
