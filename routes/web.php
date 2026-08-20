@@ -452,15 +452,34 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/browse', [Student\BrowseController::class, 'index'])->name('browse');
         Route::get('/browse/{course}', [Student\BrowseController::class, 'show'])->name('browse.show');
         Route::get('/courses', [Student\CourseController::class, 'index'])->name('courses');
+        Route::get('/courses/enrolled', [Student\CourseController::class, 'enrolled']);
+        Route::get('/courses/current', [Student\CourseController::class, 'current']);
+        Route::get('/courses/completed', [Student\CourseController::class, 'completed']);
 
         // My Courses sub-routes
         Route::prefix('my-courses')->name('my-courses.')->group(function () {
+            Route::get('/', [Student\CourseController::class, 'enrolled'])->name('index');
             Route::get('/enrolled', [Student\CourseController::class, 'enrolled'])->name('enrolled');
             Route::get('/current', [Student\CourseController::class, 'current'])->name('current');
             Route::get('/completed', [Student\CourseController::class, 'completed'])->name('completed');
             Route::get('/browse', [Student\BrowseController::class, 'index'])->name('browse');
             Route::get('/wishlist', [Student\CourseController::class, 'wishlist'])->name('wishlist');
         });
+
+        // URL Aliases for space-separated or underscore-separated requests (e.g. 'my courses' / 'my_courses')
+        Route::get('/my courses', [Student\CourseController::class, 'enrolled']);
+        Route::get('/my courses/enrolled', [Student\CourseController::class, 'enrolled']);
+        Route::get('/my courses/current', [Student\CourseController::class, 'current']);
+        Route::get('/my courses/completed', [Student\CourseController::class, 'completed']);
+        Route::get('/my courses/browse', [Student\BrowseController::class, 'index']);
+        Route::get('/my courses/wishlist', [Student\CourseController::class, 'wishlist']);
+
+        Route::get('/my_courses', [Student\CourseController::class, 'enrolled']);
+        Route::get('/my_courses/enrolled', [Student\CourseController::class, 'enrolled']);
+        Route::get('/my_courses/current', [Student\CourseController::class, 'current']);
+        Route::get('/my_courses/completed', [Student\CourseController::class, 'completed']);
+        Route::get('/my_courses/browse', [Student\BrowseController::class, 'index']);
+        Route::get('/my_courses/wishlist', [Student\CourseController::class, 'wishlist']);
 
         Route::get('/content', [Student\LearningController::class, 'content'])->name('content');
         Route::prefix('learning-content')->name('learning-content.')->group(function () {
