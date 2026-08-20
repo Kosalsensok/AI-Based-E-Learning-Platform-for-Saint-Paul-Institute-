@@ -267,6 +267,10 @@ const expandedModules = ref<Record<string, boolean>>({
   notificationsModule: false,
 })
 
+const logout = () => {
+  router.post('/logout')
+}
+
 // E.LMS Student - Structure as per official specification
 const studentNav: NavItem[] = [
   {
@@ -432,10 +436,6 @@ onUnmounted(() => {
   window.removeEventListener('online', updateOnlineStatus)
   window.removeEventListener('offline', updateOnlineStatus)
 })
-
-const logout = () => {
-  router.post('/logout')
-}
 
 const onIconError = (e: Event) => {
   const target = e.target as HTMLImageElement
