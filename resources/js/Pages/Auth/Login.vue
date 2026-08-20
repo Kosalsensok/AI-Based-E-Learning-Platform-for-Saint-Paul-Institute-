@@ -1,13 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useForm, Link, router, usePage } from '@inertiajs/vue3'
+import { useForm, Head, Link, router, usePage } from '@inertiajs/vue3'
 import { i18n, type LanguageCode } from '../../Services/i18n'
 import AuthAnimatedBackground from '../../Components/AuthAnimatedBackground.vue'
 
 const logoUrl = '/images/logo.png'
-const aiBgUrl = '/images/login-ai-illustration.png'
-const successSvgUrl = '/images/sign-in-successful.svg'
-const errorSvgUrl = '/images/forget-password-animation.svg'
 
 const props = defineProps<{
   status?: string
@@ -15,12 +12,19 @@ const props = defineProps<{
 
 const page = usePage()
 
+const selectedRole = ref<'student' | 'teacher' | 'admin'>('student')
+
 const form = useForm({
+  role: 'student' as 'student' | 'teacher' | 'admin',
   email: '',
   password: '',
-  role: 'student' as 'student' | 'teacher' | 'admin',
   remember: false,
 })
+
+const selectRole = (role: 'student' | 'teacher' | 'admin') => {
+  selectedRole.value = role
+  form.role = role
+}
 
 const showPassword = ref(false)
 const capsLockOn = ref(false)
@@ -241,8 +245,6 @@ const handleClickOutside = (e: MouseEvent) => {
   } catch (e) {}
 }
 
-
-
 const clearEmail = () => {
   form.email = ''
 }
@@ -337,23 +339,9 @@ const submit = async () => {
   }
 }
 
-const telegramBotUsername = computed(() => {
-  return (page.props as any).telegram?.bot_username || 'spi_elms_auth_bot'
-})
-
-const telegramBotId = computed(() => {
-  return (page.props as any).telegram?.bot_id || '8828915669'
-})
-
-const isTelegramConfigured = computed(() => {
-  return Boolean((page.props as any).telegram?.is_configured)
-})
-
 const getTelegramOAuthUrl = () => {
   return 'https://oauth.telegram.org/auth?bot_id=8828915669&origin=https%3A%2F%2Fspilms.tech&return_to=https%3A%2F%2Fspilms.tech%2Fauth%2Ftelegram%2Fcallback&request_access=write'
 }
-
-
 
 const isAuthenticating = ref(false)
 const authLoadingTitle = ref('')
@@ -375,7 +363,6 @@ const stopPopupTracking = () => {
 const checkPopupClosed = () => {
   if (activePopup && activePopup.closed) {
     stopPopupTracking()
-    // User closed the popup (clicked X) without completing authentication
     if (!isAuthenticating.value || (!authLoadingTitle.value.includes('ផ្ទៀងផ្ទាត់') && !authLoadingTitle.value.includes('Verifying'))) {
       isTelegramLoading.value = false
       isGoogleLoading.value = false
@@ -395,7 +382,6 @@ const handleTelegramPostMessage = (event: MessageEvent) => {
       if (data.event === 'auth_result') {
         stopPopupTracking()
         if (data.result === false) {
-          // User clicked DECLINE on Telegram popup
           isAuthenticating.value = false
           isTelegramLoading.value = false
           oauthNotice.value = {
@@ -405,7 +391,6 @@ const handleTelegramPostMessage = (event: MessageEvent) => {
               : 'Login was cancelled. Please accept Telegram permissions to access your account.'
           }
         } else if (data.result && (data.result.id || typeof data.result === 'object')) {
-          // User clicked ACCEPT on Telegram popup
           isAuthenticating.value = true
           isTelegramLoading.value = true
           authLoadingTitle.value = currentLang.value === 'km' ? 'កំពុងផ្ទៀងផ្ទាត់ Telegram...' : 'Verifying Telegram Account...'
@@ -435,7 +420,6 @@ const redirectToTelegramOAuth = () => {
   )
 
   if (!popup || popup.closed || typeof popup.closed === 'undefined') {
-    // If popup was blocked by browser, fallback to direct page navigation
     isAuthenticating.value = true
     authLoadingTitle.value = currentLang.value === 'km' ? 'កំពុងតភ្ជាប់ទៅកាន់ Telegram...' : 'Connecting to Telegram...'
     authLoadingSubtitle.value = currentLang.value === 'km' ? 'សូមរង់ចាំមួយភ្លែត ប្រព័ន្ធកំពុងនាំអ្នកទៅកាន់ Telegram Login' : 'Please wait a moment while redirecting to Telegram...'
@@ -479,20 +463,20 @@ const handleTelegramAuthSuccess = async (tgUser: any) => {
     }
   } catch (err: any) {
     try {
-      const form = document.createElement('form')
-      form.method = 'POST'
-      form.action = '/auth/telegram'
+      const formEl = document.createElement('form')
+      formEl.method = 'POST'
+      formEl.action = '/auth/telegram'
       for (const key in tgUser) {
         if (Object.prototype.hasOwnProperty.call(tgUser, key) && tgUser[key] !== null && tgUser[key] !== undefined) {
           const input = document.createElement('input')
           input.type = 'hidden'
           input.name = key
           input.value = typeof tgUser[key] === 'object' ? JSON.stringify(tgUser[key]) : String(tgUser[key])
-          form.appendChild(input)
+          formEl.appendChild(input)
         }
       }
-      document.body.appendChild(form)
-      form.submit()
+      document.body.appendChild(formEl)
+      formEl.submit()
     } catch (_) {
       isAuthenticating.value = false
       isTelegramLoading.value = false
@@ -554,8 +538,6 @@ const handleGoogleAuthSuccess = async (googleUser: any) => {
   }
 }
 
-
-
 const redirectToGoogleOAuth = () => {
   isGoogleLoading.value = true
   isAuthenticating.value = true
@@ -575,6 +557,12 @@ const handleSocialLogin = (provider: string) => {
 
   if (provider === 'Google') {
     redirectToGoogleOAuth()
+    return
+  }
+
+  if (provider === 'Email') {
+    authMode.value = 'otp'
+    otpStep.value = 1
     return
   }
 
@@ -601,7 +589,6 @@ onMounted(() => {
     window.addEventListener('keyup', handleKeyCheck)
     document.addEventListener('click', handleClickOutside)
 
-    // Register Telegram OAuth global callback
     ;(window as any).onTelegramAuth = (user: any) => {
       try {
         handleTelegramAuthSuccess(user)
@@ -619,10 +606,7 @@ onMounted(() => {
       }
     } catch (e) {}
 
-    // Listen for Telegram OAuth PostMessage events (DECLINE or ACCEPT from popup)
     window.addEventListener('message', handleTelegramPostMessage)
-
-    // Reset loading state if user closes popup (X) and returns to main window
     window.addEventListener('focus', checkPopupClosed)
     window.addEventListener('pageshow', () => {
       stopPopupTracking()
@@ -631,7 +615,6 @@ onMounted(() => {
       isTelegramLoading.value = false
     })
 
-    // 1. Check for Telegram OAuth URL fragment (#tgAuthResult=...)
     if (window.location.hash && window.location.hash.includes('tgAuthResult=')) {
       try {
         const hashStr = window.location.hash.substring(1)
@@ -653,7 +636,6 @@ onMounted(() => {
       }
     }
 
-    // 2. Check for query parameter errors and direct OAuth query returns
     const urlParams = new URLSearchParams(window.location.search)
     const err = urlParams.get('error')
     const status = urlParams.get('status')
@@ -706,17 +688,30 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-slate-100/90 dark:bg-[#070D1E] text-slate-900 dark:text-slate-100 p-4 sm:p-6 lg:p-8 relative font-sans overflow-x-hidden transition-colors duration-500">
+  <Head title="Sign In - SPI AI-ELMS" />
+
+  <div class="min-h-screen w-full bg-[#050a17] text-slate-200 flex flex-col justify-between items-center p-3.5 sm:p-6 lg:p-8 relative overflow-x-hidden font-sans selection:bg-blue-600 selection:text-white transition-colors duration-300">
     
-    <!-- Top-Right Fixed Floating Language & Theme Switchers (Generous 24px-32px Edge Spacing) -->
-    <div class="fixed top-6 right-6 sm:top-7 sm:right-7 lg:top-8 lg:right-8 z-50 flex items-center gap-3">
-      
+    <!-- 3D Three.js Futuristic Wireframe & Particle Background -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none z-0 select-none">
+      <AuthAnimatedBackground />
+
+      <!-- Tech Matrix Dot Grid Background -->
+      <div class="absolute inset-0 bg-[radial-gradient(#38bdf8_1.2px,transparent_1.2px)] [background-size:32px_32px] opacity-15"></div>
+
+      <!-- Futuristic Blur Glows -->
+      <div class="absolute -top-28 -left-28 w-80 sm:w-96 h-80 sm:h-96 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none animate-float-slow"></div>
+      <div class="absolute -bottom-28 -right-28 w-80 sm:w-96 h-80 sm:h-96 bg-indigo-600/20 rounded-full blur-[100px] pointer-events-none animate-float-reverse"></div>
+    </div>
+
+    <!-- Top Navigation Controls -->
+    <header class="w-full max-w-5xl flex justify-end items-center gap-2.5 z-20">
       <!-- Language Switcher Pill -->
       <div class="relative lang-switcher-container">
-        <button
-          type="button"
+        <button 
+          type="button" 
           @click.stop="isLangOpen = !isLangOpen"
-          class="group px-3.5 py-2 rounded-full bg-white/95 dark:bg-slate-800/90 backdrop-blur-md hover:bg-white dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition-all duration-200 border border-slate-300/90 dark:border-slate-700/60 shadow-md shadow-slate-900/5 dark:shadow-black/20 flex items-center gap-2 text-xs font-semibold cursor-pointer select-none hover:scale-105 active:scale-95 focus:outline-none"
+          class="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full bg-slate-900/85 backdrop-blur-md border border-slate-700/60 text-xs font-medium text-slate-300 hover:text-white hover:border-slate-500 hover:bg-slate-800 transition duration-150 active:scale-95 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           :title="currentLang === 'km' ? 'ប្តូរភាសា / Change Language' : 'Change Language / ប្តូរភាសា'"
         >
           <img
@@ -726,12 +721,12 @@ onUnmounted(() => {
             height="16"
             loading="eager"
             decoding="async"
-            class="w-4 h-4 rounded-full object-cover shrink-0 ring-1 ring-slate-300 dark:ring-slate-600"
+            class="w-4 h-4 rounded-full object-cover shrink-0 ring-1 ring-slate-600"
           />
-          <span class="text-[11px] font-bold tracking-wide">
-            {{ currentLang === 'km' ? 'KH' : 'EN' }}
-          </span>
-          <i :class="['pi pi-chevron-down text-[10px] text-slate-500 dark:text-slate-400 transition-transform duration-200', isLangOpen ? 'rotate-180 text-blue-600' : '']"></i>
+          <span class="font-bold text-[11px] sm:text-xs tracking-wide">{{ currentLang === 'km' ? 'KH' : 'EN' }}</span>
+          <svg :class="['w-3 h-3 opacity-70 transition-transform duration-200', isLangOpen ? 'rotate-180 text-blue-400' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
         </button>
 
         <!-- Dropdown Menu -->
@@ -745,7 +740,7 @@ onUnmounted(() => {
         >
           <div
             v-if="isLangOpen"
-            class="absolute right-0 mt-2 w-44 rounded-2xl bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-700/80 shadow-xl shadow-black/10 dark:shadow-black/40 py-1.5 z-50 overflow-hidden"
+            class="absolute right-0 mt-2 w-44 rounded-2xl bg-[#0b1329]/95 backdrop-blur-xl border border-slate-700/80 shadow-2xl shadow-black/60 py-1.5 z-50 overflow-hidden"
           >
             <button
               v-for="lang in languages"
@@ -755,477 +750,563 @@ onUnmounted(() => {
               :class="[
                 'w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-semibold transition-colors cursor-pointer select-none',
                 currentLang === lang.code
-                  ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400'
-                  : 'text-slate-800 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60 hover:text-slate-950 dark:hover:text-white'
+                  ? 'bg-blue-950/60 text-blue-400'
+                  : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
               ]"
             >
               <span class="flex items-center gap-2.5">
                 <img :src="lang.flagUrl" :alt="lang.name" width="16" height="16" loading="eager" decoding="async" class="w-4 h-4 rounded-full object-cover shrink-0 shadow-xs" />
                 <span>{{ lang.name }}</span>
               </span>
-              <i v-if="currentLang === lang.code" class="pi pi-check text-xs text-blue-600 dark:text-blue-400 font-bold shrink-0"></i>
+              <svg v-if="currentLang === lang.code" class="w-3.5 h-3.5 text-blue-400 font-bold shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+              </svg>
             </button>
           </div>
         </Transition>
       </div>
 
       <!-- Theme Switcher Pill -->
-      <button
-        type="button"
+      <button 
+        type="button" 
         @click="toggleTheme"
-        class="group px-3.5 py-2 rounded-full bg-white/95 dark:bg-slate-800/90 backdrop-blur-md hover:bg-white dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition-all duration-200 border border-slate-300/90 dark:border-slate-700/60 shadow-md shadow-slate-900/5 dark:shadow-black/20 flex items-center gap-2 text-xs font-semibold cursor-pointer select-none hover:scale-105 active:scale-95"
+        class="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full bg-slate-900/85 backdrop-blur-md border border-slate-700/60 text-xs font-medium text-slate-300 hover:text-white hover:border-slate-500 hover:bg-slate-800 transition duration-150 active:scale-95 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
         :title="isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
       >
-        <div class="relative w-4 h-4 flex items-center justify-center">
-          <i :class="['pi text-xs transition-transform duration-300 group-hover:rotate-45', isDark ? 'pi-sun text-amber-500' : 'pi-moon text-indigo-500']"></i>
-        </div>
-        <span class="text-[11px] font-bold">{{ isDark ? t('theme_light', 'Light Mode') : t('theme_dark', 'Dark Mode') }}</span>
+        <svg v-if="isDark" class="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" />
+        </svg>
+        <svg v-else class="w-3.5 h-3.5 text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+        </svg>
+        <span class="hidden sm:inline text-[11px] sm:text-xs font-bold">{{ isDark ? t('theme_light', 'Light Mode') : t('theme_dark', 'Dark Mode') }}</span>
       </button>
-    </div>
+    </header>
 
-    <!-- Interactive 3D Three.js Animated AI Background & Ambient Glow -->
-    <div class="absolute inset-0 overflow-hidden pointer-events-none z-0 select-none">
-      <AuthAnimatedBackground />
-
-      <!-- Animated Aurora Gradient Wave -->
-      <div class="absolute -inset-[100%] opacity-40 dark:opacity-30 animate-aurora bg-gradient-to-r from-blue-600/30 via-indigo-500/30 via-purple-500/30 via-sky-400/30 to-blue-600/30 blur-3xl"></div>
-
-      <!-- Tech Dot Grid Matrix Overlay -->
-      <div class="absolute inset-0 bg-[radial-gradient(#3b82f6_1.2px,transparent_1.2px)] dark:bg-[radial-gradient(#38bdf8_1.2px,transparent_1.2px)] [background-size:32px_32px] opacity-30 dark:opacity-20"></div>
-
-      <!-- Glowing Animated Orbs -->
-      <div class="absolute -top-32 -left-32 w-[550px] h-[550px] bg-blue-500/25 dark:bg-blue-600/30 rounded-full blur-[130px] animate-float-slow"></div>
-      <div class="absolute -bottom-32 -right-32 w-[600px] h-[600px] bg-indigo-500/25 dark:bg-indigo-600/30 rounded-full blur-[140px] animate-float-reverse"></div>
-    </div>
-
-    <!-- Master Centered Login Card (Clean & Focused) -->
-    <div :class="['w-full p-[1px] rounded-3xl bg-gradient-to-b from-blue-500/40 via-indigo-500/20 to-purple-500/30 dark:from-blue-500/30 dark:via-slate-800/40 dark:to-indigo-500/20 shadow-2xl shadow-slate-900/10 dark:shadow-black/60 relative z-10 my-auto transition-all duration-300', isAuthenticating ? 'max-w-sm' : 'max-w-md']">
-      <div :class="['w-full bg-white/95 dark:bg-[#0E172E]/95 backdrop-blur-2xl rounded-[23px] flex flex-col justify-center relative z-20 transition-all duration-300 font-[\'Kantumruy_Pro\',sans-serif]', isAuthenticating ? 'p-8 items-center text-center' : 'p-6 sm:p-8 space-y-4']">
+    <!-- Main Authentication Card -->
+    <main class="w-full max-w-[430px] my-auto py-3 sm:py-4 z-10 mx-auto">
+      <div class="bg-[#0b1329]/90 backdrop-blur-2xl border border-slate-800/90 shadow-2xl rounded-3xl p-5 sm:p-7 sm:px-8 transition-all duration-300 relative">
         
-        <!-- Header with Logo & Brand Name -->
-        <div v-if="!isAuthenticating" class="w-full space-y-4">
-          <div class="text-center pb-1 relative">
-            <div class="flex flex-col items-center justify-center gap-1.5">
-              <div class="relative group">
-                <div class="absolute -inset-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full blur opacity-35 group-hover:opacity-65 transition duration-300"></div>
-                <img
-                  :src="logoUrl"
-                  alt="Saint Paul Institute Official Crest Logo"
-                  width="56"
-                  height="56"
-                  fetchpriority="high"
-                  decoding="async"
-                  class="relative w-14 h-14 rounded-full shadow-lg object-contain ring-2 ring-blue-500/40 ring-offset-2 ring-offset-white dark:ring-offset-[#0E172E] bg-white p-0.5 transition-transform duration-300 group-hover:scale-105"
-                />
-              </div>
-              <div>
-                <h1 class="text-xl font-black tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 dark:from-blue-400 dark:via-indigo-300 dark:to-cyan-300 bg-clip-text text-transparent">
-                  SPI AI-ELMS
-                </h1>
-                <div class="mt-0.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-200/60 dark:border-blue-800/40 text-[10px] font-bold text-blue-700 dark:text-blue-300 tracking-wide">
-                  <span>{{ t('login_subtitle', 'វិទ្យាស្ថាន សន្តប៉ូល') }}</span>
-                </div>
+        <!-- Authenticating Loading State -->
+        <div v-if="isAuthenticating" class="w-full flex flex-col items-center justify-center text-center animate-fade-in select-none py-6">
+          <div class="relative mb-5">
+            <div class="absolute -inset-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-cyan-400 rounded-full blur-md opacity-50 animate-pulse"></div>
+            <div class="relative w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 via-cyan-500 to-blue-400 p-[2px] shadow-lg shadow-blue-500/25 flex items-center justify-center">
+              <div class="w-full h-full bg-[#080e1e] rounded-[14px] flex items-center justify-center p-1.5">
+                <img :src="logoUrl" alt="SPI Logo" class="w-full h-full object-contain rounded-full" />
               </div>
             </div>
           </div>
 
-          <div class="space-y-3.5">
-          
-            <!-- OAuth Notification Banner (e.g., Decline / Cancel / Error) -->
-            <Transition
-              enter-active-class="transition duration-300 ease-out"
-              enter-from-class="opacity-0 -translate-y-2"
-              enter-to-class="opacity-100 translate-y-0"
-              leave-active-class="transition duration-200 ease-in"
-              leave-from-class="opacity-100 translate-y-0"
-              leave-to-class="opacity-0 -translate-y-2"
-            >
-              <div
-                v-if="oauthNotice"
-                :class="[
-                  'rounded-2xl p-3.5 text-xs flex items-start justify-between gap-3 shadow-md transition-all border',
-                  oauthNotice.type === 'warning'
-                    ? 'bg-amber-500/15 border-amber-500/30 text-amber-300'
-                    : 'bg-rose-500/15 border-rose-500/30 text-rose-300'
-                ]"
-              >
-                <div class="flex items-start gap-2.5">
-                  <i
-                    :class="[
-                      'shrink-0 text-sm mt-0.5',
-                      oauthNotice.type === 'warning' ? 'pi pi-exclamation-triangle text-amber-400' : 'pi pi-times-circle text-rose-400'
-                    ]"
-                  ></i>
-                  <span class="font-medium text-[11px] leading-relaxed">{{ oauthNotice.message }}</span>
-                </div>
-                <button
-                  type="button"
-                  @click="oauthNotice = null"
-                  class="text-slate-400 hover:text-white p-0.5 rounded-full hover:bg-white/10 transition-colors shrink-0 cursor-pointer"
-                  title="Close"
-                >
-                  <i class="pi pi-times text-[10px]"></i>
-                </button>
-              </div>
-            </Transition>
-
-            <!-- Error Banner -->
-            <div v-if="form.errors.email" class="bg-rose-500/10 border border-rose-500/30 rounded-xl p-2.5 text-rose-600 dark:text-rose-300 text-xs flex items-start gap-2 shadow-sm animate-shake">
-              <i class="pi pi-exclamation-circle text-sm text-rose-500 shrink-0 mt-0.5"></i>
-              <span class="leading-tight font-medium">{{ form.errors.email }}</span>
-            </div>
-
-            <!-- Social Notice Toast -->
-            <div v-if="socialNotice" class="bg-blue-500/10 border border-blue-500/30 rounded-xl p-2.5 text-blue-700 dark:text-blue-300 text-xs flex items-center gap-2 transition-all">
-              <i class="pi pi-info-circle text-blue-500 text-sm shrink-0"></i>
-              <span class="font-medium text-[11px]">{{ socialNotice }}</span>
-            </div>
-
-            <!-- Caps Lock Alert -->
-            <div v-if="capsLockOn" class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-2 text-amber-700 dark:text-amber-300 text-xs flex items-center gap-2 animate-bounce">
-              <i class="pi pi-exclamation-triangle text-amber-500 text-sm shrink-0"></i>
-              <span class="text-[11px] font-semibold">{{ t('login_caps_lock_active', 'Caps Lock is ON') }}</span>
-            </div>
-
-            <!-- 1. Main Password Form or 2. Email OTP Flow -->
-            <div v-if="authMode === 'password'">
-              <!-- Role Selection Segmented Tabs -->
-              <div class="p-1 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 grid grid-cols-3 gap-1 mb-3.5">
-                <button
-                  v-for="role in ['student', 'teacher', 'admin']"
-                  :key="role"
-                  type="button"
-                  @click="form.role = role"
-                  :class="[
-                    'flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer select-none',
-                    form.role === role
-                      ? 'bg-blue-500/80 text-white shadow-xs shadow-blue-500/20 border border-blue-400/30'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60'
-                  ]"
-                >
-                  <i :class="['pi', role === 'student' ? 'pi-graduation-cap' : role === 'teacher' ? 'pi-book' : 'pi-shield']"></i>
-                  <span>{{ t(`login_tab_${role}`, role.charAt(0).toUpperCase() + role.slice(1)) }}</span>
-                </button>
-              </div>
-
-              <form @submit.prevent="submit" class="space-y-3.5">
-                <div class="space-y-1">
-                  <label class="block text-xs font-bold text-slate-800 dark:text-slate-100">{{ identityLabel }}</label>
-                  <div class="relative group">
-                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-300 group-focus-within:text-blue-600 transition-colors">
-                      <i class="pi pi-id-card text-sm"></i>
-                    </div>
-                    <input
-                      v-model="form.email"
-                      type="text"
-                      required
-                      autocomplete="username"
-                      :placeholder="identityPlaceholder"
-                      class="h-11 w-full pl-10 pr-9 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-800/80 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-300 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 text-xs sm:text-sm font-medium shadow-2xs"
-                    />
-                    <button v-if="form.email" type="button" @click="clearEmail" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-700 transition-colors cursor-pointer" title="Clear">
-                      <i class="pi pi-times-circle text-xs"></i>
-                    </button>
-                  </div>
-                </div>
-
-                <div class="space-y-1">
-                  <label class="block text-xs font-bold text-slate-800 dark:text-slate-100">{{ t('login_input_password_label', 'Password') }}</label>
-                  <div class="relative group">
-                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-300 group-focus-within:text-blue-600 transition-colors">
-                      <i class="pi pi-lock text-sm"></i>
-                    </div>
-                    <input
-                      v-model="form.password"
-                      :type="showPassword ? 'text' : 'password'"
-                      required
-                      autocomplete="current-password"
-                      :placeholder="t('login_input_password_placeholder', '••••••••••••••••')"
-                      class="h-11 w-full pl-10 pr-10 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-800/80 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-300 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 text-xs sm:text-sm font-medium shadow-2xs"
-                    />
-                    <button type="button" @click="showPassword = !showPassword" class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-700 transition-colors p-1.5 rounded-lg cursor-pointer">
-                      <i :class="['pi text-sm transition-transform duration-200 hover:scale-110', showPassword ? 'pi-eye-slash text-blue-600' : 'pi-eye']"></i>
-                    </button>
-                  </div>
-                </div>
-
-                <div class="flex items-center justify-between text-xs pt-0.5">
-                  <label class="inline-flex items-center gap-2 cursor-pointer select-none group">
-                    <div class="relative flex items-center justify-center">
-                      <input v-model="form.remember" type="checkbox" class="sr-only" />
-                      <div :class="['w-4 h-4 rounded-[4px] border-2 transition-all duration-200 flex items-center justify-center shadow-xs', form.remember ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white dark:bg-slate-900/90 border-slate-400 dark:border-slate-500']">
-                        <svg :class="['w-3 h-3 text-white', form.remember ? 'scale-100' : 'scale-0']" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3.5">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
-                        </svg>
-                      </div>
-                    </div>
-                    <span class="text-slate-800 dark:text-slate-100 font-bold text-[11px] sm:text-xs">{{ t('login_remember_me', 'Remember me') }}</span>
-                  </label>
-                  <Link href="/forgot-password" class="text-xs font-bold text-blue-600 dark:text-sky-400 hover:text-blue-700 dark:hover:text-sky-300 no-underline transition-colors">{{ t('login_forgot_password', 'Forgot Password?') }}</Link>
-                </div>
-
-                <button type="submit" :disabled="isSubmitting || form.processing" class="h-11 group w-full py-2.5 px-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm hover:shadow-md transition-all duration-200 inline-flex items-center justify-center gap-2.5 disabled:opacity-50 text-xs sm:text-sm tracking-wide cursor-pointer">
-                  <i v-if="isSubmitting || form.processing" class="pi pi-spin pi-spinner text-sm"></i>
-                  <template v-else>
-                    <span>{{ t('login_btn_submit', 'Sign In') }}</span>
-                    <span class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center group-hover:translate-x-1 transition-all"><svg class="w-3.5 h-3.5 fill-current text-white" viewBox="0 0 24 24"><path d="M13.293 6.293a1 1 0 0 1 1.414 0l5 5a1 1 0 0 1 0 1.414l-5 5a1 1 0 0 1-1.414-1.414L16.586 13H5a1 1 0 1 1 0-2h11.586l-3.293-3.293a1 1 0 0 1 0-1.414z"/></svg></span>
-                  </template>
-                </button>
-              </form>
-            </div>
-
-            <!-- Email OTP Flow -->
-            <div v-else class="space-y-4">
-              <div class="flex items-center justify-between pb-1 border-b border-slate-200/80 dark:border-slate-700/80">
-                <button type="button" @click="authMode = 'password'" class="text-xs font-semibold text-blue-600 dark:text-sky-400 hover:text-blue-700 dark:hover:text-sky-300 no-underline flex items-center gap-1.5 cursor-pointer py-1 transition-colors select-none">
-                  <i class="pi pi-arrow-left text-[10px]"></i>
-                  <span>{{ currentLang === 'km' ? 'ត្រឡប់ទៅ Password' : 'Back to Password' }}</span>
-                </button>
-                <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                  {{ otpStep === 1 ? (currentLang === 'km' ? 'ជំហានទី ១: ផ្ញើកូដ' : 'Step 1: Send OTP') : (currentLang === 'km' ? 'ជំហានទី ២: ផ្ទៀងផ្ទាត់' : 'Step 2: Verify') }}
-                </span>
-              </div>
-
-              <div v-if="otpStep === 1" class="space-y-3.5">
-                <div class="space-y-1.5">
-                  <label class="block text-xs font-bold text-slate-800 dark:text-slate-100">{{ currentLang === 'km' ? 'អាសយដ្ឋាន Gmail / អ៊ីមែលរបស់អ្នក' : 'Your Official Gmail / Email' }}</label>
-                  <div class="relative group">
-                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-300">
-                      <i class="pi pi-envelope text-sm"></i>
-                    </div>
-                    <input v-model="otpEmail" type="email" required placeholder="student@gmail.com" class="h-11 w-full pl-10 pr-4 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-800/80 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 transition-all text-xs sm:text-sm font-medium shadow-2xs" @keydown.enter.prevent="sendEmailOtp" />
-                  </div>
-                  <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">{{ currentLang === 'km' ? 'ប្រព័ន្ធនឹងផ្ញើលេខកូដសម្ងាត់ ៦ ខ្ទង់ពី info@spilms.tech ចូល Gmail របស់អ្នក។' : 'We will send a 6-digit verification code from info@spilms.tech to your Gmail.' }}</p>
-                </div>
-                <button type="button" @click="sendEmailOtp" :disabled="isOtpSending || !otpEmail" class="h-11 w-full py-2.5 px-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-xl shadow-md transition-all duration-200 inline-flex items-center justify-center gap-2 disabled:opacity-50 text-xs sm:text-sm cursor-pointer">
-                  <i v-if="isOtpSending" class="pi pi-spin pi-spinner text-sm"></i>
-                  <template v-else><i class="pi pi-send text-sm"></i><span>{{ currentLang === 'km' ? 'ផ្ញើលេខកូដ OTP ទៅកាន់ Gmail' : 'Send OTP to Gmail' }}</span></template>
-                </button>
-              </div>
-
-              <div v-else class="space-y-3.5">
-                <div class="space-y-1.5">
-                  <div class="flex items-center justify-between">
-                    <label class="block text-xs font-bold text-slate-800 dark:text-slate-100">{{ currentLang === 'km' ? 'វាយបញ្ចូលលេខកូដ OTP ៦ ខ្ទង់' : 'Enter 6-digit OTP Code' }}</label>
-                    <button type="button" @click="otpStep = 1" class="text-[11px] text-blue-600 dark:text-sky-400 hover:text-blue-700 dark:hover:text-sky-300 no-underline font-medium cursor-pointer transition-colors">{{ currentLang === 'km' ? 'ប្តូរ Email' : 'Edit email' }}</button>
-                  </div>
-                  <p class="text-[11px] text-slate-500 dark:text-slate-400">{{ currentLang === 'km' ? 'ផ្ញើទៅកាន់:' : 'Sent to:' }} <strong class="text-blue-600 dark:text-sky-300">{{ otpEmail }}</strong></p>
-                  <div class="relative">
-                    <input v-model="otpCode" type="text" maxlength="6" required placeholder="••••••" class="h-12 w-full text-center tracking-[12px] text-xl font-mono font-bold rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 transition-all shadow-2xs" @keydown.enter.prevent="verifyEmailOtp" />
-                  </div>
-                  <div class="flex items-center justify-between text-[11px] pt-1">
-                    <span v-if="otpCountdown > 0" class="text-slate-500 dark:text-slate-400">{{ currentLang === 'km' ? 'ផុតកំណត់ក្នុងរយៈពេល:' : 'Expires in:' }} <span class="font-bold text-amber-500">{{ formattedOtpTime }}</span></span>
-                    <span v-else class="text-rose-500 font-bold">{{ currentLang === 'km' ? 'កូដផុតកំណត់ហើយ' : 'Code expired' }}</span>
-                    <button type="button" @click="sendEmailOtp" :disabled="isOtpSending" class="text-blue-600 dark:text-sky-400 hover:text-blue-700 dark:hover:text-sky-300 no-underline font-bold disabled:opacity-50 cursor-pointer transition-colors">{{ currentLang === 'km' ? 'ផ្ញើម្តងទៀត' : 'Resend Code' }}</button>
-                  </div>
-                </div>
-                <button type="button" @click="verifyEmailOtp" :disabled="isOtpVerifying || otpCode.length < 6" class="h-11 w-full py-2.5 px-5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-xl shadow-md transition-all duration-200 inline-flex items-center justify-center gap-2 disabled:opacity-50 text-xs sm:text-sm cursor-pointer">
-                  <i v-if="isOtpVerifying" class="pi pi-spin pi-spinner text-sm"></i>
-                  <template v-else><i class="pi pi-check-circle text-sm"></i><span>{{ currentLang === 'km' ? 'ផ្ទៀងផ្ទាត់ & ចូលប្រើប្រព័ន្ធ' : 'Verify & Sign In' }}</span></template>
-                </button>
-              </div>
-            </div>
-
-            <!-- Social Logins Section (Google, Telegram, Email OTP under OR) -->
-            <div v-if="authMode === 'password'" class="space-y-2 pt-0.5">
-              <div class="flex items-center my-3.5 text-slate-400 dark:text-slate-500">
-                <div class="flex-grow border-t border-slate-300 dark:border-slate-600"></div>
-                <span class="px-4 text-xs font-bold text-slate-500 dark:text-slate-300 select-none tracking-wider">
-                  {{ t('login_or', 'OR') }}
-                </span>
-                <div class="flex-grow border-t border-slate-300 dark:border-slate-600"></div>
-              </div>
-
-              <div class="grid grid-cols-3 gap-2">
-                <!-- Google Button -->
-                <button
-                  type="button"
-                  :disabled="isAuthenticating"
-                  @click="redirectToGoogleOAuth"
-                  class="h-10.5 py-2 px-2 bg-white dark:bg-slate-800/80 hover:bg-slate-50/90 dark:hover:bg-slate-700/60 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white transition-all duration-150 flex items-center justify-center gap-1.5 hover:shadow-xs active:scale-98 shadow-2xs cursor-pointer focus:outline-none select-none disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  <template v-if="isGoogleLoading">
-                    <i class="pi pi-spin pi-spinner text-rose-500 text-sm"></i>
-                  </template>
-                  <template v-else>
-                    <i class="pi pi-google text-rose-500 text-sm"></i>
-                    <span>Google</span>
-                  </template>
-                </button>
-
-                <!-- Telegram Button -->
-                <button
-                  type="button"
-                  :disabled="isAuthenticating"
-                  @click="redirectToTelegramOAuth"
-                  class="h-10.5 py-2 px-2 bg-white dark:bg-slate-800/80 hover:bg-slate-50/90 dark:hover:bg-slate-700/60 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white transition-all duration-150 flex items-center justify-center gap-1.5 hover:shadow-xs active:scale-98 shadow-2xs cursor-pointer focus:outline-none select-none disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  <template v-if="isTelegramLoading">
-                    <i class="pi pi-spin pi-spinner text-sky-500 text-sm"></i>
-                  </template>
-                  <template v-else>
-                    <i class="pi pi-telegram text-sky-500 text-sm"></i>
-                    <span>Telegram</span>
-                  </template>
-                </button>
-
-                <!-- Email OTP Button under OR -->
-                <button
-                  type="button"
-                  :disabled="isAuthenticating"
-                  @click="authMode = 'otp'; otpStep = 1"
-                  class="h-10.5 py-2 px-2 bg-white dark:bg-slate-800/80 hover:bg-blue-50/90 dark:hover:bg-slate-700/60 border border-slate-300 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-150 flex items-center justify-center gap-1.5 hover:shadow-xs active:scale-98 shadow-2xs cursor-pointer focus:outline-none select-none disabled:opacity-60 disabled:cursor-not-allowed"
-                  title="Gmail / Email OTP Login"
-                >
-                  <i class="pi pi-envelope text-blue-500 text-sm"></i>
-                  <span>Email</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Registration Callout Footer (High Contrast in Dark Mode) -->
-            <div class="pt-2.5 border-t border-slate-200 dark:border-slate-800/80 text-center text-xs">
-              <p class="font-medium text-[11px] text-slate-700 dark:text-slate-200 flex items-center justify-center gap-1.5">
-                <span>{{ t('login_dont_have_account', 'Do not have an account?') }}</span>
-                <Link href="/register" class="group font-bold text-blue-600 dark:text-sky-400 hover:text-blue-700 dark:hover:text-sky-300 transition-all duration-150 active:scale-95 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none select-none inline-flex items-center gap-1.5">
-                  <span>{{ t('login_register_now', 'Register Account') }}</span>
-                  <span class="w-6 h-6 rounded-full bg-blue-500/10 dark:bg-sky-500/20 border border-blue-500/20 dark:border-sky-400/30 flex items-center justify-center text-blue-600 dark:text-sky-400 group-hover:bg-blue-600 group-hover:text-white dark:group-hover:bg-sky-400 dark:group-hover:text-slate-950 transition-all duration-300 group-hover:translate-x-1 shadow-2xs shrink-0">
-                    <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                      <path d="M13.293 6.293a1 1 0 0 1 1.414 0l5 5a1 1 0 0 1 0 1.414l-5 5a1 1 0 0 1-1.414-1.414L16.586 13H5a1 1 0 1 1 0-2h11.586l-3.293-3.293a1 1 0 0 1 0-1.414z"/>
-                    </svg>
-                  </span>
-                </Link>
-              </p>
-            </div>
-
-            <!-- Privacy & Terms Legal Footer -->
-            <div class="mt-2.5 pt-2 flex items-center justify-center gap-3 text-[11px] text-slate-500 dark:text-slate-400 select-none">
-              <Link href="/privacy" class="hover:text-blue-600 dark:hover:text-sky-400 hover:underline transition-colors">{{ t('privacy_policy', 'Privacy Policy') }}</Link>
-              <span>•</span>
-              <Link href="/terms" class="hover:text-blue-600 dark:hover:text-sky-400 hover:underline transition-colors">{{ t('terms_of_service', 'Terms of Service') }}</Link>
-            </div>
-          </div>
-        </div>
-
-        <!-- ២. ផ្ទាំង LOADING (បង្ហាញតែពេលកំពុង Authenticate ជំនួស Form ខាងលើ) -->
-        <div v-else class="w-full flex flex-col items-center justify-center text-center animate-fade-in select-none py-2">
-          
-          <!-- Logo E-LMS with Soft Glow -->
-          <div class="relative mb-4">
-            <div class="absolute -inset-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-sky-400 rounded-full blur-md opacity-40 animate-pulse"></div>
-            <div class="relative w-18 h-18 rounded-full p-1 bg-white dark:bg-slate-800 shadow-md">
-              <img 
-                :src="logoUrl" 
-                alt="E-LMS Logo" 
-                class="w-full h-full object-cover rounded-full"
-              />
-            </div>
-          </div>
-
-          <!-- Spinner & Title -->
-          <div class="flex items-center justify-center gap-2 mb-1.5">
-            <i class="pi pi-spin pi-spinner text-sm text-blue-600 dark:text-sky-400"></i>
-            <h3 class="text-base font-bold text-slate-800 dark:text-white tracking-wide">
+          <div class="flex items-center justify-center gap-2 mb-2">
+            <svg class="animate-spin w-4 h-4 text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <h3 class="text-sm sm:text-base font-bold text-white tracking-wide">
               {{ authLoadingTitle || (currentLang === 'km' ? 'កំពុងរៀបចំ Dashboard របស់អ្នក...' : 'Setting up your dashboard...') }}
             </h3>
           </div>
-          <p class="text-xs text-slate-500 dark:text-slate-400 font-medium mb-6 max-w-xs leading-relaxed">
+          <p class="text-xs text-slate-400 font-medium mb-6 max-w-xs leading-relaxed">
             {{ authLoadingSubtitle || (currentLang === 'km' ? 'សូមរង់ចាំមួយភ្លែត ប្រព័ន្ធកំពុងដំណើរការផ្ទៀងផ្ទាត់' : 'Please wait a moment while verifying your account') }}
           </p>
 
-          <!-- Modern Loading Progress Bar -->
-          <div class="w-52 bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden p-0.5 border border-slate-200/80 dark:border-slate-700">
-            <div class="bg-gradient-to-r from-blue-600 via-sky-400 to-teal-400 h-full rounded-full animate-indeterminate"></div>
+          <!-- Indeterminate Progress Bar -->
+          <div class="w-48 bg-slate-800 rounded-full h-1.5 overflow-hidden p-0.5 border border-slate-700">
+            <div class="bg-gradient-to-r from-blue-500 via-cyan-400 to-teal-400 h-full rounded-full animate-indeterminate"></div>
+          </div>
+        </div>
+
+        <!-- Normal Login Form & Controls -->
+        <div v-else>
+          <!-- App Logo & Branding -->
+          <div class="flex flex-col items-center text-center mb-4 sm:mb-5">
+            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-blue-600 via-cyan-500 to-blue-400 p-[2px] shadow-lg shadow-blue-500/25 mb-2.5 flex items-center justify-center">
+              <div class="w-full h-full bg-[#080e1e] rounded-[14px] flex items-center justify-center p-1.5">
+                <img :src="logoUrl" alt="Saint Paul Institute" class="w-full h-full object-contain rounded-full" />
+              </div>
+            </div>
+            <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white">SPI AI-ELMS</h1>
+            <p class="text-[10px] sm:text-xs text-slate-400 mt-1 font-medium bg-slate-900/80 border border-slate-800 px-3 py-0.5 rounded-full inline-block">
+              {{ t('login_subtitle', 'Saint Paul Institute') }}
+            </p>
           </div>
 
+          <!-- OAuth / System Alerts -->
+          <Transition
+            enter-active-class="transition duration-300 ease-out"
+            enter-from-class="opacity-0 -translate-y-2"
+            enter-to-class="opacity-100 translate-y-0"
+            leave-active-class="transition duration-200 ease-in"
+            leave-from-class="opacity-100 translate-y-0"
+            leave-to-class="opacity-0 -translate-y-2"
+          >
+            <div
+              v-if="oauthNotice"
+              :class="[
+                'rounded-xl p-3 text-xs flex items-start justify-between gap-2.5 shadow-md mb-4 border',
+                oauthNotice.type === 'warning'
+                  ? 'bg-amber-500/15 border-amber-500/30 text-amber-300'
+                  : 'bg-rose-500/15 border-rose-500/30 text-rose-300'
+              ]"
+            >
+              <div class="flex items-start gap-2">
+                <svg v-if="oauthNotice.type === 'warning'" class="w-4 h-4 text-amber-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <svg v-else class="w-4 h-4 text-rose-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="font-medium text-[11px] leading-relaxed">{{ oauthNotice.message }}</span>
+              </div>
+              <button
+                type="button"
+                @click="oauthNotice = null"
+                class="text-slate-400 hover:text-white p-0.5 rounded-md hover:bg-white/10 transition-colors shrink-0 cursor-pointer"
+                title="Close"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+          </Transition>
+
+          <!-- Error Alert Banner -->
+          <div v-if="form.errors.email" class="bg-rose-500/10 border border-rose-500/30 rounded-xl p-2.5 text-rose-300 text-xs flex items-start gap-2 shadow-sm animate-shake mb-4">
+            <svg class="w-4 h-4 text-rose-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span class="leading-tight font-medium text-[11px]">{{ form.errors.email }}</span>
+          </div>
+
+          <!-- Caps Lock Alert -->
+          <div v-if="capsLockOn" class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-2 text-amber-300 text-xs flex items-center gap-2 mb-3">
+            <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span class="text-[11px] font-semibold">{{ t('login_caps_lock_active', 'Caps Lock is ON') }}</span>
+          </div>
+
+          <!-- Social Notice Toast -->
+          <div v-if="socialNotice" class="bg-blue-500/10 border border-blue-500/30 rounded-xl p-2.5 text-blue-300 text-xs flex items-center gap-2 mb-3">
+            <svg class="w-4 h-4 text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span class="font-medium text-[11px]">{{ socialNotice }}</span>
+          </div>
+
+          <!-- Main Password Form Mode -->
+          <div v-if="authMode === 'password'">
+            <!-- Role Switcher (3 Tabs: Student, Teacher, Admin) -->
+            <div class="grid grid-cols-3 gap-1 bg-[#060b18] p-1 rounded-xl border border-slate-800/80 mb-4 sm:mb-5">
+              <!-- Student -->
+              <button 
+                type="button" 
+                @click="selectRole('student')" 
+                :class="[
+                  'min-w-0 min-h-[42px] py-2 px-1 sm:px-2 text-[11px] sm:text-xs font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer select-none active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
+                  selectedRole === 'student' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 border border-blue-400/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+                ]"
+              >
+                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                </svg>
+                <span class="truncate">{{ t('login_tab_student', 'Student') }}</span>
+              </button>
+
+              <!-- Teacher -->
+              <button 
+                type="button" 
+                @click="selectRole('teacher')" 
+                :class="[
+                  'min-w-0 min-h-[42px] py-2 px-1 sm:px-2 text-[11px] sm:text-xs font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer select-none active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
+                  selectedRole === 'teacher' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 border border-blue-400/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+                ]"
+              >
+                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span class="truncate">{{ t('login_tab_teacher', 'Teacher') }}</span>
+              </button>
+
+              <!-- Admin -->
+              <button 
+                type="button" 
+                @click="selectRole('admin')" 
+                :class="[
+                  'min-w-0 min-h-[42px] py-2 px-1 sm:px-2 text-[11px] sm:text-xs font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer select-none active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
+                  selectedRole === 'admin' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 border border-blue-400/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+                ]"
+              >
+                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <span class="truncate">{{ t('login_tab_admin', 'Admin') }}</span>
+              </button>
+            </div>
+
+            <!-- Form Fields -->
+            <form @submit.prevent="submit" class="space-y-3.5 sm:space-y-4">
+              <!-- Identifier Field -->
+              <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1.5">{{ identityLabel }}</label>
+                <div class="relative group">
+                  <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-500 group-focus-within:text-blue-400 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+                    </svg>
+                  </span>
+                  <input 
+                    v-model="form.email"
+                    type="text" 
+                    required 
+                    autocomplete="username"
+                    :placeholder="identityPlaceholder" 
+                    class="w-full h-11 sm:h-12 pl-10 pr-9 bg-[#070e1e] border border-slate-700/80 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus-visible:ring-2 focus-visible:ring-blue-500 transition duration-150"
+                  />
+                  <button 
+                    v-if="form.email" 
+                    type="button" 
+                    @click="clearEmail" 
+                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-300 transition cursor-pointer"
+                    title="Clear"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Password Field -->
+              <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1.5">{{ t('login_input_password_label', 'Password') }}</label>
+                <div class="relative group">
+                  <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-500 group-focus-within:text-blue-400 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </span>
+                  <input 
+                    v-model="form.password"
+                    :type="showPassword ? 'text' : 'password'" 
+                    required 
+                    autocomplete="current-password"
+                    :placeholder="t('login_input_password_placeholder', '••••••••••••')" 
+                    class="w-full h-11 sm:h-12 pl-10 pr-10 bg-[#070e1e] border border-slate-700/80 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus-visible:ring-2 focus-visible:ring-blue-500 transition duration-150"
+                  />
+                  <button 
+                    type="button" 
+                    @click="showPassword = !showPassword"
+                    class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-500 hover:text-slate-300 transition cursor-pointer min-w-[36px] justify-center focus:outline-none"
+                    :title="showPassword ? 'Hide password' : 'Show password'"
+                  >
+                    <!-- Eye On -->
+                    <svg v-if="!showPassword" class="w-4 h-4 transition-transform duration-150 hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    <!-- Eye Off -->
+                    <svg v-else class="w-4 h-4 text-blue-400 transition-transform duration-150 hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Remember & Forgot Password -->
+              <div class="flex items-center justify-between text-xs pt-0.5">
+                <label class="flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white select-none">
+                  <input 
+                    v-model="form.remember" 
+                    type="checkbox" 
+                    class="w-4 h-4 rounded bg-[#070e1e] border-slate-700 text-blue-600 focus:ring-0 focus:ring-offset-0 focus-visible:ring-2 focus-visible:ring-blue-500 cursor-pointer" 
+                  />
+                  <span class="text-[11px] sm:text-xs">{{ t('login_remember_me', 'Remember me') }}</span>
+                </label>
+                <Link href="/forgot-password" class="text-blue-400 hover:text-blue-300 font-medium transition text-[11px] sm:text-xs">
+                  {{ t('login_forgot_password', 'Forgot Password?') }}
+                </Link>
+              </div>
+
+              <!-- Submit Button -->
+              <button 
+                type="submit" 
+                :disabled="isSubmitting || form.processing" 
+                class="w-full min-h-[44px] sm:min-h-[48px] bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-semibold py-2.5 sm:py-3 rounded-xl shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 active:scale-[0.98] transition duration-150 mt-2 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+              >
+                <svg v-if="isSubmitting || form.processing" class="animate-spin w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <template v-else>
+                  <span class="text-xs sm:text-sm">{{ t('login_btn_submit', 'Sign In') }}</span>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </template>
+              </button>
+            </form>
+
+            <!-- Divider -->
+            <div class="relative my-4 sm:my-5 text-center">
+              <div class="absolute inset-0 flex items-center">
+                <div class="w-full border-t border-slate-800"></div>
+              </div>
+              <span class="relative bg-[#0b1329] px-3 text-[11px] font-bold tracking-wider text-slate-500 uppercase select-none">{{ t('login_or', 'OR') }}</span>
+            </div>
+
+            <!-- 3 Buttons: Google, Telegram, Email -->
+            <div class="grid grid-cols-3 gap-1.5 sm:gap-2.5">
+              <!-- Google -->
+              <button 
+                type="button" 
+                :disabled="isAuthenticating"
+                @click="redirectToGoogleOAuth"
+                class="min-w-0 min-h-[44px] sm:min-h-[46px] flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 px-1 sm:px-2 rounded-xl bg-[#070e1e] hover:bg-[#101b38] border border-slate-800 hover:border-slate-700 text-xs font-medium text-slate-200 transition duration-150 active:scale-95 cursor-pointer select-none disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              >
+                <svg v-if="isGoogleLoading" class="animate-spin w-4 h-4 text-rose-500 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <template v-else>
+                  <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+                  </svg>
+                  <span class="truncate text-[11px] sm:text-xs">Google</span>
+                </template>
+              </button>
+
+              <!-- Telegram -->
+              <button 
+                type="button" 
+                :disabled="isAuthenticating"
+                @click="redirectToTelegramOAuth"
+                class="min-w-0 min-h-[44px] sm:min-h-[46px] flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 px-1 sm:px-2 rounded-xl bg-[#070e1e] hover:bg-[#101b38] border border-slate-800 hover:border-slate-700 text-xs font-medium text-slate-200 transition duration-150 active:scale-95 cursor-pointer select-none disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              >
+                <svg v-if="isTelegramLoading" class="animate-spin w-4 h-4 text-[#229ED9] shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <template v-else>
+                  <svg class="w-4 h-4 text-[#229ED9] shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.56 8.16l-1.97 9.28c-.15.65-.53.81-1.08.51l-3-2.21-1.45 1.39c-.16.16-.3.3-.61.3l.22-3.05 5.56-5.02c.24-.22-.05-.34-.38-.13l-6.87 4.33-2.96-.92c-.64-.2-.66-.64.13-.95l11.58-4.46c.54-.2 1.01.12.83.92z"/>
+                  </svg>
+                  <span class="truncate text-[11px] sm:text-xs">Telegram</span>
+                </template>
+              </button>
+
+              <!-- Email OTP Toggle -->
+              <button 
+                type="button" 
+                :disabled="isAuthenticating"
+                @click="handleSocialLogin('Email')"
+                class="min-w-0 min-h-[44px] sm:min-h-[46px] flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 px-1 sm:px-2 rounded-xl bg-[#070e1e] hover:bg-[#101b38] border border-slate-800 hover:border-slate-700 text-xs font-medium text-slate-200 transition duration-150 active:scale-95 cursor-pointer select-none disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              >
+                <svg class="w-4 h-4 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <span class="truncate text-[11px] sm:text-xs">Email</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Email OTP Flow Mode -->
+          <div v-else class="space-y-4">
+            <div class="flex items-center justify-between pb-1 border-b border-slate-800">
+              <button 
+                type="button" 
+                @click="authMode = 'password'" 
+                class="text-xs font-semibold text-blue-400 hover:text-blue-300 flex items-center gap-1.5 cursor-pointer py-1 transition-colors select-none"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                <span>{{ currentLang === 'km' ? 'ត្រឡប់ទៅ Password' : 'Back to Password' }}</span>
+              </button>
+              <span class="text-[11px] font-bold text-slate-400">
+                {{ otpStep === 1 ? (currentLang === 'km' ? 'ជំហានទី ១: ផ្ញើកូដ' : 'Step 1: Send OTP') : (currentLang === 'km' ? 'ជំហានទី ២: ផ្ទៀងផ្ទាត់' : 'Step 2: Verify') }}
+              </span>
+            </div>
+
+            <!-- OTP Step 1: Send OTP -->
+            <div v-if="otpStep === 1" class="space-y-3.5">
+              <div class="space-y-1.5">
+                <label class="block text-xs font-medium text-slate-300">{{ currentLang === 'km' ? 'អាសយដ្ឋាន Gmail / អ៊ីមែលរបស់អ្នក' : 'Your Official Gmail / Email' }}</label>
+                <div class="relative group">
+                  <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500 group-focus-within:text-blue-400 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                  </span>
+                  <input 
+                    v-model="otpEmail" 
+                    type="email" 
+                    required 
+                    placeholder="student@gmail.com" 
+                    class="w-full h-11 sm:h-12 pl-10 pr-4 bg-[#070e1e] border border-slate-700/80 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition duration-150" 
+                    @keydown.enter.prevent="sendEmailOtp" 
+                  />
+                </div>
+                <p class="text-[11px] text-slate-400 leading-relaxed">{{ currentLang === 'km' ? 'ប្រព័ន្ធនឹងផ្ញើលេខកូដសម្ងាត់ ៦ ខ្ទង់ពី info@spilms.tech ចូល Gmail របស់អ្នក។' : 'We will send a 6-digit verification code from info@spilms.tech to your Gmail.' }}</p>
+              </div>
+              <button 
+                type="button" 
+                @click="sendEmailOtp" 
+                :disabled="isOtpSending || !otpEmail" 
+                class="w-full min-h-[44px] sm:min-h-[48px] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold py-2.5 sm:py-3 rounded-xl shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 active:scale-[0.98] transition duration-150 disabled:opacity-50 text-xs sm:text-sm cursor-pointer"
+              >
+                <svg v-if="isOtpSending" class="animate-spin w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                <template v-else>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                  <span>{{ currentLang === 'km' ? 'ផ្ញើលេខកូដ OTP ទៅកាន់ Gmail' : 'Send OTP to Gmail' }}</span>
+                </template>
+              </button>
+            </div>
+
+            <!-- OTP Step 2: Verify OTP -->
+            <div v-else class="space-y-3.5">
+              <div class="space-y-1.5">
+                <div class="flex items-center justify-between">
+                  <label class="block text-xs font-medium text-slate-300">{{ currentLang === 'km' ? 'វាយបញ្ចូលលេខកូដ OTP ៦ ខ្ទង់' : 'Enter 6-digit OTP Code' }}</label>
+                  <button type="button" @click="otpStep = 1" class="text-[11px] text-blue-400 hover:text-blue-300 font-medium cursor-pointer transition-colors">{{ currentLang === 'km' ? 'ប្តូរ Email' : 'Edit email' }}</button>
+                </div>
+                <p class="text-[11px] text-slate-400">{{ currentLang === 'km' ? 'ផ្ញើទៅកាន់:' : 'Sent to:' }} <strong class="text-cyan-400">{{ otpEmail }}</strong></p>
+                <div class="relative">
+                  <input 
+                    v-model="otpCode" 
+                    type="text" 
+                    maxlength="6" 
+                    required 
+                    placeholder="••••••" 
+                    class="h-12 w-full text-center tracking-[10px] text-xl font-mono font-bold rounded-xl border border-slate-700/80 bg-[#070e1e] text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all" 
+                    @keydown.enter.prevent="verifyEmailOtp" 
+                  />
+                </div>
+                <div class="flex items-center justify-between text-[11px] pt-1">
+                  <span v-if="otpCountdown > 0" class="text-slate-400">{{ currentLang === 'km' ? 'ផុតកំណត់ក្នុងរយៈពេល:' : 'Expires in:' }} <span class="font-bold text-amber-400">{{ formattedOtpTime }}</span></span>
+                  <span v-else class="text-rose-400 font-bold">{{ currentLang === 'km' ? 'កូដផុតកំណត់ហើយ' : 'Code expired' }}</span>
+                  <button type="button" @click="sendEmailOtp" :disabled="isOtpSending" class="text-blue-400 hover:text-blue-300 font-bold disabled:opacity-50 cursor-pointer transition-colors">{{ currentLang === 'km' ? 'ផ្ញើម្តងទៀត' : 'Resend Code' }}</button>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                @click="verifyEmailOtp" 
+                :disabled="isOtpVerifying || otpCode.length < 6" 
+                class="w-full min-h-[44px] sm:min-h-[48px] bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold py-2.5 sm:py-3 rounded-xl shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 active:scale-[0.98] transition duration-150 disabled:opacity-50 text-xs sm:text-sm cursor-pointer"
+              >
+                <svg v-if="isOtpVerifying" class="animate-spin w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                <template v-else>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <span>{{ currentLang === 'km' ? 'ផ្ទៀងផ្ទាត់ & ចូលប្រើប្រព័ន្ធ' : 'Verify & Sign In' }}</span>
+                </template>
+              </button>
+            </div>
+          </div>
+
+          <!-- Register Link -->
+          <p class="text-center text-xs text-slate-400 mt-5 sm:mt-6">
+            {{ t('login_dont_have_account', "Don't have an account?") }}
+            <Link href="/register" class="text-blue-400 hover:text-blue-300 font-semibold ml-1 inline-flex items-center gap-1 transition">
+              <span>{{ t('login_register_now', 'Register Account') }}</span>
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+            </Link>
+          </p>
+
+          <!-- Terms & Policy -->
+          <div class="flex justify-center gap-4 text-[11px] text-slate-500 mt-4 sm:mt-5 pt-3.5 border-t border-slate-800/80">
+            <Link href="/privacy" class="hover:text-slate-400 transition">{{ t('privacy_policy', 'Privacy Policy') }}</Link>
+            <span>•</span>
+            <Link href="/terms" class="hover:text-slate-400 transition">{{ t('terms_of_service', 'Terms of Service') }}</Link>
+          </div>
         </div>
+
+      </div>
+    </main>
+
+    <!-- Success Modal Alert -->
+    <Transition
+      enter-active-class="transition duration-300 ease-out"
+      enter-from-class="opacity-0 scale-90 translate-y-2"
+      enter-to-class="opacity-100 scale-100 translate-y-0"
+      leave-active-class="transition duration-200 ease-in"
+      leave-from-class="opacity-100 scale-100 translate-y-0"
+      leave-to-class="opacity-0 scale-90 translate-y-2"
+    >
+      <div v-if="showSuccessModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm select-none">
+        <div class="max-w-xs w-full bg-[#0b1329] rounded-3xl p-6 shadow-2xl border border-emerald-500/30 text-center flex flex-col items-center space-y-3.5 transform transition-all">
+          <div class="relative flex items-center justify-center">
+            <div class="absolute -inset-2 bg-gradient-to-r from-emerald-500/30 to-teal-500/30 rounded-full blur-md animate-pulse"></div>
+            <div class="relative w-14 h-14 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-lg shadow-emerald-500/25 ring-4 ring-[#0b1329]">
+              <svg class="w-7 h-7 text-white stroke-current" fill="none" viewBox="0 0 24 24" stroke-width="3">
+                <path stroke-linecap="round" stroke-linejoin="round" class="checkmark-path" d="M4.5 12.75l6 6 9-13.5"/>
+              </svg>
+            </div>
+          </div>
+          
+          <div class="space-y-1">
+            <h3 class="text-base font-extrabold text-white">
+              {{ statusMessage ? t('login_modal_status_title', 'ជូនដំណឹង') : t('login_modal_success_title', 'ចូលប្រើប្រាស់ជោគជ័យ!') }}
+            </h3>
+            <p class="text-xs text-slate-400 font-medium leading-relaxed">
+              {{ statusMessage || t('login_modal_success_msg', 'កំពុងបញ្ជូនអ្នកទៅកាន់ទំព័រដើម...') }}
+            </p>
+          </div>
+
+          <button
+            v-if="statusMessage"
+            type="button"
+            @click="showSuccessModal = false"
+            class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs sm:text-sm font-bold shadow-lg shadow-emerald-600/25 transition-all duration-150 cursor-pointer select-none"
+          >
+            {{ t('login_modal_btn_login_now', 'ចូលប្រព័ន្ធឥឡូវនេះ (Login)') }}
+          </button>
         </div>
       </div>
+    </Transition>
 
-      <!-- Compact Success Alert Modal (Checkmark Icon) -->
-      <Transition
-        enter-active-class="transition duration-300 ease-out"
-        enter-from-class="opacity-0 scale-90 translate-y-2"
-        enter-to-class="opacity-100 scale-100 translate-y-0"
-        leave-active-class="transition duration-200 ease-in"
-        leave-from-class="opacity-100 scale-100 translate-y-0"
-        leave-to-class="opacity-0 scale-90 translate-y-2"
-      >
-        <div v-if="showSuccessModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm select-none">
-          <div class="max-w-xs w-full bg-white dark:bg-[#0E172E] rounded-3xl p-6 shadow-2xl border border-emerald-500/30 text-center flex flex-col items-center space-y-3.5 transform transition-all">
-            <!-- Icon with glowing ring -->
-            <div class="relative flex items-center justify-center">
-              <div class="absolute -inset-2 bg-gradient-to-r from-emerald-500/30 to-teal-500/30 rounded-full blur-md animate-pulse"></div>
-              <div class="relative w-14 h-14 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-lg shadow-emerald-500/25 ring-4 ring-white dark:ring-[#0E172E]">
-                <svg class="w-7 h-7 text-white stroke-current" fill="none" viewBox="0 0 24 24" stroke-width="3">
-                  <path stroke-linecap="round" stroke-linejoin="round" class="checkmark-path" d="M4.5 12.75l6 6 9-13.5"/>
-                </svg>
-              </div>
+    <!-- Error Modal Alert -->
+    <Transition
+      enter-active-class="transition duration-300 ease-out"
+      enter-from-class="opacity-0 scale-90 translate-y-2"
+      enter-to-class="opacity-100 scale-100 translate-y-0"
+      leave-active-class="transition duration-200 ease-in"
+      leave-from-class="opacity-100 scale-100 translate-y-0"
+      leave-to-class="opacity-0 scale-90 translate-y-2"
+    >
+      <div v-if="showErrorModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm select-none">
+        <div class="max-w-xs w-full bg-[#0b1329] rounded-3xl p-6 shadow-2xl border border-rose-500/30 text-center flex flex-col items-center space-y-3.5 transform transition-all">
+          <div class="relative flex items-center justify-center">
+            <div class="absolute -inset-2 bg-gradient-to-r from-rose-500/30 to-amber-500/30 rounded-full blur-md animate-pulse"></div>
+            <div class="relative w-14 h-14 rounded-full bg-gradient-to-br from-amber-500 via-rose-500 to-rose-600 text-white flex items-center justify-center shadow-lg shadow-rose-500/25 ring-4 ring-[#0b1329]">
+              <span class="text-3xl font-black font-sans leading-none">?</span>
             </div>
-            
-            <div class="space-y-1">
-              <h3 class="text-base font-extrabold text-slate-900 dark:text-white">
-                {{ statusMessage ? t('login_modal_status_title', 'ជូនដំណឹង') : t('login_modal_success_title', 'ចូលប្រើប្រាស់ជោគជ័យ!') }}
-              </h3>
-              <p class="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-                {{ statusMessage || t('login_modal_success_msg', 'កំពុងបញ្ជូនអ្នកទៅកាន់ទំព័រដើម...') }}
-              </p>
-            </div>
-
-            <!-- Action Button: Login Now or Got It -->
-            <button
-              v-if="statusMessage"
-              type="button"
-              @click="showSuccessModal = false"
-              class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs sm:text-sm font-bold shadow-lg shadow-emerald-600/25 transition-all duration-150 cursor-pointer select-none"
-            >
-              {{ t('login_modal_btn_login_now', 'ចូលប្រព័ន្ធឥឡូវនេះ (Login)') }}
-            </button>
           </div>
-        </div>
-      </Transition>
-
-      <!-- Compact Error Alert Modal (Question Mark Icon) -->
-      <Transition
-        enter-active-class="transition duration-300 ease-out"
-        enter-from-class="opacity-0 scale-90 translate-y-2"
-        enter-to-class="opacity-100 scale-100 translate-y-0"
-        leave-active-class="transition duration-200 ease-in"
-        leave-from-class="opacity-100 scale-100 translate-y-0"
-        leave-to-class="opacity-0 scale-90 translate-y-2"
-      >
-        <div v-if="showErrorModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm select-none">
-          <div class="max-w-xs w-full bg-white dark:bg-[#0E172E] rounded-3xl p-6 shadow-2xl border border-rose-500/30 text-center flex flex-col items-center space-y-3.5 transform transition-all">
-            <!-- Icon with glowing ring -->
-            <div class="relative flex items-center justify-center">
-              <div class="absolute -inset-2 bg-gradient-to-r from-rose-500/30 to-amber-500/30 rounded-full blur-md animate-pulse"></div>
-              <div class="relative w-14 h-14 rounded-full bg-gradient-to-br from-amber-500 via-rose-500 to-rose-600 text-white flex items-center justify-center shadow-lg shadow-rose-500/25 ring-4 ring-white dark:ring-[#0E172E]">
-                <span class="text-3xl font-black font-sans leading-none">?</span>
-              </div>
-            </div>
-            
-            <div class="space-y-1">
-              <h3 class="text-base font-extrabold text-slate-900 dark:text-white">
-                {{ t('login_modal_error_title', 'ព័ត៌មានមិនត្រឹមត្រូវ') }}
-              </h3>
-              <p class="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-                {{ errorMessage || form.errors.email || t('login_modal_error_msg', 'សូមពិនិត្យមើលអ៊ីមែល ឬពាក្យសម្ងាត់របស់អ្នកឡើងវិញ!') }}
-              </p>
-            </div>
-
-            <button
-              type="button"
-              @click="showErrorModal = false"
-              class="w-full py-2 px-4 rounded-xl bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-800/40 text-rose-700 dark:text-rose-300 text-xs font-bold transition-all duration-150 cursor-pointer active:scale-95"
-            >
-              {{ t('login_modal_close', 'យល់ព្រម') }}
-            </button>
+          
+          <div class="space-y-1">
+            <h3 class="text-base font-extrabold text-white">
+              {{ t('login_modal_error_title', 'ព័ត៌មានមិនត្រឹមត្រូវ') }}
+            </h3>
+            <p class="text-xs text-slate-400 font-medium leading-relaxed">
+              {{ errorMessage || form.errors.email || t('login_modal_error_msg', 'សូមពិនិត្យមើលអ៊ីមែល ឬពាក្យសម្ងាត់របស់អ្នកឡើងវិញ!') }}
+            </p>
           </div>
-        </div>
-      </Transition>
 
-    </div>
-  </template>
+          <button
+            type="button"
+            @click="showErrorModal = false"
+            class="w-full py-2.5 px-4 rounded-xl bg-rose-950/60 hover:bg-rose-900/80 border border-rose-800/60 text-rose-300 text-xs font-bold transition-all duration-150 cursor-pointer active:scale-95"
+          >
+            {{ t('login_modal_close', 'យល់ព្រម') }}
+          </button>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- Footer Copyright -->
+    <footer class="w-full text-center text-[11px] text-slate-600 z-10 py-1 select-none">
+      &copy; 2026 Saint Paul Institute. All rights reserved.
+    </footer>
+
+  </div>
+</template>
 
 <style scoped>
 .checkmark-path {
@@ -1247,47 +1328,12 @@ onUnmounted(() => {
 
 @keyframes floatSlow {
   0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-22px) rotate(4deg); }
+  50% { transform: translateY(-20px) rotate(3deg); }
 }
 
 @keyframes floatReverse {
   0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(22px) rotate(-4deg); }
-}
-
-@keyframes spinSlow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@keyframes spinReverse {
-  from { transform: rotate(360deg); }
-  to { transform: rotate(0deg); }
-}
-
-@keyframes aurora {
-  0% { transform: translate(0%, 0%) rotate(0deg); }
-  50% { transform: translate(8%, 8%) rotate(180deg); }
-  100% { transform: translate(0%, 0%) rotate(360deg); }
-}
-
-.animate-float-slow {
-  animation: floatSlow 8s ease-in-out infinite;
-}
-.animate-float-reverse {
-  animation: floatReverse 11s ease-in-out infinite;
-}
-.animate-spin-slow {
-  animation: spinSlow 30s linear infinite;
-}
-.animate-spin-reverse {
-  animation: spinReverse 35s linear infinite;
-}
-.animate-aurora {
-  animation: aurora 25s linear infinite;
-}
-.animate-pulse-slow {
-  animation: pulse 5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  50% { transform: translateY(20px) rotate(-3deg); }
 }
 
 @keyframes indeterminate {
@@ -1300,6 +1346,14 @@ onUnmounted(() => {
   100% {
     transform: translateX(100%) scaleX(0.2);
   }
+}
+
+.animate-float-slow {
+  animation: floatSlow 8s ease-in-out infinite;
+}
+
+.animate-float-reverse {
+  animation: floatReverse 11s ease-in-out infinite;
 }
 
 .animate-indeterminate {
@@ -1315,7 +1369,14 @@ onUnmounted(() => {
 .animate-fade-in {
   animation: fadeIn 0.35s ease-out forwards;
 }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+
+.animate-shake {
+  animation: shake 0.4s ease-in-out;
+}
 </style>
-
-
-
