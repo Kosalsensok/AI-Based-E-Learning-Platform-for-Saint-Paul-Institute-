@@ -572,58 +572,11 @@ const onIconError = (e: Event) => {
         </button>
       </div>
 
-      <!-- 👤 Student Profile Card (Avatar, Name, ID, Major/Dept, Online Status) -->
-      <div v-show="!isSidebarCollapsed" class="px-3 pt-3 pb-1 shrink-0">
-        <Link
-          href="/student/profile?tab=personal"
-          class="flex items-center gap-3 p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 hover:border-indigo-500/40 transition-all shadow-xs group"
-        >
-          <div class="relative shrink-0">
-            <div
-              v-if="!user.avatar"
-              class="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold flex items-center justify-center text-xs shadow-md ring-2 ring-indigo-400/30 group-hover:scale-105 transition-transform"
-            >
-              {{ studentDisplayName.charAt(0) }}
-            </div>
-            <img
-              v-else
-              :src="user.avatar"
-              :alt="studentDisplayName"
-              class="w-10 h-10 rounded-full object-cover ring-2 ring-indigo-400/30 shadow-md"
-            />
-            <span
-              :class="[
-                isOnline ? 'bg-emerald-500' : 'bg-slate-400',
-                'absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full ring-2 ring-white dark:ring-slate-900 shadow-xs'
-              ]"
-            ></span>
-          </div>
-
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center justify-between gap-1">
-              <p class="font-bold text-xs text-slate-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors">
-                {{ studentDisplayName }}
-              </p>
-              <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                {{ isOnline ? 'Online' : 'Offline' }}
-              </span>
-            </div>
-            <p class="text-[10px] text-slate-500 dark:text-slate-400 font-mono mt-0.5 truncate">
-              ID: {{ studentId }}
-            </p>
-            <p class="text-[10px] font-medium text-indigo-600 dark:text-indigo-300 truncate">
-              {{ studentMajor }}
-            </p>
-          </div>
-        </Link>
-      </div>
-
       <!-- Navigation Tree (13 Core Modules) -->
       <nav
         :class="[
           isSidebarCollapsed ? 'px-0 overflow-visible' : 'px-3 custom-scrollbar overflow-y-auto',
-          'flex flex-1 flex-col py-2 space-y-1'
+          'flex flex-1 flex-col py-4 space-y-1'
         ]"
       >
         <ul role="list" class="space-y-1 w-full">
@@ -873,41 +826,7 @@ const onIconError = (e: Event) => {
         </button>
       </div>
 
-      <!-- Mobile Student Profile Card -->
-      <div class="p-3 border-b border-slate-200 dark:border-slate-800">
-        <Link
-          href="/student/profile?tab=personal"
-          @click="sidebarOpen = false"
-          class="flex items-center gap-3 p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60"
-        >
-          <div class="relative shrink-0">
-            <div
-              v-if="!user.avatar"
-              class="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold flex items-center justify-center text-xs"
-            >
-              {{ studentDisplayName.charAt(0) }}
-            </div>
-            <img
-              v-else
-              :src="user.avatar"
-              :alt="studentDisplayName"
-              class="w-9 h-9 rounded-full object-cover ring-2 ring-indigo-400/30"
-            />
-            <span
-              :class="[
-                isOnline ? 'bg-emerald-500' : 'bg-slate-400',
-                'absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full ring-2 ring-white dark:ring-slate-900'
-              ]"
-            ></span>
-          </div>
-          <div class="min-w-0 flex-1">
-            <p class="font-bold text-xs text-slate-900 dark:text-white truncate">{{ studentDisplayName }}</p>
-            <p class="text-[10px] text-indigo-500 dark:text-indigo-400 font-mono truncate">ID: {{ studentId }} • {{ studentMajor }}</p>
-          </div>
-        </Link>
-      </div>
-
-      <nav class="flex-1 px-3 py-3 space-y-1 overflow-y-auto custom-scrollbar">
+      <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto custom-scrollbar">
         <template v-for="item in studentNav" :key="item.key">
           <Link
             v-if="!item.children || item.children.length === 0"
