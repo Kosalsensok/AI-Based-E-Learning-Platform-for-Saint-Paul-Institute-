@@ -35,11 +35,16 @@ class PasswordResetLinkController extends Controller
         }
 
         $user = User::where(function ($query) use ($input) {
+            $cleanUser = ltrim($input, '@');
+            $cleanId = ltrim($input, '#');
+
             $query->where('email', $input)
                 ->orWhere('student_code', $input)
-                ->orWhere('phone', $input);
+                ->orWhere('phone', $input)
+                ->orWhere('telegram_username', $cleanUser)
+                ->orWhere('telegram_id', $input)
+                ->orWhere('telegram_chat_id', $input);
 
-            $cleanId = ltrim($input, '#');
             if (is_numeric($cleanId)) {
                 $query->orWhere('id', (int) $cleanId);
             }
@@ -154,11 +159,16 @@ class PasswordResetLinkController extends Controller
         }
 
         $user = User::where(function ($query) use ($input) {
+            $cleanUser = ltrim($input, '@');
+            $cleanId = ltrim($input, '#');
+
             $query->where('email', $input)
                 ->orWhere('student_code', $input)
-                ->orWhere('phone', $input);
+                ->orWhere('phone', $input)
+                ->orWhere('telegram_username', $cleanUser)
+                ->orWhere('telegram_id', $input)
+                ->orWhere('telegram_chat_id', $input);
 
-            $cleanId = ltrim($input, '#');
             if (is_numeric($cleanId)) {
                 $query->orWhere('id', (int) $cleanId);
             }
@@ -254,11 +264,16 @@ class PasswordResetLinkController extends Controller
         }
 
         $user = User::where(function ($query) use ($input) {
+            $cleanUser = ltrim($input, '@');
+            $cleanId = ltrim($input, '#');
+
             $query->where('email', $input)
                 ->orWhere('student_code', $input)
-                ->orWhere('phone', $input);
+                ->orWhere('phone', $input)
+                ->orWhere('telegram_username', $cleanUser)
+                ->orWhere('telegram_id', $input)
+                ->orWhere('telegram_chat_id', $input);
 
-            $cleanId = ltrim($input, '#');
             if (is_numeric($cleanId)) {
                 $query->orWhere('id', (int) $cleanId);
             }
