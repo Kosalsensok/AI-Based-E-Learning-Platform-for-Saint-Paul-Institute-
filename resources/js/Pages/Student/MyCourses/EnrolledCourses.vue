@@ -407,15 +407,15 @@ const statsSummary = computed(() => {
               </Link>
               <Link
                 v-else-if="course.progress === 0"
-                href="/student/my-courses/current"
+                :href="`/student/learn/${course.id}`"
                 class="w-full py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs transition-all shadow-md text-center block"
               >
                 ▶ Start Learning
               </Link>
               <Link
                 v-else
-                href="/student/my-courses/current"
-                class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition-all shadow-md shadow-indigo-600/30 text-center block"
+                :href="`/student/learn/${course.id}`"
+                class="w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs transition-all shadow-md shadow-indigo-600/30 text-center block"
               >
                 ▶ Continue Learning
               </Link>
@@ -429,44 +429,35 @@ const statsSummary = computed(() => {
         <div class="overflow-x-auto custom-scrollbar">
           <table class="w-full text-left text-xs border-collapse">
             <thead>
-              <tr class="bg-slate-900/90 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-700/80">
+              <tr class="bg-slate-900/90 border-b border-slate-700 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
                 <th class="p-4">Course</th>
-                <th class="p-4">Teacher</th>
-                <th class="p-4">Mode</th>
-                <th class="p-4">Price</th>
+                <th class="p-4">Instructor</th>
+                <th class="p-4">Major</th>
                 <th class="p-4">Progress</th>
                 <th class="p-4">Status</th>
-                <th class="p-4 text-right">Actions</th>
+                <th class="p-4 text-right">Action</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-700/60">
-              <tr v-for="course in filteredCourses" :key="course.id" class="hover:bg-slate-700/30 transition-colors">
+              <tr
+                v-for="course in filteredCourses"
+                :key="course.id"
+                class="hover:bg-slate-700/40 transition-colors group"
+              >
                 <td class="p-4">
                   <div class="flex items-center gap-3">
-                    <img :src="course.thumbnail" class="w-10 h-10 rounded-xl object-cover border border-slate-700 shrink-0" />
+                    <img :src="course.thumbnail" class="w-12 h-12 rounded-xl object-cover" />
                     <div>
-                      <p class="font-bold text-white text-xs">{{ course.title }}</p>
-                      <p class="text-[10px] text-slate-400">🏫 {{ course.major }}</p>
+                      <h4 class="font-bold text-white group-hover:text-indigo-300 transition-colors line-clamp-1">{{ course.title }}</h4>
+                      <p class="text-[10px] text-slate-400">{{ course.mode }} • {{ course.price }}</p>
                     </div>
                   </div>
                 </td>
-                <td class="p-4 text-slate-300 font-medium">
-                  👨‍🏫 {{ course.teacher }}
-                </td>
+                <td class="p-4 text-slate-300 font-medium">{{ course.teacher }}</td>
+                <td class="p-4 text-slate-300">{{ course.major }}</td>
                 <td class="p-4">
-                  <span :class="[course.mode === 'Teacher-Led' ? 'bg-blue-500/20 text-blue-300 border-blue-500/30' : 'bg-purple-500/20 text-purple-300 border-purple-500/30', 'px-2.5 py-1 rounded-full text-[10px] font-bold border']">
-                    {{ course.mode === 'Teacher-Led' ? '🎥 Teacher-Led' : '💻 Self-Study' }}
-                  </span>
-                </td>
-                <td class="p-4 font-bold text-white">
-                  {{ course.price }}
-                </td>
-                <td class="p-4 w-40">
-                  <div class="space-y-1">
-                    <div class="flex justify-between text-[10px]">
-                      <span class="text-slate-400">Completed</span>
-                      <span class="font-bold text-indigo-400">{{ course.progress }}%</span>
-                    </div>
+                  <div class="space-y-1 w-28">
+                    <span class="text-[10px] font-bold text-indigo-400">{{ course.progress }}%</span>
                     <div class="w-full h-1.5 rounded-full bg-slate-700 overflow-hidden">
                       <div class="h-full bg-indigo-500 rounded-full" :style="{ width: course.progress + '%' }"></div>
                     </div>
@@ -503,8 +494,8 @@ const statsSummary = computed(() => {
                   </Link>
                   <Link
                     v-else
-                    href="/student/my-courses/current"
-                    class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs inline-block"
+                    :href="`/student/learn/${course.id}`"
+                    class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs inline-block shadow-md"
                   >
                     ▶ Learn
                   </Link>

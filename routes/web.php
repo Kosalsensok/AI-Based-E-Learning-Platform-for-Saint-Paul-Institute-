@@ -474,6 +474,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/courses/{course}/enroll', [Student\EnrollmentController::class, 'store'])->name('enroll');
         Route::get('/learn/{course}', [Student\LearningController::class, 'show'])->name('learn');
         Route::post('/learn/progress/{lesson}', [Student\LearningController::class, 'updateProgress'])->name('learn.progress');
+        Route::post('/learn/ai-tutor/{lesson}', [Student\LearningController::class, 'askAi'])->name('learn.ai-tutor');
+        Route::post('/learn/discussion/{lesson}', [Student\LearningController::class, 'postDiscussion'])->name('learn.discussion');
+        Route::post('/learn/notes/{lesson}', [Student\LearningController::class, 'saveNote'])->name('learn.notes');
         Route::get('/quizzes', [Student\QuizController::class, 'index'])->name('quizzes');
         Route::prefix('quizzes')->name('quizzes.')->group(function () {
             Route::get('/pre-test', [Student\QuizController::class, 'preTest'])->name('pre-test');
