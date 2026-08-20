@@ -310,13 +310,13 @@ class TelegramAuthController extends Controller
             $cbId = $callbackQuery['id'] ?? null;
 
             if ($cbId) {
-                \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/answerCallbackQuery", [
+                \Illuminate\Support\Facades\Http::withoutVerifying()->post("https://api.telegram.org/bot{$botToken}/answerCallbackQuery", [
                     'callback_query_id' => $cbId,
                 ]);
             }
 
             if ($cbData === 'support') {
-                \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                \Illuminate\Support\Facades\Http::withoutVerifying()->post("https://api.telegram.org/bot{$botToken}/sendMessage", [
                     'chat_id' => $chatId,
                     'text' => $supportText,
                     'parse_mode' => 'HTML',
@@ -394,14 +394,14 @@ class TelegramAuthController extends Controller
                     ]
                 ];
 
-                \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                \Illuminate\Support\Facades\Http::withoutVerifying()->post("https://api.telegram.org/bot{$botToken}/sendMessage", [
                     'chat_id' => $chatId,
                     'text' => $welcomeText,
                     'parse_mode' => 'HTML',
                     'reply_markup' => json_encode($inlineKeyboard)
                 ]);
             } elseif (str_starts_with($text, '/support') || str_starts_with($text, '/help') || $text === 'support' || $text === 'help') {
-                \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                \Illuminate\Support\Facades\Http::withoutVerifying()->post("https://api.telegram.org/bot{$botToken}/sendMessage", [
                     'chat_id' => $chatId,
                     'text' => $supportText,
                     'parse_mode' => 'HTML',
@@ -422,7 +422,7 @@ class TelegramAuthController extends Controller
                     ]
                 ];
 
-                \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                \Illuminate\Support\Facades\Http::withoutVerifying()->post("https://api.telegram.org/bot{$botToken}/sendMessage", [
                     'chat_id' => $chatId,
                     'text' => $dashboardText,
                     'parse_mode' => 'HTML',

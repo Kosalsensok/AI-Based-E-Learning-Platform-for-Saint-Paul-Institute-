@@ -107,7 +107,7 @@ class TelegramService
                 $payload['reply_markup'] = json_encode($replyMarkup);
             }
 
-            $response = Http::timeout(5)->post($url, $payload);
+            $response = Http::withoutVerifying()->timeout(5)->post($url, $payload);
 
             if ($response->failed()) {
                 Log::error("Telegram API Direct Message Error: " . $response->body());
@@ -166,7 +166,7 @@ class TelegramService
 
         try {
             $url = "https://api.telegram.org/bot{$this->botToken}/sendMessage";
-            $response = Http::timeout(5)->post($url, [
+            $response = Http::withoutVerifying()->timeout(5)->post($url, [
                 'chat_id'    => (string) $target,
                 'text'       => $text,
                 'parse_mode' => $parseMode,

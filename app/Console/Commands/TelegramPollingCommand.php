@@ -20,7 +20,7 @@ class TelegramPollingCommand extends Command
 
         if (empty($botToken)) {
             $this->error('❌ Telegram Bot Token is not configured.');
-            return Command::FAILURE;
+            return self::FAILURE;
         }
 
         $this->info("🤖 Connected to Bot. Listening for messages & commands...");
