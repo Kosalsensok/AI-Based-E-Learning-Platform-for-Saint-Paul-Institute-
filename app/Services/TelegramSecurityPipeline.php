@@ -70,12 +70,25 @@ class TelegramSecurityPipeline
                 ->orWhere('telegram_id', (string)$userId)
                 ->exists();
 
-            $isCommand = str_starts_with(trim($text), '/start') || str_starts_with(trim($text), '/login');
+            $rawCmd = strtolower(trim($text));
+            $cleanCmd = preg_replace('/^(\/\w+)@\w+/i', '$1', $rawCmd);
 
-            if (!$isLinked && !$isCommand) {
+            $isCommandOrAction = !empty($update['callback_query'])
+                || str_starts_with($cleanCmd, '/start')
+                || str_starts_with($cleanCmd, '/login')
+                || str_starts_with($cleanCmd, '/dashboard')
+                || str_starts_with($cleanCmd, '/support')
+                || str_starts_with($cleanCmd, '/help')
+                || $cleanCmd === 'support'
+                || $cleanCmd === 'help'
+                || str_contains($cleanCmd, 'hello')
+                || str_contains($cleanCmd, 'hi')
+                || str_contains($cleanCmd, 'សួស្តី');
+
+            if (!$isLinked && !$isCommandOrAction) {
                 self::sendMessage(
                     $userId,
-                    "⚠️ *ការអនុញ្ញាតត្រូវបានបដិសេធ*\n\nសូមភ្ជាប់គណនី LMS របស់អ្នកជាមុនសិនដោយចុចពាក្យបញ្ជា `/start`",
+                    "⚠️ *ការអនុញ្ញាតត្រូវបានបដិសេធ*\n\nសូមភ្ជាប់គណនី LMS របស់អ្នកជាមុនសិនដោយចុចពាក្យបញ្ជា `/start` ឬ `/login`",
                     'Markdown'
                 );
                 return false;
@@ -152,23 +165,30 @@ class TelegramSecurityPipeline
     }
 
     /**
-     * ផ្ញើសារចេញទៅកាន់ Telegram API
+     * ផ្ញើសារចេញទៅកាន់ Telegram API ជាមួយនឹង Support Reply Markup (Buttons)
      */
-    public static function sendMessage($chatId, string $text, ?string $mode = null): void
+    public static function sendMessage($chatId, string $text, ?string $mode = null, ?array $replyMarkup = null): void
     {
         $token = config('services.telegram.bot_token');
         if (!$token || !$chatId) {
             return;
         }
 
-        $payload = ['chat_id' => (string)$chatId, 'text' => $text];
+        $payload = [
+            'chat_id'                  => (string)$chatId,
+            'text'                     => $text,
+            'disable_web_page_preview' => false,
+        ];
         if ($mode) {
             $payload['parse_mode'] = $mode;
+        }
+        if (!empty($replyMarkup)) {
+            $payload['reply_markup'] = json_encode($replyMarkup);
         }
 
         try {
             Http::withoutVerifying()
-                ->timeout(10)
+                ->timeout(15)
                 ->post("https://api.telegram.org/bot{$token}/sendMessage", $payload);
         } catch (\Throwable $e) {
             Log::error("Telegram sendMessage exception: " . $e->getMessage());

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\AuthLog;
 use App\Models\User;
+use App\Services\TelegramSecurityPipeline;
 use App\Services\TelegramService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -116,6 +117,7 @@ class TelegramAuthController extends Controller
             // Update Telegram profile info
             $updateData = [
                 'telegram_id' => $telegramId,
+                'telegram_chat_id' => $telegramId,
             ];
             if ($telegramUsername) {
                 $updateData['telegram_username'] = $telegramUsername;
@@ -156,6 +158,7 @@ class TelegramAuthController extends Controller
                 'student_code' => $studentCode,
                 'study_type' => 'on_campus',
                 'telegram_id' => $telegramId,
+                'telegram_chat_id' => $telegramId,
                 'telegram_username' => $telegramUsername,
                 'telegram_photo_url' => $photoUrl,
                 'avatar' => $photoUrl,
@@ -270,6 +273,12 @@ class TelegramAuthController extends Controller
         $botToken = $telegramService->getBotToken();
 
         if (!$botToken) {
+            return response()->json(['ok' => true]);
+        }
+
+        // Validate incoming update through 5-Layer Security Pipeline
+        if (!TelegramSecurityPipeline::validate($update)) {
+            Log::warning("Telegram webhook: blocked unauthorized/suspicious update.");
             return response()->json(['ok' => true]);
         }
 
