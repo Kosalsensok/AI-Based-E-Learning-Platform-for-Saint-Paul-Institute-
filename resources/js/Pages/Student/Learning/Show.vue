@@ -289,7 +289,17 @@ const currentSlideIndex = ref(1)
 const totalSlides = ref(8)
 
 // Q&A Discussion State
-const discussionsList = ref([
+interface DiscussionItem {
+  id: number | string
+  userName: string
+  avatar: string
+  content: string
+  time: string
+  isTeacherReply?: boolean
+  reply?: string | null
+}
+
+const discussionsList = ref<DiscussionItem[]>([
   {
     id: 1,
     userName: 'Channak Meas',
@@ -382,7 +392,14 @@ const askAiTutor = () => {
 }
 
 // Personal Notes State
-const personalNotes = ref([
+interface PersonalNote {
+  id: number | string
+  text: string
+  time: string
+  savedAt: string
+}
+
+const personalNotes = ref<PersonalNote[]>([
   { id: 1, text: 'Operator %= ប្រើសម្រាប់គណនា Remainder (សំណល់នៃការចែក)', time: '04:15', savedAt: '2026-08-20' }
 ])
 const noteInput = ref('')
