@@ -36,10 +36,11 @@ return [
     ],
 
     'telegram' => [
-        'bot_token' => env('TELEGRAM_BOT_TOKEN', '8828915669:AAE2vWvVyJxkyLkgiwNZLPN0jtgnvT7A7sE'),
-        'bot_username' => env('TELEGRAM_BOT_USERNAME', 'spi_elms_auth_bot'),
-        'bot_id' => env('TELEGRAM_BOT_ID', '8828915669'),
-        'chat_id' => env('TELEGRAM_CHAT_ID'),
+        'bot_token'     => env('TELEGRAM_BOT_TOKEN', '8828915669:AAGmJB360sQzUM1GZqEMV_kntPGJLMi4Egs'),
+        'bot_username'  => env('TELEGRAM_BOT_USERNAME', 'spi_elms_auth_bot'),
+        'bot_id'        => env('TELEGRAM_BOT_ID', '8828915669'),
+        'admin_chat_id' => env('TELEGRAM_ADMIN_CHAT_ID', '-5560385465'),
+        'chat_id'       => env('TELEGRAM_CHAT_ID', env('TELEGRAM_ADMIN_CHAT_ID', '-5560385465')),
     ],
 
     'cloudconvert' => [
