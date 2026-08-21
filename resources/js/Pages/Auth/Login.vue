@@ -1073,26 +1073,9 @@ onUnmounted(() => {
                   <Link href="/forgot-password" class="text-xs font-bold text-blue-600 dark:text-sky-400 hover:text-blue-700 dark:hover:text-sky-300 no-underline transition-colors">{{ t('login_forgot_password', 'Forgot Password?') }}</Link>
                 </div>
 
-                <!-- Cloudflare Security Verification Card (Full-Width Unified Container) -->
-                <div :class="[
-                  'my-2 w-full p-2.5 rounded-2xl border transition-all duration-300 shadow-2xs',
-                  form.turnstile_token
-                    ? 'bg-emerald-500/5 dark:bg-emerald-950/20 border-emerald-500/40 dark:border-emerald-500/30'
-                    : 'bg-slate-50/70 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/70'
-                ]">
-                  <div class="w-full flex items-center justify-between px-1 pb-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-300 border-b border-slate-200/60 dark:border-slate-700/50">
-                    <span class="inline-flex items-center gap-1.5">
-                      <i :class="['pi text-xs transition-colors', form.turnstile_token ? 'pi-check-circle text-emerald-500' : 'pi-shield text-blue-500']"></i>
-                      <span>{{ t('login_security_check', 'ការផ្ទៀងផ្ទាត់សុវត្ថិភាព') }}</span>
-                    </span>
-                    <span :class="['inline-flex items-center gap-1 text-[10px] font-bold transition-colors', form.turnstile_token ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-400']">
-                      <i class="pi pi-lock text-[9px]"></i>
-                      <span>{{ form.turnstile_token ? (currentLang === 'km' ? 'ផ្ទៀងផ្ទាត់ជោគជ័យ' : 'Verified') : 'Cloudflare Protected' }}</span>
-                    </span>
-                  </div>
-                  <div class="w-full flex items-center justify-center pt-2 pb-0.5 min-h-[65px]">
-                    <div ref="turnstileWidget" class="flex justify-center"></div>
-                  </div>
+                <!-- Cloudflare Turnstile CAPTCHA Widget (Full Width Flexible Mode) -->
+                <div class="my-2 w-full flex flex-col items-center justify-center min-h-[65px] [&>div]:w-full [&>div>iframe]:w-full [&>div>iframe]:rounded-xl">
+                  <div ref="turnstileWidget" class="w-full flex justify-center"></div>
                 </div>
 
                 <button type="submit" :disabled="isSubmitting || form.processing" class="h-11 group w-full py-2.5 px-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm hover:shadow-md transition-all duration-200 inline-flex items-center justify-center gap-2.5 disabled:opacity-50 text-xs sm:text-sm tracking-wide cursor-pointer select-none">
