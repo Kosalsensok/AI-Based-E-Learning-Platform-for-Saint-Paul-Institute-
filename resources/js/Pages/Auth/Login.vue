@@ -25,35 +25,18 @@ const form = useForm({
 
 // Cloudflare Turnstile CAPTCHA State
 const turnstileWidget = ref<HTMLElement | null>(null)
-let turnstileWidgetId: string | number | null = null
+let widgetId: string | number | null = null
 
 const initTurnstile = () => {
   if (typeof window === 'undefined') return
 
-  const tryRender = (attempts = 0) => {
-    if (!turnstileWidget.value) {
-      if (attempts < 30) setTimeout(() => tryRender(attempts + 1), 100)
-      return
-    }
-
-    if (!(window as any).turnstile || typeof (window as any).turnstile.render !== 'function') {
-      if (attempts < 30) setTimeout(() => tryRender(attempts + 1), 150)
-      return
-    }
+  const initWidget = () => {
+    if (typeof window === 'undefined' || !(window as any).turnstile || !turnstileWidget.value) return
+    if (widgetId !== null) return
 
     try {
-      if (turnstileWidgetId !== null) {
-        try {
-          (window as any).turnstile.remove(turnstileWidgetId)
-        } catch (_) {}
-        turnstileWidgetId = null
-      }
-
-      if (turnstileWidget.value) {
-        turnstileWidget.value.innerHTML = ''
-      }
-
-      turnstileWidgetId = (window as any).turnstile.render(turnstileWidget.value, {
+      turnstileWidget.value.innerHTML = ''
+      widgetId = (window as any).turnstile.render(turnstileWidget.value, {
         sitekey: '0x4AAAAAAAEXY2t6Dsf5eBecK',
         theme: isDark.value ? 'dark' : 'light',
         size: 'normal',
@@ -65,23 +48,50 @@ const initTurnstile = () => {
           form.turnstile_token = ''
         },
         'error-callback': (code: any) => {
-          console.warn('Turnstile error callback:', code)
+          console.error('Turnstile Error Code:', code)
           form.turnstile_token = ''
         },
       })
     } catch (e) {
-      console.warn('Turnstile render exception:', e)
+      console.error('Turnstile init exception:', e)
     }
   }
 
-  tryRender()
+  if (typeof window !== 'undefined' && (window as any).turnstile) {
+    initWidget()
+  } else {
+    const scriptId = 'cf-turnstile-script'
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement('script')
+      script.id = scriptId
+      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
+      script.async = true
+      script.defer = true
+      script.onload = () => {
+        setTimeout(initWidget, 100)
+      }
+      document.head.appendChild(script)
+    } else {
+      setTimeout(initWidget, 150)
+    }
+  }
 }
 
 const resetTurnstile = () => {
-  if (typeof window !== 'undefined' && (window as any).turnstile && turnstileWidgetId !== null) {
+  if (typeof window !== 'undefined' && (window as any).turnstile && widgetId !== null) {
     try {
-      (window as any).turnstile.reset(turnstileWidgetId)
+      (window as any).turnstile.reset(widgetId)
     } catch (_) {}
+  }
+  form.turnstile_token = ''
+}
+
+const removeTurnstile = () => {
+  if (typeof window !== 'undefined' && (window as any).turnstile && widgetId !== null) {
+    try {
+      (window as any).turnstile.remove(widgetId)
+    } catch (_) {}
+    widgetId = null
   }
   form.turnstile_token = ''
 }
@@ -287,7 +297,10 @@ const toggleTheme = () => {
     localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
   } catch (e) {}
   applyTheme()
-  setTimeout(initTurnstile, 100)
+  removeTurnstile()
+  nextTick(() => {
+    initTurnstile()
+  })
 }
 
 const applyTheme = () => {
@@ -790,11 +803,7 @@ onUnmounted(() => {
     if ((window as any).onTelegramAuth) {
       delete (window as any).onTelegramAuth
     }
-    if (turnstileWidgetId !== null && (window as any).turnstile) {
-      try {
-        (window as any).turnstile.remove(turnstileWidgetId)
-      } catch (_) {}
-    }
+    removeTurnstile()
   }
 })
 </script>
