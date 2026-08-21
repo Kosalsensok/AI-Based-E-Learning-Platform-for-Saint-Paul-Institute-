@@ -37,7 +37,7 @@ const initTurnstile = () => {
     try {
       turnstileWidget.value.innerHTML = ''
       widgetId = (window as any).turnstile.render(turnstileWidget.value, {
-        sitekey: '1x00000000000000000000AA',
+        sitekey: '0x4AAAAAAAEXY2t6Dsf5eBecK',
         theme: isDark.value ? 'dark' : 'light',
         size: 'normal',
         callback: (token: string) => {
