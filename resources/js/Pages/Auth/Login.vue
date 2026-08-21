@@ -329,24 +329,25 @@ const submit = async () => {
 
     const data = await response.json().catch(() => ({}))
 
-    let errText: string | null = null
+    let errText = ''
+    let isTurnstileError = false
 
     if (data?.props?.errors?.turnstile_token) {
-      errText = data.props.errors.turnstile_token
-      form.setError('turnstile_token', errText)
+      errText = String(data.props.errors.turnstile_token)
+      isTurnstileError = true
     } else if (data?.errors?.turnstile_token) {
-      errText = Array.isArray(data.errors.turnstile_token) ? data.errors.turnstile_token[0] : data.errors.turnstile_token
-      form.setError('turnstile_token', errText)
+      errText = Array.isArray(data.errors.turnstile_token) ? String(data.errors.turnstile_token[0]) : String(data.errors.turnstile_token)
+      isTurnstileError = true
     } else if (data?.props?.errors?.email) {
-      errText = data.props.errors.email
+      errText = String(data.props.errors.email)
     } else if (data?.props?.errors?.password) {
-      errText = data.props.errors.password
+      errText = String(data.props.errors.password)
     } else if (data?.errors?.email) {
-      errText = Array.isArray(data.errors.email) ? data.errors.email[0] : data.errors.email
+      errText = Array.isArray(data.errors.email) ? String(data.errors.email[0]) : String(data.errors.email)
     } else if (data?.errors?.password) {
-      errText = Array.isArray(data.errors.password) ? data.errors.password[0] : data.errors.password
+      errText = Array.isArray(data.errors.password) ? String(data.errors.password[0]) : String(data.errors.password)
     } else if (response.status === 422) {
-      errText = data?.message || t('login_modal_error_msg', 'អាសយដ្ឋានអ៊ីមែល ឬពាក្យសម្ងាត់របស់អ្នកមិនត្រឹមត្រូវទេ។ សូមពិនិត្យមើលឡើងវិញ!')
+      errText = String(data?.message || t('login_modal_error_msg', 'អាសយដ្ឋានអ៊ីមែល ឬពាក្យសម្ងាត់របស់អ្នកមិនត្រឹមត្រូវទេ។ សូមពិនិត្យមើលឡើងវិញ!'))
     }
 
     if (errText || data?.component === 'Auth/Login') {
@@ -354,8 +355,12 @@ const submit = async () => {
       showErrorModal.value = true
       isSubmitting.value = false
       errorMessage.value = errText || t('login_modal_error_msg', 'អាសយដ្ឋានអ៊ីមែល ឬពាក្យសម្ងាត់របស់អ្នកមិនត្រឹមត្រូវទេ។ សូមពិនិត្យមើលឡើងវិញ!')
-      if (errText && !form.errors.turnstile_token) {
-        form.setError('email', errText)
+      if (errText) {
+        if (isTurnstileError) {
+          form.setError('turnstile_token', errText)
+        } else {
+          form.setError('email', errText)
+        }
       }
 
       setTimeout(() => {
