@@ -28,10 +28,19 @@ const turnstileWidget = ref<HTMLElement | null>(null)
 let turnstileWidgetId: string | number | null = null
 
 const initTurnstile = () => {
-  if (typeof window === 'undefined' || !turnstileWidget.value) return
+  if (typeof window === 'undefined') return
 
-  const renderWidget = () => {
-    if (typeof window === 'undefined' || !(window as any).turnstile || !turnstileWidget.value) return
+  const tryRender = (attempts = 0) => {
+    if (!turnstileWidget.value) {
+      if (attempts < 30) setTimeout(() => tryRender(attempts + 1), 100)
+      return
+    }
+
+    if (!(window as any).turnstile || typeof (window as any).turnstile.render !== 'function') {
+      if (attempts < 30) setTimeout(() => tryRender(attempts + 1), 150)
+      return
+    }
+
     try {
       if (turnstileWidgetId !== null) {
         try {
@@ -40,8 +49,12 @@ const initTurnstile = () => {
         turnstileWidgetId = null
       }
 
+      if (turnstileWidget.value) {
+        turnstileWidget.value.innerHTML = ''
+      }
+
       turnstileWidgetId = (window as any).turnstile.render(turnstileWidget.value, {
-        sitekey: import.meta.env.VITE_TURNSTILE_SITE_KEY || '0x4AAAAAAAEXY2t6Dsf5eBecK',
+        sitekey: '0x4AAAAAAAEXY2t6Dsf5eBecK',
         theme: isDark.value ? 'dark' : 'light',
         size: 'normal',
         callback: (token: string) => {
@@ -61,11 +74,7 @@ const initTurnstile = () => {
     }
   }
 
-  if (typeof (window as any).turnstile !== 'undefined' && typeof (window as any).turnstile.ready === 'function') {
-    (window as any).turnstile.ready(renderWidget)
-  } else {
-    setTimeout(renderWidget, 250)
-  }
+  tryRender()
 }
 
 const resetTurnstile = () => {
@@ -757,20 +766,8 @@ onMounted(() => {
       handleTelegramAuthSuccess(tgUser)
     }
 
-    // 3. Load Cloudflare Turnstile script dynamically
-    if (!document.getElementById('turnstile-script')) {
-      const script = document.createElement('script')
-      script.id = 'turnstile-script'
-      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
-      script.async = true
-      script.defer = true
-      script.onload = () => {
-        setTimeout(initTurnstile, 150)
-      }
-      document.head.appendChild(script)
-    } else {
-      setTimeout(initTurnstile, 150)
-    }
+    // 3. Initialize Cloudflare Turnstile
+    initTurnstile()
   }
 })
 
