@@ -8,8 +8,17 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return redirect()->route('login');
-});
+    if (auth()->check()) {
+        $user = auth()->user();
+        if ($user->role === 'admin') {
+            return redirect()->route('admin.dashboard');
+        } elseif ($user->role === 'teacher') {
+            return redirect()->route('teacher.dashboard');
+        }
+        return redirect()->route('student.dashboard');
+    }
+    return Inertia::render('Auth/Login');
+})->name('home');
 
 // ─── Sitemap XML for Googlebot & Search Engines ───
 Route::get('/sitemap.xml', function () {
