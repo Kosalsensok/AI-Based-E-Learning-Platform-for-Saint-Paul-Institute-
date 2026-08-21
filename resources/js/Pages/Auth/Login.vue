@@ -39,7 +39,7 @@ const initTurnstile = () => {
       widgetId = (window as any).turnstile.render(turnstileWidget.value, {
         sitekey: '0x4AAAAAAEXbfl90rlcdniVI',
         theme: isDark.value ? 'dark' : 'light',
-        size: 'normal',
+        size: 'flexible',
         callback: (token: string) => {
           form.turnstile_token = token
           form.clearErrors('turnstile_token')
@@ -1073,9 +1073,9 @@ onUnmounted(() => {
                   <Link href="/forgot-password" class="text-xs font-bold text-blue-600 dark:text-sky-400 hover:text-blue-700 dark:hover:text-sky-300 no-underline transition-colors">{{ t('login_forgot_password', 'Forgot Password?') }}</Link>
                 </div>
 
-                <!-- Cloudflare Turnstile CAPTCHA Widget -->
-                <div class="my-2 flex flex-col items-center justify-center min-h-[65px]">
-                  <div ref="turnstileWidget"></div>
+                <!-- Cloudflare Turnstile CAPTCHA Widget (Full Width Flexible Mode) -->
+                <div class="my-2 w-full flex flex-col items-center justify-center min-h-[65px] [&>div]:w-full [&>div>iframe]:w-full [&>div>iframe]:rounded-xl">
+                  <div ref="turnstileWidget" class="w-full flex justify-center"></div>
                 </div>
 
                 <button type="submit" :disabled="isSubmitting || form.processing" class="h-11 group w-full py-2.5 px-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm hover:shadow-md transition-all duration-200 inline-flex items-center justify-center gap-2.5 disabled:opacity-50 text-xs sm:text-sm tracking-wide cursor-pointer select-none">
