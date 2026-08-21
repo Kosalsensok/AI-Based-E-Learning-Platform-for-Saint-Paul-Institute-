@@ -20,6 +20,14 @@ Route::get('/', function () {
     return Inertia::render('Auth/Login');
 })->name('home');
 
+// ─── Health Check Route (UptimeRobot / Monitoring) ───
+Route::get('/health', function () {
+    return response()->json([
+        'status' => 'active',
+        'timestamp' => now()->toIso8601String(),
+    ], 200);
+});
+
 // ─── Sitemap XML for Googlebot & Search Engines ───
 Route::get('/sitemap.xml', function () {
     $path = public_path('sitemap.xml');
