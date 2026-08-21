@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useForm, Link, router, usePage } from '@inertiajs/vue3'
 import { i18n, type LanguageCode } from '../../Services/i18n'
 import AuthAnimatedBackground from '../../Components/AuthAnimatedBackground.vue'
@@ -233,6 +233,14 @@ const verifyEmailOtp = async () => {
 
 onUnmounted(() => {
   if (otpCountdownTimer) clearInterval(otpCountdownTimer)
+})
+
+watch(authMode, (mode) => {
+  if (mode === 'password') {
+    nextTick(() => {
+      initTurnstile()
+    })
+  }
 })
 
 const languages = [
