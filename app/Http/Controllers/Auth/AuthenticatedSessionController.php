@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\AuthLog;
 use App\Models\User;
+use App\Rules\Turnstile;
 use App\Services\TelegramService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,15 +21,17 @@ class AuthenticatedSessionController extends Controller
 
     public function store(Request $request, TelegramService $telegramService)
     {
-        // 1. Email / Student ID / Phone & Password Basic Validation
+        // 1. Email / Student ID / Phone, Password & Turnstile Validation
         $request->validate([
             'email' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string', 'min:8'],
             'role' => ['nullable', 'string', 'in:student,teacher,admin'],
+            'turnstile_token' => ['required', new Turnstile],
         ], [
             'email.required' => 'សូមបញ្ចូលអាសយដ្ឋានអ៊ីមែល, ID, ឬលេខទូរស័ព្ទ។',
             'password.required' => 'សូមបញ្ចូលពាក្យសម្ងាត់។',
             'password.min' => 'ពាក្យសម្ងាត់ត្រូវមានយ៉ាងតិច ៨ តួអក្សរ។',
+            'turnstile_token.required' => 'សូមផ្ទៀងផ្ទាត់សុវត្ថិភាព Cloudflare (Turnstile) ជាមុនសិន។',
         ]);
 
         $loginInput = trim($request->email);

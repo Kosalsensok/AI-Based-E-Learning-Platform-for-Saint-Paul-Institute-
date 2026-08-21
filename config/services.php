@@ -59,4 +59,10 @@ return [
         'app_id' => env('CLERK_APP_ID', 'app_3HuqsrwyUIBYDv90aKgOiwfsKkx'),
     ],
 
+    'turnstile' => [
+        'key' => env('VITE_TURNSTILE_SITE_KEY', '0x4AAAAAAAEXY2t6Dsf5eBecK'),
+        'secret' => env('TURNSTILE_SECRET_KEY', '0x4AAAAAAAEXY2oh5qEipgUpQW2FKhsxQLCA'),
+    ],
+
 ];
+

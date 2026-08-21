@@ -20,7 +20,53 @@ const form = useForm({
   password: '',
   role: 'student' as 'student' | 'teacher' | 'admin',
   remember: false,
+  turnstile_token: '',
 })
+
+// Cloudflare Turnstile CAPTCHA State
+const turnstileWidget = ref<HTMLElement | null>(null)
+let turnstileWidgetId: string | number | null = null
+
+const initTurnstile = () => {
+  if (typeof window === 'undefined' || !(window as any).turnstile || !turnstileWidget.value) {
+    return
+  }
+
+  try {
+    if (turnstileWidgetId !== null) {
+      try {
+        (window as any).turnstile.remove(turnstileWidgetId)
+      } catch (_) {}
+      turnstileWidgetId = null
+    }
+
+    turnstileWidgetId = (window as any).turnstile.render(turnstileWidget.value, {
+      sitekey: import.meta.env.VITE_TURNSTILE_SITE_KEY || '0x4AAAAAAAEXY2t6Dsf5eBecK',
+      theme: isDark.value ? 'dark' : 'light',
+      callback: (token: string) => {
+        form.turnstile_token = token
+        form.clearErrors('turnstile_token')
+      },
+      'expired-callback': () => {
+        form.turnstile_token = ''
+      },
+      'error-callback': () => {
+        form.turnstile_token = ''
+      },
+    })
+  } catch (e) {
+    console.warn('Turnstile init error:', e)
+  }
+}
+
+const resetTurnstile = () => {
+  if (typeof window !== 'undefined' && (window as any).turnstile && turnstileWidgetId !== null) {
+    try {
+      (window as any).turnstile.reset(turnstileWidgetId)
+    } catch (_) {}
+  }
+  form.turnstile_token = ''
+}
 
 const showPassword = ref(false)
 const capsLockOn = ref(false)
@@ -215,6 +261,7 @@ const toggleTheme = () => {
     localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
   } catch (e) {}
   applyTheme()
+  setTimeout(initTurnstile, 100)
 }
 
 const applyTheme = () => {
@@ -276,6 +323,7 @@ const submit = async () => {
         password: form.password,
         role: form.role,
         remember: form.remember,
+        turnstile_token: form.turnstile_token,
       }),
     })
 
@@ -283,7 +331,13 @@ const submit = async () => {
 
     let errText: string | null = null
 
-    if (data?.props?.errors?.email) {
+    if (data?.props?.errors?.turnstile_token) {
+      errText = data.props.errors.turnstile_token
+      form.setError('turnstile_token', errText)
+    } else if (data?.errors?.turnstile_token) {
+      errText = Array.isArray(data.errors.turnstile_token) ? data.errors.turnstile_token[0] : data.errors.turnstile_token
+      form.setError('turnstile_token', errText)
+    } else if (data?.props?.errors?.email) {
       errText = data.props.errors.email
     } else if (data?.props?.errors?.password) {
       errText = data.props.errors.password
@@ -300,7 +354,7 @@ const submit = async () => {
       showErrorModal.value = true
       isSubmitting.value = false
       errorMessage.value = errText || t('login_modal_error_msg', 'អាសយដ្ឋានអ៊ីមែល ឬពាក្យសម្ងាត់របស់អ្នកមិនត្រឹមត្រូវទេ។ សូមពិនិត្យមើលឡើងវិញ!')
-      if (errText) {
+      if (errText && !form.errors.turnstile_token) {
         form.setError('email', errText)
       }
 
@@ -334,6 +388,7 @@ const submit = async () => {
     }, 4500)
   } finally {
     form.reset('password')
+    resetTurnstile()
   }
 }
 
@@ -687,6 +742,21 @@ onMounted(() => {
       } catch (_) {}
       handleTelegramAuthSuccess(tgUser)
     }
+
+    // 3. Load Cloudflare Turnstile script dynamically
+    if (!document.getElementById('turnstile-script')) {
+      const script = document.createElement('script')
+      script.id = 'turnstile-script'
+      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
+      script.async = true
+      script.defer = true
+      script.onload = () => {
+        setTimeout(initTurnstile, 150)
+      }
+      document.head.appendChild(script)
+    } else {
+      setTimeout(initTurnstile, 150)
+    }
   }
 })
 
@@ -700,6 +770,11 @@ onUnmounted(() => {
     stopPopupTracking()
     if ((window as any).onTelegramAuth) {
       delete (window as any).onTelegramAuth
+    }
+    if (turnstileWidgetId !== null && (window as any).turnstile) {
+      try {
+        (window as any).turnstile.remove(turnstileWidgetId)
+      } catch (_) {}
     }
   }
 })
@@ -875,6 +950,12 @@ onUnmounted(() => {
               <span class="leading-tight font-medium">{{ form.errors.email }}</span>
             </div>
 
+            <!-- Turnstile Error Banner -->
+            <div v-if="form.errors.turnstile_token" class="bg-rose-500/10 border border-rose-500/30 rounded-xl p-2.5 text-rose-600 dark:text-rose-300 text-xs flex items-start gap-2 shadow-sm animate-shake">
+              <i class="pi pi-shield text-sm text-rose-500 shrink-0 mt-0.5"></i>
+              <span class="leading-tight font-medium">{{ form.errors.turnstile_token }}</span>
+            </div>
+
             <!-- Social Notice Toast -->
             <div v-if="socialNotice" class="bg-blue-500/10 border border-blue-500/30 rounded-xl p-2.5 text-blue-700 dark:text-blue-300 text-xs flex items-center gap-2 transition-all">
               <i class="pi pi-info-circle text-blue-500 text-sm shrink-0"></i>
@@ -962,6 +1043,11 @@ onUnmounted(() => {
                     <span class="text-slate-800 dark:text-slate-100 font-bold text-[11px] sm:text-xs">{{ t('login_remember_me', 'Remember me') }}</span>
                   </label>
                   <Link href="/forgot-password" class="text-xs font-bold text-blue-600 dark:text-sky-400 hover:text-blue-700 dark:hover:text-sky-300 no-underline transition-colors">{{ t('login_forgot_password', 'Forgot Password?') }}</Link>
+                </div>
+
+                <!-- Cloudflare Turnstile CAPTCHA Widget -->
+                <div class="my-2.5 flex flex-col items-center justify-center min-h-[65px]">
+                  <div ref="turnstileWidget"></div>
                 </div>
 
                 <button type="submit" :disabled="isSubmitting || form.processing" class="h-11 group w-full py-2.5 px-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm hover:shadow-md transition-all duration-200 inline-flex items-center justify-center gap-2.5 disabled:opacity-50 text-xs sm:text-sm tracking-wide cursor-pointer">
