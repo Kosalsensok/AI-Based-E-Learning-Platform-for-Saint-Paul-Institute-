@@ -15,6 +15,7 @@
         "laravel/reverb": "^1.11",
         "laravel/sanctum": "^4.3",
         "laravel/tinker": "^3.0",
+        "league/flysystem-aws-s3-v3": "*",
         "maatwebsite/excel": "*",
         "predis/predis": "*",
         "resend/resend-laravel": "^1.4",
