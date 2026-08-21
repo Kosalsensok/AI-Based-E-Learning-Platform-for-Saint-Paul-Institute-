@@ -901,13 +901,13 @@ onUnmounted(() => {
       <div class="absolute -bottom-32 -right-32 w-[600px] h-[600px] bg-indigo-500/25 dark:bg-indigo-600/30 rounded-full blur-[140px] animate-float-reverse"></div>
     </div>
 
-    <!-- Master Centered Login Card (Clean & Focused) -->
-    <div :class="['w-full p-[1px] rounded-3xl bg-gradient-to-b from-blue-500/40 via-indigo-500/20 to-purple-500/30 dark:from-blue-500/30 dark:via-slate-800/40 dark:to-indigo-500/20 shadow-2xl shadow-slate-900/10 dark:shadow-black/60 relative z-10 my-auto transition-all duration-300', isAuthenticating ? 'max-w-sm' : 'max-w-md']">
-      <div :class="['w-full bg-white/95 dark:bg-[#0E172E]/95 backdrop-blur-2xl rounded-[23px] flex flex-col justify-center relative z-20 transition-all duration-300 font-[\'Kantumruy_Pro\',sans-serif]', isAuthenticating ? 'p-8 items-center text-center' : 'p-6 sm:p-8 space-y-4']">
+    <!-- Master Centered Login Card (Clean & Balanced Width) -->
+    <div :class="['w-full p-[1px] rounded-3xl bg-gradient-to-b from-blue-500/40 via-indigo-500/20 to-purple-500/30 dark:from-blue-500/30 dark:via-slate-800/40 dark:to-indigo-500/20 shadow-2xl shadow-slate-900/10 dark:shadow-black/60 relative z-10 my-auto transition-all duration-300', isAuthenticating ? 'max-w-sm' : 'max-w-[490px]']">
+      <div :class="['w-full bg-white/95 dark:bg-[#0E172E]/95 backdrop-blur-2xl rounded-[23px] flex flex-col justify-center relative z-20 transition-all duration-300 font-[\'Kantumruy_Pro\',sans-serif]', isAuthenticating ? 'p-8 items-center text-center' : 'p-6 sm:p-8 space-y-3.5']">
         
         <!-- Header with Logo & Brand Name -->
-        <div v-if="!isAuthenticating" class="w-full space-y-4">
-          <div class="text-center pb-1 relative">
+        <div v-if="!isAuthenticating" class="w-full space-y-3">
+          <div class="text-center pb-0.5 relative">
             <div class="flex flex-col items-center justify-center gap-1.5">
               <div class="relative group">
                 <div class="absolute -inset-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full blur opacity-35 group-hover:opacity-65 transition duration-300"></div>
@@ -918,7 +918,7 @@ onUnmounted(() => {
                   height="56"
                   fetchpriority="high"
                   decoding="async"
-                  class="relative w-14 h-14 rounded-full shadow-lg object-contain ring-2 ring-blue-500/40 ring-offset-2 ring-offset-white dark:ring-offset-[#0E172E] bg-white p-0.5 transition-transform duration-300 group-hover:scale-105"
+                  class="relative w-13 h-13 rounded-full shadow-lg object-contain ring-2 ring-blue-500/40 ring-offset-2 ring-offset-white dark:ring-offset-[#0E172E] bg-white p-0.5 transition-transform duration-300 group-hover:scale-105"
                 />
               </div>
               <div>
@@ -932,7 +932,7 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <div class="space-y-3.5">
+          <div class="space-y-3">
           
             <!-- OAuth Notification Banner (e.g., Decline / Cancel / Error) -->
             <Transition
@@ -999,7 +999,7 @@ onUnmounted(() => {
             <!-- 1. Main Password Form or 2. Email OTP Flow -->
             <div v-if="authMode === 'password'">
               <!-- Role Selection Segmented Tabs -->
-              <div class="p-1 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 grid grid-cols-3 gap-1 mb-3.5">
+              <div class="p-1 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 grid grid-cols-3 gap-1.5 mb-3">
                 <button
                   v-for="role in ['student', 'teacher', 'admin']"
                   :key="role"
@@ -1017,7 +1017,7 @@ onUnmounted(() => {
                 </button>
               </div>
 
-              <form @submit.prevent="submit" class="space-y-3.5">
+              <form @submit.prevent="submit" class="space-y-3">
                 <div class="space-y-1">
                   <label class="block text-xs font-bold text-slate-800 dark:text-slate-100">{{ identityLabel }}</label>
                   <div class="relative group">
@@ -1074,11 +1074,11 @@ onUnmounted(() => {
                 </div>
 
                 <!-- Cloudflare Turnstile CAPTCHA Widget -->
-                <div class="my-2.5 flex flex-col items-center justify-center min-h-[65px]">
+                <div class="my-2 flex flex-col items-center justify-center min-h-[65px]">
                   <div ref="turnstileWidget"></div>
                 </div>
 
-                <button type="submit" :disabled="isSubmitting || form.processing" class="h-11 group w-full py-2.5 px-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm hover:shadow-md transition-all duration-200 inline-flex items-center justify-center gap-2.5 disabled:opacity-50 text-xs sm:text-sm tracking-wide cursor-pointer">
+                <button type="submit" :disabled="isSubmitting || form.processing" class="h-11 group w-full py-2.5 px-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm hover:shadow-md transition-all duration-200 inline-flex items-center justify-center gap-2.5 disabled:opacity-50 text-xs sm:text-sm tracking-wide cursor-pointer select-none">
                   <i v-if="isSubmitting || form.processing" class="pi pi-spin pi-spinner text-sm"></i>
                   <template v-else>
                     <span>{{ t('login_btn_submit', 'Sign In') }}</span>
@@ -1089,7 +1089,7 @@ onUnmounted(() => {
             </div>
 
             <!-- Email OTP Flow -->
-            <div v-else class="space-y-4">
+            <div v-else class="space-y-3.5">
               <div class="flex items-center justify-between pb-1 border-b border-slate-200/80 dark:border-slate-700/80">
                 <button type="button" @click="authMode = 'password'" class="text-xs font-semibold text-blue-600 dark:text-sky-400 hover:text-blue-700 dark:hover:text-sky-300 no-underline flex items-center gap-1.5 cursor-pointer py-1 transition-colors select-none">
                   <i class="pi pi-arrow-left text-[10px]"></i>
@@ -1100,8 +1100,8 @@ onUnmounted(() => {
                 </span>
               </div>
 
-              <div v-if="otpStep === 1" class="space-y-3.5">
-                <div class="space-y-1.5">
+              <div v-if="otpStep === 1" class="space-y-3">
+                <div class="space-y-1">
                   <label class="block text-xs font-bold text-slate-800 dark:text-slate-100">{{ currentLang === 'km' ? 'អាសយដ្ឋាន Gmail / អ៊ីមែលរបស់អ្នក' : 'Your Official Gmail / Email' }}</label>
                   <div class="relative group">
                     <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-300">
@@ -1117,8 +1117,8 @@ onUnmounted(() => {
                 </button>
               </div>
 
-              <div v-else class="space-y-3.5">
-                <div class="space-y-1.5">
+              <div v-else class="space-y-3">
+                <div class="space-y-1">
                   <div class="flex items-center justify-between">
                     <label class="block text-xs font-bold text-slate-800 dark:text-slate-100">{{ currentLang === 'km' ? 'វាយបញ្ចូលលេខកូដ OTP ៦ ខ្ទង់' : 'Enter 6-digit OTP Code' }}</label>
                     <button type="button" @click="otpStep = 1" class="text-[11px] text-blue-600 dark:text-sky-400 hover:text-blue-700 dark:hover:text-sky-300 no-underline font-medium cursor-pointer transition-colors">{{ currentLang === 'km' ? 'ប្តូរ Email' : 'Edit email' }}</button>
@@ -1141,8 +1141,8 @@ onUnmounted(() => {
             </div>
 
             <!-- Social Logins Section (Google, Telegram, Email OTP under OR) -->
-            <div v-if="authMode === 'password'" class="space-y-2 pt-0.5">
-              <div class="flex items-center my-3.5 text-slate-400 dark:text-slate-500">
+            <div v-if="authMode === 'password'" class="space-y-1.5 pt-0.5">
+              <div class="flex items-center my-3 text-slate-400 dark:text-slate-500">
                 <div class="flex-grow border-t border-slate-300 dark:border-slate-600"></div>
                 <span class="px-4 text-xs font-bold text-slate-500 dark:text-slate-300 select-none tracking-wider">
                   {{ t('login_or', 'OR') }}
@@ -1150,13 +1150,13 @@ onUnmounted(() => {
                 <div class="flex-grow border-t border-slate-300 dark:border-slate-600"></div>
               </div>
 
-              <div class="grid grid-cols-3 gap-2">
+              <div class="grid grid-cols-3 gap-2.5">
                 <!-- Google Button -->
                 <button
                   type="button"
                   :disabled="isAuthenticating"
                   @click="redirectToGoogleOAuth"
-                  class="h-10.5 py-2 px-2 bg-white dark:bg-slate-800/80 hover:bg-slate-50/90 dark:hover:bg-slate-700/60 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white transition-all duration-150 flex items-center justify-center gap-1.5 hover:shadow-xs active:scale-98 shadow-2xs cursor-pointer focus:outline-none select-none disabled:opacity-60 disabled:cursor-not-allowed"
+                  class="h-10.5 py-2 px-2.5 bg-white dark:bg-slate-800/80 hover:bg-slate-50/90 dark:hover:bg-slate-700/60 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white transition-all duration-150 flex items-center justify-center gap-1.5 hover:shadow-xs active:scale-98 shadow-2xs cursor-pointer focus:outline-none select-none disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <template v-if="isGoogleLoading">
                     <i class="pi pi-spin pi-spinner text-rose-500 text-sm"></i>
@@ -1172,7 +1172,7 @@ onUnmounted(() => {
                   type="button"
                   :disabled="isAuthenticating"
                   @click="redirectToTelegramOAuth"
-                  class="h-10.5 py-2 px-2 bg-white dark:bg-slate-800/80 hover:bg-slate-50/90 dark:hover:bg-slate-700/60 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white transition-all duration-150 flex items-center justify-center gap-1.5 hover:shadow-xs active:scale-98 shadow-2xs cursor-pointer focus:outline-none select-none disabled:opacity-60 disabled:cursor-not-allowed"
+                  class="h-10.5 py-2 px-2.5 bg-white dark:bg-slate-800/80 hover:bg-slate-50/90 dark:hover:bg-slate-700/60 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white transition-all duration-150 flex items-center justify-center gap-1.5 hover:shadow-xs active:scale-98 shadow-2xs cursor-pointer focus:outline-none select-none disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <template v-if="isTelegramLoading">
                     <i class="pi pi-spin pi-spinner text-sky-500 text-sm"></i>
@@ -1188,7 +1188,7 @@ onUnmounted(() => {
                   type="button"
                   :disabled="isAuthenticating"
                   @click="authMode = 'otp'; otpStep = 1"
-                  class="h-10.5 py-2 px-2 bg-white dark:bg-slate-800/80 hover:bg-blue-50/90 dark:hover:bg-slate-700/60 border border-slate-300 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-150 flex items-center justify-center gap-1.5 hover:shadow-xs active:scale-98 shadow-2xs cursor-pointer focus:outline-none select-none disabled:opacity-60 disabled:cursor-not-allowed"
+                  class="h-10.5 py-2 px-2.5 bg-white dark:bg-slate-800/80 hover:bg-blue-50/90 dark:hover:bg-slate-700/60 border border-slate-300 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-150 flex items-center justify-center gap-1.5 hover:shadow-xs active:scale-98 shadow-2xs cursor-pointer focus:outline-none select-none disabled:opacity-60 disabled:cursor-not-allowed"
                   title="Gmail / Email OTP Login"
                 >
                   <i class="pi pi-envelope text-blue-500 text-sm"></i>
