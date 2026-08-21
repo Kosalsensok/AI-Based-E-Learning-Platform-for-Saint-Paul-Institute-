@@ -28,34 +28,43 @@ const turnstileWidget = ref<HTMLElement | null>(null)
 let turnstileWidgetId: string | number | null = null
 
 const initTurnstile = () => {
-  if (typeof window === 'undefined' || !(window as any).turnstile || !turnstileWidget.value) {
-    return
+  if (typeof window === 'undefined' || !turnstileWidget.value) return
+
+  const renderWidget = () => {
+    if (typeof window === 'undefined' || !(window as any).turnstile || !turnstileWidget.value) return
+    try {
+      if (turnstileWidgetId !== null) {
+        try {
+          (window as any).turnstile.remove(turnstileWidgetId)
+        } catch (_) {}
+        turnstileWidgetId = null
+      }
+
+      turnstileWidgetId = (window as any).turnstile.render(turnstileWidget.value, {
+        sitekey: import.meta.env.VITE_TURNSTILE_SITE_KEY || '0x4AAAAAAAEXY2t6Dsf5eBecK',
+        theme: isDark.value ? 'dark' : 'light',
+        size: 'normal',
+        callback: (token: string) => {
+          form.turnstile_token = token
+          form.clearErrors('turnstile_token')
+        },
+        'expired-callback': () => {
+          form.turnstile_token = ''
+        },
+        'error-callback': (code: any) => {
+          console.warn('Turnstile error callback:', code)
+          form.turnstile_token = ''
+        },
+      })
+    } catch (e) {
+      console.warn('Turnstile render exception:', e)
+    }
   }
 
-  try {
-    if (turnstileWidgetId !== null) {
-      try {
-        (window as any).turnstile.remove(turnstileWidgetId)
-      } catch (_) {}
-      turnstileWidgetId = null
-    }
-
-    turnstileWidgetId = (window as any).turnstile.render(turnstileWidget.value, {
-      sitekey: import.meta.env.VITE_TURNSTILE_SITE_KEY || '0x4AAAAAAAEXY2t6Dsf5eBecK',
-      theme: isDark.value ? 'dark' : 'light',
-      callback: (token: string) => {
-        form.turnstile_token = token
-        form.clearErrors('turnstile_token')
-      },
-      'expired-callback': () => {
-        form.turnstile_token = ''
-      },
-      'error-callback': () => {
-        form.turnstile_token = ''
-      },
-    })
-  } catch (e) {
-    console.warn('Turnstile init error:', e)
+  if (typeof (window as any).turnstile !== 'undefined' && typeof (window as any).turnstile.ready === 'function') {
+    (window as any).turnstile.ready(renderWidget)
+  } else {
+    setTimeout(renderWidget, 250)
   }
 }
 
