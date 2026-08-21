@@ -1073,16 +1073,28 @@ onUnmounted(() => {
                   <Link href="/forgot-password" class="text-xs font-bold text-blue-600 dark:text-sky-400 hover:text-blue-700 dark:hover:text-sky-300 no-underline transition-colors">{{ t('login_forgot_password', 'Forgot Password?') }}</Link>
                 </div>
 
-                <!-- Cloudflare Turnstile CAPTCHA Widget -->
-                <div class="my-2.5 flex flex-col items-center justify-center min-h-[65px]">
+                <!-- Cloudflare Turnstile CAPTCHA Widget (Zero Layout Shift) -->
+                <div class="my-2.5 flex flex-col items-center justify-center min-h-[68px] transition-all duration-200">
                   <div ref="turnstileWidget"></div>
                 </div>
 
-                <button type="submit" :disabled="isSubmitting || form.processing" class="h-11 group w-full py-2.5 px-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm hover:shadow-md transition-all duration-200 inline-flex items-center justify-center gap-2.5 disabled:opacity-50 text-xs sm:text-sm tracking-wide cursor-pointer">
-                  <i v-if="isSubmitting || form.processing" class="pi pi-spin pi-spinner text-sm"></i>
+                <!-- Submit Button with Loading Spinner and Disabled Micro-Interactions -->
+                <button 
+                  type="submit" 
+                  :disabled="isSubmitting || form.processing || !form.turnstile_token" 
+                  class="h-11 group w-full py-2.5 px-5 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800/80 disabled:text-slate-500 disabled:border-slate-700/50 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-lg shadow-blue-600/25 active:scale-[0.99] transition-all duration-200 inline-flex items-center justify-center gap-2.5 text-xs sm:text-sm tracking-wide cursor-pointer select-none"
+                >
+                  <svg v-if="isSubmitting || form.processing" class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
                   <template v-else>
                     <span>{{ t('login_btn_submit', 'Sign In') }}</span>
-                    <span class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center group-hover:translate-x-1 transition-all"><svg class="w-3.5 h-3.5 fill-current text-white" viewBox="0 0 24 24"><path d="M13.293 6.293a1 1 0 0 1 1.414 0l5 5a1 1 0 0 1 0 1.414l-5 5a1 1 0 0 1-1.414-1.414L16.586 13H5a1 1 0 1 1 0-2h11.586l-3.293-3.293a1 1 0 0 1 0-1.414z"/></svg></span>
+                    <span class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center group-hover:translate-x-1 transition-all">
+                      <svg class="w-3.5 h-3.5 fill-current text-white" viewBox="0 0 24 24">
+                        <path d="M13.293 6.293a1 1 0 0 1 1.414 0l5 5a1 1 0 0 1 0 1.414l-5 5a1 1 0 0 1-1.414-1.414L16.586 13H5a1 1 0 1 1 0-2h11.586l-3.293-3.293a1 1 0 0 1 0-1.414z"/>
+                      </svg>
+                    </span>
                   </template>
                 </button>
               </form>
