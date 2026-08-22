@@ -884,8 +884,8 @@ onUnmounted(() => {
     </div>
 
     <!-- Master Centered Login Card (Clean Obsidian Glassmorphism) -->
-    <div :class="['w-full p-[1px] rounded-3xl bg-gradient-to-b from-blue-500/40 via-indigo-500/20 to-purple-500/30 dark:from-white/20 dark:via-white/5 dark:to-white/10 shadow-2xl shadow-slate-900/10 dark:shadow-[0_0_60px_-15px_rgba(0,0,0,0.9)] relative z-10 my-auto transition-all duration-300', isAuthenticating ? 'max-w-sm' : 'max-w-[490px]']">
-      <div :class="['w-full bg-white/95 dark:bg-[#0c0d12]/95 backdrop-blur-2xl rounded-[23px] flex flex-col justify-center relative z-20 transition-all duration-300 font-[\'Kantumruy_Pro\',sans-serif]', isAuthenticating ? 'p-8 items-center text-center' : 'p-6 sm:p-8 space-y-3.5']">
+    <div :class="['w-full p-[1px] rounded-3xl bg-gradient-to-b from-blue-500/30 via-indigo-500/10 to-transparent dark:from-white/15 dark:via-white/5 dark:to-transparent shadow-2xl shadow-slate-900/10 dark:shadow-[0_0_80px_-20px_rgba(0,0,0,0.95)] relative z-10 my-auto transition-all duration-300', isAuthenticating ? 'max-w-sm' : 'max-w-[430px]']">
+      <div :class="['w-full bg-white/95 dark:bg-[#0c0d12]/90 backdrop-blur-3xl rounded-[23px] flex flex-col justify-center relative z-20 transition-all duration-300 font-[\'Kantumruy_Pro\',sans-serif]', isAuthenticating ? 'p-8 items-center text-center' : 'p-6 sm:p-7 space-y-3.5']">
         
         <!-- Header with Logo & Brand Name -->
         <div v-if="!isAuthenticating" class="w-full space-y-3">

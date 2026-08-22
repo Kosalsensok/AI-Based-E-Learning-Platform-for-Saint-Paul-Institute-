@@ -87,14 +87,14 @@ const handleClick = (e: MouseEvent) => {
     x: e.clientX - rect.left,
     y: e.clientY - rect.top,
     radius: 0,
-    maxRadius: 400,
+    maxRadius: 380,
     intensity: 1.0,
-    speed: 6.0,
+    speed: 5.5,
   })
 }
 
-// Initialize and Rebuild the Matrix Grid
-const spacing = 22
+// Initialize and Rebuild the Matrix Grid (Crisp 20px spacing like Manus)
+const spacing = 20
 
 const buildGrid = () => {
   dots = []
@@ -109,14 +109,14 @@ const buildGrid = () => {
       const x = c * spacing + offsetX
       const normX = x / (width || 1)
 
-      // 10% of nodes are distinct bright twinkling stars / nodes
-      const isStar = Math.random() < 0.09
+      // 8% of nodes are distinct bright twinkling constellation stars
+      const isStar = Math.random() < 0.08
 
-      // Color mapping
+      // Color mapping (Subtle cyber accents on wings)
       let colorType: 'emerald' | 'amber' | 'white' | 'cyan' = 'white'
-      if (normX < 0.32) {
-        colorType = Math.random() < 0.6 ? 'emerald' : 'cyan'
-      } else if (normX > 0.68) {
+      if (normX < 0.35) {
+        colorType = Math.random() < 0.5 ? 'emerald' : 'cyan'
+      } else if (normX > 0.65) {
         colorType = 'amber'
       }
 
@@ -127,7 +127,7 @@ const buildGrid = () => {
         baseY: y,
         isStar,
         twinklePhase: Math.random() * Math.PI * 2,
-        twinkleSpeed: 0.8 + Math.random() * 1.6,
+        twinkleSpeed: 0.6 + Math.random() * 1.4,
         colorType,
       })
     }
@@ -148,7 +148,7 @@ const resize = () => {
   buildGrid()
 }
 
-// 60FPS Manus Twinkling & Traveling Matrix Wave Engine
+// 60FPS Manus Continuous Matrix Wave & Twinkling Constellation Engine
 const render = (time: number) => {
   if (!isAnimating || !canvasRef.value) return
   animationFrameId = requestAnimationFrame(render)
@@ -176,34 +176,34 @@ const render = (time: number) => {
     }
   }
 
-  // 1. Render Subtle Ambient Lighting Flares in Dark Mode
+  // 1. Subtle Ambient Nebula Glow in Dark Mode
   if (isDark) {
-    // Left Emerald Flare
+    // Left Cyber Emerald Flare
     const g1 = ctx.createRadialGradient(
-      width * 0.15 + Math.sin(t * 0.4) * 60,
-      height * 0.65 + Math.cos(t * 0.3) * 50,
+      width * 0.12 + Math.sin(t * 0.35) * 50,
+      height * 0.7 + Math.cos(t * 0.25) * 40,
       0,
-      width * 0.15,
-      height * 0.65,
-      Math.max(width, height) * 0.4
+      width * 0.12,
+      height * 0.7,
+      Math.max(width, height) * 0.38
     )
-    g1.addColorStop(0, 'rgba(16, 185, 129, 0.12)')
-    g1.addColorStop(0.5, 'rgba(6, 182, 212, 0.04)')
+    g1.addColorStop(0, 'rgba(16, 185, 129, 0.09)')
+    g1.addColorStop(0.6, 'rgba(6, 182, 212, 0.03)')
     g1.addColorStop(1, 'rgba(16, 185, 129, 0)')
     ctx.fillStyle = g1
     ctx.fillRect(0, 0, width, height)
 
-    // Right Amber Flare
+    // Right Warm Amber Flare
     const g2 = ctx.createRadialGradient(
-      width * 0.85 + Math.cos(t * 0.35) * 60,
-      height * 0.35 + Math.sin(t * 0.4) * 50,
+      width * 0.88 + Math.cos(t * 0.3) * 50,
+      height * 0.3 + Math.sin(t * 0.35) * 40,
       0,
-      width * 0.85,
-      height * 0.35,
-      Math.max(width, height) * 0.4
+      width * 0.88,
+      height * 0.3,
+      Math.max(width, height) * 0.38
     )
-    g2.addColorStop(0, 'rgba(245, 158, 11, 0.11)')
-    g2.addColorStop(0.5, 'rgba(244, 63, 94, 0.04)')
+    g2.addColorStop(0, 'rgba(245, 158, 11, 0.08)')
+    g2.addColorStop(0.6, 'rgba(244, 63, 94, 0.03)')
     g2.addColorStop(1, 'rgba(245, 158, 11, 0)')
     ctx.fillStyle = g2
     ctx.fillRect(0, 0, width, height)
@@ -218,25 +218,29 @@ const render = (time: number) => {
   for (let i = 0; i < dots.length; i++) {
     const dot = dots[i]
 
-    // Traveling Wave 1 (Diagonal sweeping pulse)
-    const wave1 = Math.sin(dot.col * 0.12 + dot.row * 0.08 - t * 1.8)
+    // Traveling Wave 1 (Diagonal sweeping pulse across the matrix)
+    const wave1 = Math.sin(dot.col * 0.14 + dot.row * 0.09 - t * 1.6)
     
-    // Traveling Wave 2 (Radial breathing pulse from center)
+    // Traveling Wave 2 (Radial organic breathing pulse)
     const distCenter = Math.hypot(dot.baseX - centerX, dot.baseY - centerY)
-    const wave2 = Math.sin(distCenter * 0.012 - t * 2.2)
+    const wave2 = Math.sin(distCenter * 0.01 - t * 2.0)
 
     // Combined Wave Factor (0.0 to 1.0)
     const waveFactor = (wave1 * 0.55 + wave2 * 0.45 + 1) * 0.5
 
+    // Center Form Falloff (Manus signature spotlight: dots in the immediate center fade gently so form text is 100% crisp)
+    const centerFactor = Math.min(1.0, Math.pow(distCenter / (Math.min(width, height) * 0.38), 1.6))
+    const centerFade = isDark ? 0.45 + centerFactor * 0.55 : 0.6 + centerFactor * 0.4
+
     // Base Alpha Calculation
-    let alpha = isDark ? 0.08 + Math.pow(waveFactor, 2.0) * 0.35 : 0.06 + Math.pow(waveFactor, 1.8) * 0.25
-    let radius = isDark ? 0.85 + waveFactor * 0.55 : 0.8 + waveFactor * 0.4
+    let alpha = (isDark ? 0.08 + Math.pow(waveFactor, 2.0) * 0.32 : 0.06 + Math.pow(waveFactor, 1.8) * 0.22) * centerFade
+    let radius = isDark ? 0.8 + waveFactor * 0.5 : 0.75 + waveFactor * 0.35
 
     // Individual Twinkling Node Pulsing (Sparkling Stars like Manus)
     if (dot.isStar) {
       const twinkle = (Math.sin(t * dot.twinkleSpeed + dot.twinklePhase) + 1) * 0.5
-      alpha += Math.pow(twinkle, 2.5) * (isDark ? 0.65 : 0.45)
-      radius += twinkle * 1.1
+      alpha += Math.pow(twinkle, 2.5) * (isDark ? 0.6 : 0.4) * centerFade
+      radius += twinkle * 1.0
     }
 
     let currentX = dot.baseX
@@ -252,10 +256,10 @@ const render = (time: number) => {
         const dist = Math.sqrt(distSq)
         const factor = Math.pow(1 - dist / mouseRadius, 2)
         
-        alpha += factor * (isDark ? 0.8 : 0.55)
-        radius += factor * 1.5
+        alpha += factor * (isDark ? 0.75 : 0.5)
+        radius += factor * 1.4
 
-        const push = factor * 3.5
+        const push = factor * 3.2
         currentX += (dx / dist) * push
         currentY += (dy / dist) * push
       }
@@ -270,16 +274,16 @@ const render = (time: number) => {
 
       if (waveDiff < 40) {
         const swFactor = (1 - waveDiff / 40) * sw.intensity
-        alpha += swFactor * 0.85
-        radius += swFactor * 1.6
+        alpha += swFactor * 0.8
+        radius += swFactor * 1.5
         if (swDist > 0) {
-          currentX += (swDx / swDist) * (swFactor * 6.0)
-          currentY += (swDy / swDist) * (swFactor * 6.0)
+          currentX += (swDx / swDist) * (swFactor * 5.5)
+          currentY += (swDy / swDist) * (swFactor * 5.5)
         }
       }
     }
 
-    alpha = Math.min(Math.max(alpha, 0.04), 0.95)
+    alpha = Math.min(Math.max(alpha, 0.03), 0.95)
 
     // Color Rendering
     if (isDark) {
@@ -293,15 +297,15 @@ const render = (time: number) => {
       } else if (dot.colorType === 'amber') {
         ctx.fillStyle = `rgba(245, 158, 11, ${alpha})`
       } else {
-        ctx.fillStyle = `rgba(225, 235, 255, ${alpha})`
+        ctx.fillStyle = `rgba(230, 238, 255, ${alpha})`
       }
     } else {
       if (dot.colorType === 'emerald' || dot.colorType === 'cyan') {
-        ctx.fillStyle = `rgba(13, 148, 136, ${Math.min(alpha * 1.2, 0.8)})`
+        ctx.fillStyle = `rgba(13, 148, 136, ${Math.min(alpha * 1.2, 0.75)})`
       } else if (dot.colorType === 'amber') {
-        ctx.fillStyle = `rgba(217, 119, 6, ${Math.min(alpha * 1.2, 0.8)})`
+        ctx.fillStyle = `rgba(217, 119, 6, ${Math.min(alpha * 1.2, 0.75)})`
       } else {
-        ctx.fillStyle = `rgba(71, 85, 105, ${Math.min(alpha * 1.2, 0.9)})`
+        ctx.fillStyle = `rgba(71, 85, 105, ${Math.min(alpha * 1.2, 0.85)})`
       }
     }
 
@@ -316,14 +320,14 @@ const render = (time: number) => {
     const vignette = ctx.createRadialGradient(
       width / 2,
       height / 2,
-      Math.min(width, height) * 0.28,
+      Math.min(width, height) * 0.32,
       width / 2,
       height / 2,
-      Math.max(width, height) * 0.78
+      Math.max(width, height) * 0.82
     )
-    vignette.addColorStop(0, 'rgba(7, 7, 9, 0)')
-    vignette.addColorStop(0.65, 'rgba(7, 7, 9, 0.35)')
-    vignette.addColorStop(1, 'rgba(7, 7, 9, 0.94)')
+    vignette.addColorStop(0, 'rgba(5, 5, 7, 0)')
+    vignette.addColorStop(0.65, 'rgba(5, 5, 7, 0.4)')
+    vignette.addColorStop(1, 'rgba(5, 5, 7, 0.95)')
     ctx.fillStyle = vignette
     ctx.fillRect(0, 0, width, height)
   }
