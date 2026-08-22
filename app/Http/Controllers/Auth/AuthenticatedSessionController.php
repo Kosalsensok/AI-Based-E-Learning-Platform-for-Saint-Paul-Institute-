@@ -209,13 +209,14 @@ class AuthenticatedSessionController extends Controller
         // Login and regenerate session
         Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
+        $request->session()->forget('url.intended');
 
         if ($user->role === 'admin') {
-            return redirect()->intended('/admin/dashboard');
+            return redirect()->route('admin.dashboard');
         } elseif ($user->role === 'teacher') {
-            return redirect()->intended('/teacher/dashboard');
+            return redirect()->route('teacher.dashboard');
         } else {
-            return redirect()->intended('/student/dashboard');
+            return redirect()->route('student.dashboard');
         }
     }
 

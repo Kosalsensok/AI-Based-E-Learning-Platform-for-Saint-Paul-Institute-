@@ -17,14 +17,22 @@ class EnsureRole
         }
 
         if (!$user->is_active) {
-            abort(403, 'Account is disabled.');
+            auth()->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            return redirect()->route('login')->withErrors(['email' => 'គណនីរបស់អ្នកត្រូវបានបិទដំណើរការ។']);
         }
 
-        // Admin has superuser access across teacher & admin modules
+        // Admin has superuser access across all modules
         if ($user->role === 'admin' || in_array($user->role, $roles)) {
             return $next($request);
         }
 
-        abort(403, 'Unauthorized role access.');
+        // Gracefully redirect to the user's appropriate role dashboard
+        return match ($user->role) {
+            'admin' => redirect()->route('admin.dashboard'),
+            'teacher' => redirect()->route('teacher.dashboard'),
+            default => redirect()->route('student.dashboard'),
+        };
     }
 }
