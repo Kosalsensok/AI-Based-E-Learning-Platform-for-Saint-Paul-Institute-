@@ -1,90 +1,273 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import * as THREE from 'three'
 
 const containerRef = ref<HTMLDivElement | null>(null)
 const canvasRef = ref<HTMLCanvasElement | null>(null)
-const isMobile = ref(false)
-const isCanvasReady = ref(false)
 
 let animationFrameId: number | null = null
 let isAnimating = false
-let startTime = 0
-let scene: THREE.Scene | null = null
-let camera: THREE.PerspectiveCamera | null = null
-let renderer: THREE.WebGLRenderer | null = null
-let observer: IntersectionObserver | null = null
+let width = 0
+let height = 0
+let dpr = 1
 
-// Three.js object references for animation loop
-let mainGroup: THREE.Group | null = null
-let innerSphere: THREE.Mesh | null = null
-let outerWire: THREE.Mesh | null = null
-let ringMesh: THREE.Mesh | null = null
-let aiCoreGroup: THREE.Group | null = null
-let outerTorus: THREE.Mesh | null = null
-let innerNode: THREE.Mesh | null = null
-let techMatrixGroup: THREE.Group | null = null
-let glassCube1: THREE.Mesh | null = null
-let glassCube2: THREE.Mesh | null = null
-let particleCloud: THREE.Points | null = null
-
-// Subtle mouse tracking for gentle 3D parallax
-const mouse = { x: 0, y: 0, targetX: 0, targetY: 0 }
-
-const handleMouseMove = (e: MouseEvent) => {
-  const halfWidth = window.innerWidth / 2
-  const halfHeight = window.innerHeight / 2
-  mouse.targetX = (e.clientX - halfWidth) / halfWidth
-  mouse.targetY = (e.clientY - halfHeight) / halfHeight
+// Mouse Tracking for Interactive Illumination
+const mouse = {
+  x: -1000,
+  y: -1000,
+  targetX: -1000,
+  targetY: -1000,
+  active: false,
 }
 
-const animate = () => {
-  if (!isAnimating) return
-  animationFrameId = requestAnimationFrame(animate)
-  const elapsedTime = (performance.now() - startTime) / 1000
+// Click Ripple Waves
+interface Ripple {
+  x: number
+  y: number
+  radius: number
+  maxRadius: number
+  opacity: number
+}
+const ripples: Ripple[] = []
+
+// Dark Mode State Observer
+let isDark = true
+let themeObserver: MutationObserver | null = null
+
+const updateTheme = () => {
+  if (typeof document !== 'undefined') {
+    isDark = document.documentElement.classList.contains('dark')
+  }
+}
+
+const handleMouseMove = (e: MouseEvent) => {
+  if (!containerRef.value) return
+  const rect = containerRef.value.getBoundingClientRect()
+  mouse.targetX = e.clientX - rect.left
+  mouse.targetY = e.clientY - rect.top
+  mouse.active = true
+}
+
+const handleMouseLeave = () => {
+  mouse.active = false
+  mouse.targetX = -1000
+  mouse.targetY = -1000
+}
+
+const handleTouchMove = (e: TouchEvent) => {
+  if (!containerRef.value || e.touches.length === 0) return
+  const rect = containerRef.value.getBoundingClientRect()
+  mouse.targetX = e.touches[0].clientX - rect.left
+  mouse.targetY = e.touches[0].clientY - rect.top
+  mouse.active = true
+}
+
+const handleTouchEnd = () => {
+  mouse.active = false
+}
+
+const handleClick = (e: MouseEvent) => {
+  if (!containerRef.value) return
+  const rect = containerRef.value.getBoundingClientRect()
+  ripples.push({
+    x: e.clientX - rect.left,
+    y: e.clientY - rect.top,
+    radius: 0,
+    maxRadius: 280,
+    opacity: 0.8,
+  })
+}
+
+// Resize & High-DPI Canvas Buffer
+const resize = () => {
+  if (!containerRef.value || !canvasRef.value) return
+  width = containerRef.value.clientWidth || window.innerWidth
+  height = containerRef.value.clientHeight || window.innerHeight
+  dpr = Math.min(window.devicePixelRatio || 1, 2)
+
+  canvasRef.value.width = width * dpr
+  canvasRef.value.height = height * dpr
+  canvasRef.value.style.width = `${width}px`
+  canvasRef.value.style.height = `${height}px`
+}
+
+// Animation Loop (60 FPS Interactive Dot Matrix Engine)
+const render = (time: number) => {
+  if (!isAnimating || !canvasRef.value) return
+  animationFrameId = requestAnimationFrame(render)
+
+  const ctx = canvasRef.value.getContext('2d', { alpha: true })
+  if (!ctx) return
+
+  ctx.save()
+  ctx.scale(dpr, dpr)
+  ctx.clearRect(0, 0, width, height)
 
   // Smooth mouse lerp
-  mouse.x += (mouse.targetX - mouse.x) * 0.03
-  mouse.y += (mouse.targetY - mouse.y) * 0.03
-
-  if (mainGroup) {
-    mainGroup.rotation.y = mouse.x * 0.08
-    mainGroup.rotation.x = -mouse.y * 0.06
+  if (mouse.active) {
+    mouse.x += (mouse.targetX - mouse.x) * 0.12
+    mouse.y += (mouse.targetY - mouse.y) * 0.12
+  } else {
+    mouse.x += (mouse.targetX - mouse.x) * 0.05
+    mouse.y += (mouse.targetY - mouse.y) * 0.05
   }
 
-  // Serene Floating Animations
-  if (innerSphere) innerSphere.rotation.y = elapsedTime * 0.25
-  if (outerWire) {
-    outerWire.rotation.x = elapsedTime * 0.15
-    outerWire.rotation.y = elapsedTime * 0.2
-  }
-  if (ringMesh) ringMesh.rotation.z = elapsedTime * 0.18
-  if (aiCoreGroup) aiCoreGroup.position.y = 4.8 + Math.sin(elapsedTime * 1.0) * 0.15
+  // 1. Ambient Moving Flares (Manus Signature Lighting)
+  const t = time * 0.0008
+  const amberX = width * 0.85 + Math.sin(t * 0.7) * 80
+  const amberY = height * 0.15 + Math.cos(t * 0.6) * 60
+  const tealX = width * 0.15 + Math.cos(t * 0.8) * 80
+  const tealY = height * 0.85 + Math.sin(t * 0.5) * 60
+  const violetX = width * 0.2 + Math.sin(t * 0.5) * 60
+  const violetY = height * 0.35 + Math.cos(t * 0.7) * 50
 
-  if (outerTorus) outerTorus.rotation.z = elapsedTime * 0.12
-  if (innerNode) innerNode.rotation.y = elapsedTime * 0.3
-  if (techMatrixGroup) techMatrixGroup.position.y = -4.8 + Math.sin(elapsedTime * 1.2 + 1) * 0.12
+  // Draw Subtle Ambient Glows
+  if (isDark) {
+    // Top-Right Warm Amber / Orange Flare
+    const gradAmber = ctx.createRadialGradient(amberX, amberY, 0, amberX, amberY, 480)
+    gradAmber.addColorStop(0, 'rgba(245, 158, 11, 0.13)')
+    gradAmber.addColorStop(0.5, 'rgba(234, 88, 12, 0.06)')
+    gradAmber.addColorStop(1, 'rgba(0, 0, 0, 0)')
+    ctx.fillStyle = gradAmber
+    ctx.fillRect(0, 0, width, height)
 
-  if (glassCube1) {
-    glassCube1.rotation.x += 0.003
-    glassCube1.rotation.y += 0.004
-  }
-  if (glassCube2) {
-    glassCube2.rotation.x -= 0.003
+    // Bottom-Left Cyber Emerald / Teal Flare
+    const gradTeal = ctx.createRadialGradient(tealX, tealY, 0, tealX, tealY, 520)
+    gradTeal.addColorStop(0, 'rgba(20, 184, 166, 0.11)')
+    gradTeal.addColorStop(0.5, 'rgba(16, 185, 129, 0.05)')
+    gradTeal.addColorStop(1, 'rgba(0, 0, 0, 0)')
+    ctx.fillStyle = gradTeal
+    ctx.fillRect(0, 0, width, height)
+
+    // Deep Indigo / Violet center flare
+    const gradViolet = ctx.createRadialGradient(violetX, violetY, 0, violetX, violetY, 400)
+    gradViolet.addColorStop(0, 'rgba(99, 102, 241, 0.10)')
+    gradViolet.addColorStop(1, 'rgba(0, 0, 0, 0)')
+    ctx.fillStyle = gradViolet
+    ctx.fillRect(0, 0, width, height)
+  } else {
+    // Light Mode Soft Blue / Indigo Glows
+    const gradLight = ctx.createRadialGradient(width * 0.75, height * 0.25, 0, width * 0.75, height * 0.25, 500)
+    gradLight.addColorStop(0, 'rgba(59, 130, 246, 0.08)')
+    gradLight.addColorStop(1, 'rgba(255, 255, 255, 0)')
+    ctx.fillStyle = gradLight
+    ctx.fillRect(0, 0, width, height)
   }
 
-  if (particleCloud) particleCloud.rotation.y = elapsedTime * 0.012
-
-  if (renderer && scene && camera) {
-    renderer.render(scene, camera)
+  // 2. Update Ripple Waves
+  for (let i = ripples.length - 1; i >= 0; i--) {
+    const r = ripples[i]
+    r.radius += 4.5
+    r.opacity *= 0.96
+    if (r.radius > r.maxRadius || r.opacity < 0.02) {
+      ripples.splice(i, 1)
+    }
   }
+
+  // 3. Grid Settings
+  const spacing = 26
+  const cols = Math.ceil(width / spacing) + 1
+  const rows = Math.ceil(height / spacing) + 1
+  const offsetX = (width % spacing) / 2
+  const offsetY = (height % spacing) / 2
+
+  const mouseRadius = 220
+  const mouseRadiusSq = mouseRadius * mouseRadius
+
+  // 4. Render Interactive Dot Matrix
+  for (let r = 0; r < rows; r++) {
+    const y = r * spacing + offsetY
+    for (let c = 0; c < cols; c++) {
+      const x = c * spacing + offsetX
+
+      // Organic subtle shimmer wave
+      const wave = Math.sin(t * 1.5 + x * 0.012 + y * 0.012) * 0.03
+      let alpha = isDark ? 0.16 + wave : 0.12 + wave
+      let radius = isDark ? 1.05 : 1.0
+
+      // Interactive Cursor Proximity Boost
+      const dx = x - mouse.x
+      const dy = y - mouse.y
+      const distSq = dx * dx + dy * dy
+
+      if (distSq < mouseRadiusSq) {
+        const dist = Math.sqrt(distSq)
+        const factor = Math.pow(1 - dist / mouseRadius, 2)
+        alpha += factor * (isDark ? 0.65 : 0.45)
+        radius += factor * 1.4
+      }
+
+      // Ripple Wave Interaction
+      for (const rip of ripples) {
+        const rdx = x - rip.x
+        const rdy = y - rip.y
+        const rDist = Math.sqrt(rdx * rdx + rdy * rdy)
+        const diff = Math.abs(rDist - rip.radius)
+        if (diff < 35) {
+          const ripFactor = (1 - diff / 35) * rip.opacity
+          alpha += ripFactor * 0.6
+          radius += ripFactor * 1.2
+        }
+      }
+
+      // Clamp Alpha
+      alpha = Math.min(Math.max(alpha, 0.04), 0.95)
+
+      // Dynamic Color Shading based on Screen Position (Manus Multi-Tone Dot Grid)
+      if (isDark) {
+        // Color influence calculation
+        const amberWeight = Math.max(0, 1 - Math.hypot(x - amberX, y - amberY) / 550)
+        const tealWeight = Math.max(0, 1 - Math.hypot(x - tealX, y - tealY) / 550)
+        const mouseWeight = distSq < mouseRadiusSq ? Math.pow(1 - Math.sqrt(distSq) / mouseRadius, 2) : 0
+
+        if (mouseWeight > 0.3) {
+          // Bright Diamond White/Cyan when near cursor
+          ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`
+        } else if (amberWeight > 0.25) {
+          // Warm Amber Tone
+          ctx.fillStyle = `rgba(251, 191, 36, ${alpha})`
+        } else if (tealWeight > 0.25) {
+          // Cyber Emerald Tone
+          ctx.fillStyle = `rgba(45, 212, 191, ${alpha})`
+        } else {
+          // Pure Crisp Slate/White Tone
+          ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`
+        }
+      } else {
+        // Light Mode: Slate / Indigo Tone
+        ctx.fillStyle = `rgba(51, 65, 85, ${alpha})`
+      }
+
+      // Draw Crisp Round Dot
+      ctx.beginPath()
+      ctx.arc(x, y, radius, 0, Math.PI * 2)
+      ctx.fill()
+    }
+  }
+
+  // 5. Soft Vignette Edge Falloff (Dark Mode Luxury Edge Shadow)
+  if (isDark) {
+    const vignette = ctx.createRadialGradient(
+      width / 2,
+      height / 2,
+      Math.min(width, height) * 0.3,
+      width / 2,
+      height / 2,
+      Math.max(width, height) * 0.75
+    )
+    vignette.addColorStop(0, 'rgba(7, 7, 9, 0)')
+    vignette.addColorStop(0.7, 'rgba(7, 7, 9, 0.4)')
+    vignette.addColorStop(1, 'rgba(7, 7, 9, 0.92)')
+    ctx.fillStyle = vignette
+    ctx.fillRect(0, 0, width, height)
+  }
+
+  ctx.restore()
 }
 
 const startAnimation = () => {
-  if (isAnimating || document.hidden || isMobile.value || !renderer) return
+  if (isAnimating) return
   isAnimating = true
-  if (!startTime) startTime = performance.now()
-  animate()
+  animationFrameId = requestAnimationFrame(render)
 }
 
 const stopAnimation = () => {
@@ -103,283 +286,46 @@ const handleVisibilityChange = () => {
   }
 }
 
-const checkMobile = () => {
-  if (typeof window !== 'undefined') {
-    isMobile.value = window.innerWidth < 768
-  }
-}
-
-const initThree = () => {
-  try {
-    checkMobile()
-    // Skip heavy 3D rendering on mobile devices, use ultra-light CSS gradient instead
-    if (isMobile.value) return
-    if (!canvasRef.value || !containerRef.value) return
-
-    const width = containerRef.value.clientWidth || window.innerWidth
-    const height = containerRef.value.clientHeight || window.innerHeight
-
-    if (width === 0 || height === 0) return
-
-    // Scene & Camera setup
-    scene = new THREE.Scene()
-    camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000)
-    camera.position.set(0, 0, 22)
-
-    // WebGL Renderer with Anti-aliasing & Soft Tone Mapping
-    renderer = new THREE.WebGLRenderer({
-      canvas: canvasRef.value,
-      alpha: true,
-      antialias: true,
-      powerPreference: 'high-performance',
-    })
-    renderer.setSize(width, height)
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
-
-    // Soft Lighting Setup (Gentle & Balanced)
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.75)
-    scene.add(ambientLight)
-
-    const dirLight = new THREE.DirectionalLight(0x60a5fa, 1.0)
-    dirLight.position.set(10, 15, 15)
-    scene.add(dirLight)
-
-    const cyanPoint = new THREE.PointLight(0x38bdf8, 1.4, 35)
-    cyanPoint.position.set(-12, 8, 8)
-    scene.add(cyanPoint)
-
-    const purplePoint = new THREE.PointLight(0x8b5cf6, 1.4, 35)
-    purplePoint.position.set(12, -8, 8)
-    scene.add(purplePoint)
-
-    // Main 3D Group
-    mainGroup = new THREE.Group()
-    scene.add(mainGroup)
-
-    // ==========================================
-    // 1. SUBTLE HOLOGRAPHIC AI CORE (TOP-LEFT)
-    // ==========================================
-    aiCoreGroup = new THREE.Group()
-    aiCoreGroup.position.set(-8.5, 4.8, -3)
-
-    // Inner Soft Glowing Core
-    const innerSphereGeo = new THREE.SphereGeometry(1.2, 24, 24)
-    const innerSphereMat = new THREE.MeshStandardMaterial({
-      color: 0x38bdf8,
-      emissive: 0x0284c7,
-      emissiveIntensity: 0.35,
-      roughness: 0.4,
-      metalness: 0.5,
-      transparent: true,
-      opacity: 0.65,
-    })
-    innerSphere = new THREE.Mesh(innerSphereGeo, innerSphereMat)
-    aiCoreGroup.add(innerSphere)
-
-    // Outer Delicate Wireframe Icosahedron
-    const outerWireGeo = new THREE.IcosahedronGeometry(1.9, 1)
-    const outerWireMat = new THREE.MeshBasicMaterial({
-      color: 0x60a5fa,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.28,
-    })
-    outerWire = new THREE.Mesh(outerWireGeo, outerWireMat)
-    aiCoreGroup.add(outerWire)
-
-    // Subtle Orbital Ring
-    const ringGeo = new THREE.TorusGeometry(2.4, 0.025, 16, 64)
-    const ringMat = new THREE.MeshBasicMaterial({
-      color: 0x38bdf8,
-      transparent: true,
-      opacity: 0.3,
-    })
-    ringMesh = new THREE.Mesh(ringGeo, ringMat)
-    ringMesh.rotation.x = Math.PI / 3
-    aiCoreGroup.add(ringMesh)
-
-    mainGroup.add(aiCoreGroup)
-
-    // ==========================================
-    // 2. SUBTLE TECH RING MATRIX (BOTTOM-RIGHT)
-    // ==========================================
-    techMatrixGroup = new THREE.Group()
-    techMatrixGroup.position.set(8.5, -4.8, -2)
-
-    const outerTorusGeo = new THREE.TorusGeometry(2.6, 0.03, 16, 64)
-    const outerTorusMat = new THREE.MeshBasicMaterial({
-      color: 0x8b5cf6,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.25,
-    })
-    outerTorus = new THREE.Mesh(outerTorusGeo, outerTorusMat)
-    outerTorus.rotation.x = Math.PI / 2.5
-    techMatrixGroup.add(outerTorus)
-
-    const innerNodeGeo = new THREE.OctahedronGeometry(0.8, 0)
-    const innerNodeMat = new THREE.MeshStandardMaterial({
-      color: 0x8b5cf6,
-      roughness: 0.4,
-      transparent: true,
-      opacity: 0.5,
-    })
-    innerNode = new THREE.Mesh(innerNodeGeo, innerNodeMat)
-    techMatrixGroup.add(innerNode)
-
-    mainGroup.add(techMatrixGroup)
-
-    // ==========================================
-    // 3. ELEGANT GLASSMOPHISM ACCENTS
-    // ==========================================
-    const glassGroup = new THREE.Group()
-
-    const cubeGeo = new THREE.BoxGeometry(1.4, 1.4, 1.4)
-    const glassMat = new THREE.MeshPhysicalMaterial({
-      color: 0x60a5fa,
-      transparent: true,
-      opacity: 0.22,
-      roughness: 0.2,
-      metalness: 0.1,
-      transmission: 0.6,
-      ior: 1.4,
-    })
-
-    // Glass Cube 1 (Upper Right Accent)
-    glassCube1 = new THREE.Mesh(cubeGeo, glassMat)
-    glassCube1.position.set(9.0, 5.5, -4)
-    glassCube1.rotation.set(0.4, 0.6, 0.2)
-    glassGroup.add(glassCube1)
-
-    // Glass Cube 2 (Lower Left Accent)
-    glassCube2 = new THREE.Mesh(cubeGeo, glassMat)
-    glassCube2.position.set(-9.0, -5.5, -3)
-    glassCube2.rotation.set(-0.3, 0.3, 0.5)
-    glassGroup.add(glassCube2)
-
-    mainGroup.add(glassGroup)
-
-    // ==========================================
-    // 4. SUBTLE DUST PARTICLES (LIGHT & SOFT)
-    // ==========================================
-    const particleCount = 70
-    const particleGeo = new THREE.BufferGeometry()
-    const particlePositions = new Float32Array(particleCount * 3)
-
-    for (let i = 0; i < particleCount; i++) {
-      particlePositions[i * 3] = (Math.random() - 0.5) * 40
-      particlePositions[i * 3 + 1] = (Math.random() - 0.5) * 26
-      particlePositions[i * 3 + 2] = (Math.random() - 0.5) * 16
-    }
-
-    particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3))
-    const particleMat = new THREE.PointsMaterial({
-      color: 0x38bdf8,
-      size: 0.1,
-      transparent: true,
-      opacity: 0.4,
-    })
-    particleCloud = new THREE.Points(particleGeo, particleMat)
-    mainGroup.add(particleCloud)
-
-    // Start Animation
-    startTime = performance.now()
-    startAnimation()
-    isCanvasReady.value = true
-
-    // IntersectionObserver to pause Three.js when scrolled off screen
-    if (typeof IntersectionObserver !== 'undefined' && containerRef.value) {
-      observer = new IntersectionObserver(([entry]) => {
-        if (entry.isIntersecting) {
-          startAnimation()
-        } else {
-          stopAnimation()
-        }
-      }, { threshold: 0.05 })
-      observer.observe(containerRef.value)
-    }
-  } catch (err) {
-    console.warn('AuthAnimatedBackground 3D canvas skipped gracefully:', err)
-  }
-}
-
-const handleResize = () => {
-  try {
-    const wasMobile = isMobile.value
-    checkMobile()
-
-    if (isMobile.value) {
-      stopAnimation()
-      if (renderer) {
-        renderer.dispose()
-        renderer = null
-      }
-      return
-    }
-
-    if (wasMobile && !isMobile.value && !renderer) {
-      initThree()
-      return
-    }
-
-    if (!containerRef.value || !camera || !renderer) return
-    const width = containerRef.value.clientWidth || window.innerWidth
-    const height = containerRef.value.clientHeight || window.innerHeight
-    if (width === 0 || height === 0) return
-    camera.aspect = width / height
-    camera.updateProjectionMatrix()
-    renderer.setSize(width, height)
-  } catch (e) {}
-}
-
 onMounted(() => {
-  checkMobile()
-  initThree()
+  updateTheme()
+  resize()
+
+  // Track Theme Changes (Dark/Light Switcher)
+  themeObserver = new MutationObserver(() => {
+    updateTheme()
+  })
+  themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+
+  // Listeners for Interactive Motion & Canvas Resize
   window.addEventListener('mousemove', handleMouseMove, { passive: true })
-  window.addEventListener('resize', handleResize, { passive: true })
+  window.addEventListener('mouseleave', handleMouseLeave)
+  window.addEventListener('touchmove', handleTouchMove, { passive: true })
+  window.addEventListener('touchend', handleTouchEnd)
+  window.addEventListener('click', handleClick, { passive: true })
+  window.addEventListener('resize', resize, { passive: true })
   document.addEventListener('visibilitychange', handleVisibilityChange)
+
+  startAnimation()
 })
 
 onUnmounted(() => {
   stopAnimation()
-  window.removeEventListener('mousemove', handleMouseMove)
-  window.removeEventListener('resize', handleResize)
-  document.removeEventListener('visibilitychange', handleVisibilityChange)
-  if (observer) {
-    observer.disconnect()
-    observer = null
+  if (themeObserver) {
+    themeObserver.disconnect()
+    themeObserver = null
   }
-  try {
-    if (renderer) {
-      renderer.dispose()
-      renderer = null
-    }
-    scene = null
-    camera = null
-    mainGroup = null
-    innerSphere = null
-    outerWire = null
-    ringMesh = null
-    aiCoreGroup = null
-    outerTorus = null
-    innerNode = null
-    techMatrixGroup = null
-    glassCube1 = null
-    glassCube2 = null
-    particleCloud = null
-  } catch (e) {}
+  window.removeEventListener('mousemove', handleMouseMove)
+  window.removeEventListener('mouseleave', handleMouseLeave)
+  window.removeEventListener('touchmove', handleTouchMove)
+  window.removeEventListener('touchend', handleTouchEnd)
+  window.removeEventListener('click', handleClick)
+  window.removeEventListener('resize', resize)
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
 })
 </script>
 
 <template>
-  <div ref="containerRef" class="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-hidden select-none bg-gradient-to-br from-blue-950/20 via-slate-950/30 to-indigo-950/20">
-    <!-- Desktop 3D Canvas with Smooth 700ms Fade-in to Prevent Popping -->
-    <canvas
-      v-if="!isMobile"
-      ref="canvasRef"
-      :class="['w-full h-full block transition-opacity duration-700 ease-out', isCanvasReady ? 'opacity-100' : 'opacity-0']"
-    ></canvas>
-    <!-- Mobile Lightweight Ambient CSS Gradient Fallback -->
-    <div v-else class="w-full h-full absolute inset-0 bg-gradient-to-br from-blue-900/30 via-slate-900/50 to-indigo-950/40"></div>
+  <div ref="containerRef" class="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-hidden select-none">
+    <canvas ref="canvasRef" class="w-full h-full block"></canvas>
   </div>
 </template>

@@ -343,22 +343,9 @@ const onResetPassword = () => {
       </button>
     </div>
 
-    <!-- Manus AI Style Deep Obsidian Micro-Dot Matrix & Ambient Flares -->
+    <!-- Manus AI Style Interactive Dot-Matrix Canvas Background -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none z-0 select-none">
-      
-      <!-- 3D Three.js Animated Nodes -->
       <AuthAnimatedBackground />
-
-      <!-- Manus Deep Pitch-Black Crisp Dot Grid (24px Matrix) -->
-      <div class="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] dark:bg-[radial-gradient(rgba(255,255,255,0.18)_1.1px,transparent_1.1px)] [background-size:24px_24px] opacity-35 dark:opacity-30"></div>
-
-      <!-- Multi-Color Ambient Lighting Flares -->
-      <div class="absolute -top-36 -right-36 w-[550px] h-[550px] bg-amber-500/10 dark:bg-amber-500/12 rounded-full blur-[130px] animate-float-slow"></div>
-      <div class="absolute -bottom-36 -left-36 w-[600px] h-[600px] bg-cyan-500/10 dark:bg-emerald-500/10 rounded-full blur-[140px] animate-float-reverse"></div>
-      <div class="absolute top-1/4 -left-20 w-[450px] h-[450px] bg-indigo-500/10 dark:bg-indigo-600/12 rounded-full blur-[120px]"></div>
-
-      <!-- Soft Edge Vignette Overlay -->
-      <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(248,250,252,0.92)_100%)] dark:bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(7,7,9,0.95)_100%)]"></div>
     </div>
 
     <!-- Master Centered Forgot Password Card (Clean Obsidian Glassmorphism) -->
