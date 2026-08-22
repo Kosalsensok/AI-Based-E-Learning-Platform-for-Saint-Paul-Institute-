@@ -416,6 +416,46 @@ const savePersonalNote = () => {
   noteInput.value = ''
 }
 
+// AI Smart Next Steps Recommendation State
+const aiNextSteps = ref<any>(null)
+const isNextStepsLoading = ref(false)
+
+const loadAiNextSteps = async () => {
+  isNextStepsLoading.value = true
+  try {
+    const res = await fetch('/api/ai/recommendation', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        major: props.course?.major?.name || 'Information Technology',
+        lesson_title: activeLesson.value?.title || props.course?.title,
+        quiz_score: 85
+      })
+    })
+    const data = await res.json()
+    if (data.success && data.recommendation) {
+      aiNextSteps.value = data.recommendation
+    }
+  } catch (e) {
+    aiNextSteps.value = {
+      major: props.course?.major?.name || 'Information Technology',
+      next_topic: 'Advanced Practical Implementation & Lab Exercises',
+      practice_project: 'Complete the attached practice exercises to solidify theoretical concepts.',
+      tech_badge: props.course?.major?.name || 'SPI Academic Module',
+      difficulty_level: 'Recommended Next Step'
+    }
+  } finally {
+    isNextStepsLoading.value = false
+  }
+}
+
+watch(activeLessonId, () => {
+  loadAiNextSteps()
+})
+
 // Fullscreen API Helper
 const togglePlayerFullscreen = () => {
   if (!document.fullscreenElement) {
@@ -469,6 +509,7 @@ const handlePlayerKeydown = (e: KeyboardEvent) => {
 
 onMounted(() => {
   window.addEventListener('keydown', handlePlayerKeydown)
+  loadAiNextSteps()
 })
 
 onUnmounted(() => {
@@ -912,6 +953,96 @@ onUnmounted(() => {
                   <li>អាចអនុវត្ត Code និងលំហាត់ដោយផ្ទាល់បានជោគជ័យ</li>
                   <li>ត្រៀមខ្លួនសម្រាប់ធ្វើ Quiz ប្រចាំ Module</li>
                 </ul>
+              </div>
+
+              <!-- ✨ AI NEXT STEPS RECOMMENDATION CARD (TAILORED TO MAJOR) -->
+              <div class="rounded-3xl bg-gradient-to-br from-indigo-950 via-slate-900 to-purple-950 border border-indigo-500/30 p-5 shadow-2xl space-y-4">
+                <div class="flex items-center justify-between border-b border-indigo-500/20 pb-3 flex-wrap gap-2">
+                  <div class="flex items-center gap-2">
+                    <span class="text-xl">✨</span>
+                    <div>
+                      <h4 class="font-extrabold text-sm text-white flex items-center gap-2">
+                        <span>AI Smart Next Steps & Skill Roadmap</span>
+                        <span class="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 text-[10px] font-bold">
+                          Cloudflare AI
+                        </span>
+                      </h4>
+                      <p class="text-[11px] text-indigo-300">Tailored for {{ course.major?.name || 'Your Degree Major' }}</p>
+                    </div>
+                  </div>
+
+                  <span 
+                    v-if="aiNextSteps?.tech_badge || aiNextSteps?.crop_badge || aiNextSteps?.cefr_level || aiNextSteps?.etiquette_badge"
+                    class="px-3 py-1 rounded-xl bg-indigo-600/30 border border-indigo-400/40 text-indigo-200 text-xs font-bold font-mono"
+                  >
+                    🏷️ {{ aiNextSteps.tech_badge || aiNextSteps.crop_badge || aiNextSteps.cefr_level || aiNextSteps.etiquette_badge }}
+                  </span>
+                </div>
+
+                <div v-if="isNextStepsLoading" class="p-4 text-center text-xs text-indigo-300 flex items-center justify-center gap-2">
+                  <span class="animate-spin">⏳</span>
+                  <span>Generating personalized next steps recommendations...</span>
+                </div>
+
+                <div v-else-if="aiNextSteps" class="space-y-3 text-xs">
+                  <!-- Next Recommended Topic -->
+                  <div class="p-3.5 rounded-2xl bg-slate-950/80 border border-indigo-500/20 space-y-1">
+                    <p class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">🚀 Next Recommended Topic (ប្រធានបទបន្ត):</p>
+                    <p class="text-white font-bold text-sm">{{ aiNextSteps.next_topic }}</p>
+                  </div>
+
+                  <!-- Hands-on Project / Field Task -->
+                  <div class="p-3.5 rounded-2xl bg-slate-950/80 border border-indigo-500/20 space-y-1">
+                    <p class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
+                      🛠️ Hands-on Challenge / Practice Task (កិច្ចការអនុវត្ត):
+                    </p>
+                    <p class="text-slate-200 leading-relaxed">
+                      {{ aiNextSteps.practice_project || aiNextSteps.daily_practice_task || aiNextSteps.field_practice || aiNextSteps.simulated_case || aiNextSteps.hospitality_scenario }}
+                    </p>
+                  </div>
+
+                  <!-- Pitfalls / Smart Tips -->
+                  <div 
+                    v-if="aiNextSteps.common_pitfalls || aiNextSteps.smart_farming_tip || aiNextSteps.ethical_tip || aiNextSteps.customer_service_tip || aiNextSteps.vocabulary_booster"
+                    class="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-1.5"
+                  >
+                    <p class="text-[10px] font-bold text-amber-400 uppercase tracking-wider">💡 Pro Mentor Guidance & Tips:</p>
+                    <div v-if="aiNextSteps.common_pitfalls" class="text-slate-300 text-[11px] space-y-1">
+                      <p v-for="(pf, idx) in aiNextSteps.common_pitfalls" :key="idx">• {{ pf }}</p>
+                    </div>
+                    <p v-else-if="aiNextSteps.smart_farming_tip" class="text-slate-300 text-[11px]">
+                      {{ aiNextSteps.smart_farming_tip }}
+                    </p>
+                    <p v-else-if="aiNextSteps.ethical_tip" class="text-slate-300 text-[11px]">
+                      {{ aiNextSteps.ethical_tip }}
+                    </p>
+                    <p v-else-if="aiNextSteps.customer_service_tip" class="text-slate-300 text-[11px]">
+                      {{ aiNextSteps.customer_service_tip }}
+                    </p>
+                    <div v-else-if="aiNextSteps.vocabulary_booster" class="flex gap-2 flex-wrap text-[11px]">
+                      <span class="text-slate-400">Vocab Booster:</span>
+                      <span v-for="w in aiNextSteps.vocabulary_booster" :key="w" class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold">
+                        {{ w }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Quick Action Buttons -->
+                  <div class="flex items-center gap-2 pt-1 flex-wrap">
+                    <Link
+                      href="/student/practice-lab"
+                      class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <span>💻 Open Practice Sandbox</span>
+                    </Link>
+                    <Link
+                      href="/student/quizzes"
+                      class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <span>❓ Take Knowledge Check</span>
+                    </Link>
+                  </div>
+                </div>
               </div>
             </div>
 

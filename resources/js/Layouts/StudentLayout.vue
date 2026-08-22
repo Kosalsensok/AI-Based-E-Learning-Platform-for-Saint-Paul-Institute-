@@ -4,6 +4,7 @@ import { Head, Link, usePage, router } from '@inertiajs/vue3'
 import { i18n } from '@/Services/i18n'
 import { useTheme } from '@/composables/useTheme'
 import GlobalToast from '@/Components/GlobalToast.vue'
+import AiTutorFloatingWidget from '@/Components/AiTutorFloatingWidget.vue'
 
 const { isDark, toggleTheme } = useTheme()
 
@@ -1215,6 +1216,9 @@ const onIconError = (e: Event) => {
         <slot />
       </div>
     </main>
+
+    <!-- 24/7 AI Tutor Assistant Floating Button & Drawer -->
+    <AiTutorFloatingWidget />
   </div>
 </template>
 

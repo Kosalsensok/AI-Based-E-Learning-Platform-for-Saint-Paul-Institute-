@@ -619,7 +619,8 @@ class ContentController extends Controller
                 'questions' => $quizQuestions,
                 'topic' => $validated['topic'] ?? ($lesson?->title ?? $course->title),
                 'generated_at' => now()->toIso8601String(),
-                'model' => 'Gemini 3.7 Flash Pro',
+                'model' => config('services.cloudflare.default_model', '@cf/meta/llama-3.1-8b-instruct'),
+                'provider' => 'Cloudflare Workers AI (AI Gateway)',
             ],
             'status' => 'draft', // Teacher must approve before students see it
         ]);

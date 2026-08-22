@@ -20,3 +20,17 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
 Route::post('/auth/email-otp/send', [\App\Http\Controllers\AuthController::class, 'sendEmailOtp']);
 Route::post('/auth/email-otp/verify', [\App\Http\Controllers\AuthController::class, 'verifyEmailOtp']);
 
+// ─── Cloudflare Workers AI & AI Gateway Endpoints ───
+Route::prefix('ai')->group(function () {
+    Route::get('/verify', [Api\CloudflareAIController::class, 'verify']);
+    Route::post('/verify', [Api\CloudflareAIController::class, 'verify']);
+    Route::post('/chat', [Api\CloudflareAIController::class, 'chat']);
+    Route::post('/recommendation', [Api\CloudflareAIController::class, 'recommendation']);
+    Route::post('/generate-quiz', [Api\CloudflareAIController::class, 'generateQuiz']);
+    Route::post('/summarize', [Api\CloudflareAIController::class, 'summarize']);
+    Route::post('/code-review', [Api\CloudflareAIController::class, 'codeReview']);
+    Route::post('/agri-diagnosis', [Api\CloudflareAIController::class, 'agriDiagnosis']);
+    Route::post('/english-review', [Api\CloudflareAIController::class, 'englishReview']);
+    Route::post('/social-work-case', [Api\CloudflareAIController::class, 'socialWorkCase']);
+});
+

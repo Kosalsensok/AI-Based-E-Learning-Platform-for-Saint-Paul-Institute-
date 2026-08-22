@@ -8,96 +8,34 @@ use Illuminate\Support\Str;
 
 class AIContentService
 {
+    protected CloudflareAIService $cfAi;
+
+    public function __construct(?CloudflareAIService $cfAi = null)
+    {
+        $this->cfAi = $cfAi ?: app(CloudflareAIService::class);
+    }
+
     /**
-     * Generate MCQ quiz questions based on lesson / topic context.
+     * Generate MCQ quiz questions based on lesson / topic context using Cloudflare Workers AI.
      */
     public function generateQuiz(Course $course, ?Lesson $lesson = null, ?string $topic = null, int $numQuestions = 4): array
     {
         $lessonTitle = $lesson ? $lesson->title : ($topic ?: $course->title);
         $context = $lesson ? ($lesson->content ?: $lesson->ai_summary ?: $lesson->title) : $course->description;
+        $majorCode = $course->major ? ($course->major->code ?? $course->major->name ?? 'it') : 'it';
 
-        $questions = [
-            [
-                'id' => 1,
-                'question' => "What is the primary concept and objective covered in '{$lessonTitle}'?",
-                'options' => [
-                    "Fundamental architecture and syntax rules of {$lessonTitle}",
-                    "Legacy hardware requirements without software implementation",
-                    "Third-party external dependencies deprecated in modern standards",
-                    "None of the above options"
-                ],
-                'correct_answer' => 0,
-                'explanation' => "{$lessonTitle} establishes core architectural patterns and structured principles for effective execution.",
-                'difficulty' => 'Medium',
-                'points' => 10,
-            ],
-            [
-                'id' => 2,
-                'question' => "Which best practice should be followed when implementing {$lessonTitle}?",
-                'options' => [
-                    "Bypassing validation and error handling for faster throughput",
-                    "Modular structure with comprehensive documentation and unit test coverage",
-                    "Hardcoding memory addresses directly into runtime scripts",
-                    "Disabling compiler optimizations"
-                ],
-                'correct_answer' => 1,
-                'explanation' => "Modular coding and automated verification ensure robust, maintainable curriculum outcomes.",
-                'difficulty' => 'Easy',
-                'points' => 10,
-            ],
-            [
-                'id' => 3,
-                'question' => "What is the expected outcome or output when executing the core routine of {$lessonTitle}?",
-                'options' => [
-                    "Uncontrolled segmentation fault or unhandled exception",
-                    "Deterministic return code and structured state mutation",
-                    "Immediate buffer overflow across shared stack frames",
-                    "Infinite waiting state without thread synchronization"
-                ],
-                'correct_answer' => 1,
-                'explanation' => "Well-structured routines produce deterministic return values and proper memory release.",
-                'difficulty' => 'Hard',
-                'points' => 10,
-            ],
-            [
-                'id' => 4,
-                'question' => "In Saint Paul Institute's curriculum, why is {$lessonTitle} essential for students?",
-                'options' => [
-                    "It forms foundational knowledge connecting theory with practical industry labs",
-                    "It is an optional historical anecdote with no practical relevance",
-                    "It only applies to simulated theoretical environments",
-                    "It replaces all database indexing structures"
-                ],
-                'correct_answer' => 0,
-                'explanation' => "Practical industry alignment and hands-on skill building are core tenets of the SPI curriculum.",
-                'difficulty' => 'Medium',
-                'points' => 10,
-            ],
-        ];
-
-        return array_slice($questions, 0, max(1, $numQuestions));
+        return $this->cfAi->generateQuiz($context ?: $lessonTitle, $lessonTitle, $numQuestions, (string) $majorCode);
     }
 
     /**
-     * Generate structured summary from lesson / transcript context.
+     * Generate structured summary from lesson / transcript context using Cloudflare Workers AI.
      */
     public function generateSummary(Course $course, ?Lesson $lesson = null, ?string $rawText = null): array
     {
         $title = $lesson ? $lesson->title : $course->title;
+        $context = $rawText ?: ($lesson ? ($lesson->content ?: $lesson->ai_summary ?: $lesson->title) : $course->description);
 
-        return [
-            'title' => "AI Executive Summary: {$title}",
-            'overview' => "This summary distills the essential learning objectives, core terminology, and practical takeaways for {$title}.",
-            'key_takeaways' => [
-                "Mastered the fundamental syntax, design patterns, and operational logic.",
-                "Identified common development pitfalls and standard debugging methodologies.",
-                "Prepared practical exercises to reinforce retention through active recall.",
-                "Integrated real-world examples relevant to Saint Paul Institute degree modules."
-            ],
-            'estimated_reading_minutes' => 6,
-            'word_count' => 420,
-            'suggested_review_schedule' => "Review within 24 hours, then 3 days later, and before midterm exam.",
-        ];
+        return $this->cfAi->generateSummary($context ?: $title, $title);
     }
 
     /**
@@ -106,6 +44,31 @@ class AIContentService
     public function generateFlashcards(Course $course, ?Lesson $lesson = null, ?string $contextText = null): array
     {
         $title = $lesson ? $lesson->title : $course->title;
+        $context = $contextText ?: ($lesson ? ($lesson->content ?: $lesson->ai_summary) : $course->description);
+
+        $prompt = "Generate 4 key term study flashcards for '{$title}' in Saint Paul Institute courses. Context: " . Str::limit((string)$context, 1000) . "
+Output JSON format:
+[
+  {\"id\": 1, \"front\": \"Term/Concept\", \"back\": \"Definition and usage\", \"tag\": \"Core/Syntax/Pattern\", \"mastery_level\": \"Core/Intermediate/Advanced\"}
+]";
+
+        $res = $this->cfAi->runModel(config('services.cloudflare.default_model', '@cf/meta/llama-3.1-8b-instruct'), [
+            'messages' => [
+                ['role' => 'system', 'content' => 'You are a flashcard generator. Output only valid JSON array.'],
+                ['role' => 'user', 'content' => $prompt]
+            ],
+            'temperature' => 0.3,
+            'max_tokens' => 800
+        ]);
+
+        $raw = $res ? ($res['result']['choices'][0]['message']['content'] ?? $res['result']['response'] ?? null) : null;
+        if ($raw) {
+            $clean = trim(preg_replace('/^```json\s*|^```\s*|\s*```$/i', '', $raw));
+            $parsed = json_decode($clean, true);
+            if (is_array($parsed) && count($parsed) > 0) {
+                return $parsed;
+            }
+        }
 
         return [
             [

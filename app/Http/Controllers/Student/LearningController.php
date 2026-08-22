@@ -232,9 +232,9 @@ class LearningController extends Controller
     }
 
     /**
-     * AI Tutor Instant Q&A in Focus Mode
+     * AI Tutor Instant Q&A in Focus Mode (Powered by Cloudflare Workers AI)
      */
-    public function askAi(Request $request, Lesson $lesson)
+    public function askAi(Request $request, Lesson $lesson, \App\Services\CloudflareAIService $cfAi)
     {
         $request->validate([
             'question' => 'required|string|max:1000',
@@ -242,14 +242,23 @@ class LearningController extends Controller
 
         $question = trim($request->input('question'));
         $title = $lesson->title ?: 'Current Lesson';
+        $course = $lesson->course ?: Course::find($lesson->course_id);
+        $courseTitle = $course ? $course->title : 'Saint Paul Institute Course';
 
-        // AI Response Logic (Pedagogical & Context-Aware in Khmer/English)
-        $aiResponses = [
-            "🎓 **ការពន្យល់លើមេរៀន {$title}**\n\nចំពោះសំណួររបស់អ្នក៖ *\"{$question}\"*\n\n💡 **គន្លឹះសំខាន់ (Key Concepts):**\n1. ស្វែងយល់ពីមូលដ្ឋានគ្រឹះ និង Syntax នៃមេរៀននេះដោយអនុវត្តលើ Practice Code ផ្ទាល់។\n2. ចងចាំចំណុចគន្លឹះ និង Formula ដែលបានបង្ហាញក្នុង Slide។\n3. ប្រសិនបើមានបញ្ហា Error សូមពិនិត្យមើលលក្ខខណ្ឌ Variable Scope និង Return Types។\n\n✨ *តើអ្នកចង់ឱ្យខ្ញុំបង្ហាញឧទាហរណ៍ជាក់ស្តែង (Code Example) បន្ថែមទេ?*",
-            "🤖 **ជំនួយការ AI E-LMS**\n\nផ្អែកលើខ្លឹមសារនៃមេរៀន **{$title}**៖\n• សំណួររបស់អ្នកពាក់ព័ន្ធនឹងការអនុវត្ត Logic ផ្ទាល់។\n• សូមសាកល្បងដំណើរការលំហាត់ក្នុង tab **Coding / Practice Lab** ខាងក្រោម ដើម្បីឃើញលទ្ធផលជាក់ស្តែងភ្លាមៗ។\n\n📌 *អនុសាសន៍៖ ព្យាយាមអនុវត្តឱ្យបាន ២-៣ ដងដើម្បីបង្កើនភាពស្ទាត់ជំនាញ!*",
+        $messages = [
+            [
+                'role' => 'system',
+                'content' => "You are an intelligent AI Tutor at Saint Paul Institute. The student is currently studying: Course: '{$courseTitle}', Lesson: '{$title}'.
+Provide a helpful, pedagogical, structured explanation answering their question. Explain key points clearly with code snippets or practical steps if applicable.
+Answer in Khmer or English matching the user's language."
+            ],
+            [
+                'role' => 'user',
+                'content' => $question
+            ]
         ];
 
-        $reply = $aiResponses[array_rand($aiResponses)];
+        $reply = $cfAi->chat($messages);
 
         return response()->json([
             'success' => true,

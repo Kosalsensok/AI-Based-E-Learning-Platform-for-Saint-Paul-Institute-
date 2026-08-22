@@ -140,17 +140,17 @@ const filteredList = computed(() => {
       <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div class="space-y-3 max-w-2xl">
           <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/20 border border-purple-400/40 text-purple-300 text-xs font-bold uppercase tracking-wider">
-            <span>✨ AI Content Engine</span>
+            <span>✨ Cloudflare Workers AI</span>
             <span class="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse"></span>
-            <span>Gemini 3.7 Flash</span>
+            <span>AI Gateway Connected</span>
           </div>
 
           <h2 class="text-2xl md:text-3xl font-extrabold tracking-tight">
             AI-Assisted Content Generation 🤖
           </h2>
           <p class="text-xs md:text-sm text-purple-200/80 leading-relaxed">
-            Generate quizzes, extract key summaries from transcripts, and create study flashcards automatically. 
-            All AI-generated items are initially saved as <span class="font-bold text-amber-300">Draft</span> for teacher review and approval before students can see them.
+            Generate multiple-choice quizzes, extract key summaries from transcripts, and create study flashcards automatically via Cloudflare AI Gateway. 
+            All AI-generated items are saved as <span class="font-bold text-amber-300">Draft</span> for teacher review and approval before publishing.
           </p>
         </div>
 

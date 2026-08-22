@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\AiRecommendation;
+use App\Models\Lesson;
 use App\Models\LessonProgress;
 use App\Models\QuizAttempt;
 use App\Models\User;
@@ -10,6 +11,8 @@ use Illuminate\Support\Facades\Cache;
 
 class AiRecommendationService
 {
+    protected CloudflareAIService $cfAi;
+
     protected array $rules = [
         'advance_next'   => ['min_score' => 80, 'action' => 'next_module'],
         'review_current' => ['min_score' => 50, 'max_score' => 79, 'action' => 'review'],
@@ -17,6 +20,11 @@ class AiRecommendationService
         'resume'         => ['max_progress' => 40, 'action' => 'resume'],
         're_engage'      => ['max_idle_days' => 3, 'action' => 're_engage'],
     ];
+
+    public function __construct(?CloudflareAIService $cfAi = null)
+    {
+        $this->cfAi = $cfAi ?: app(CloudflareAIService::class);
+    }
 
     public function analyzeAndRecommend(User $user): void
     {
@@ -34,6 +42,22 @@ class AiRecommendationService
 
         // 3. Check engagement (idle days)
         $this->checkEngagement($user, $rules);
+    }
+
+    /**
+     * Generate dynamic AI Next Steps recommendation tailored to user's major.
+     */
+    public function getMajorRecommendation(User $user, ?Lesson $lesson = null, ?int $quizScore = null): array
+    {
+        $major = $user->major ? ($user->major->name ?? $user->major->code ?? 'IT') : 'Information Technology';
+        $lessonTitle = $lesson ? $lesson->title : 'General Academic Foundation';
+        $score = $quizScore ?? 80;
+
+        $cacheKey = "ai_rec_{$user->id}_" . ($lesson ? $lesson->id : 'latest') . "_{$score}";
+
+        return Cache::remember($cacheKey, 3600, function () use ($major, $lessonTitle, $score) {
+            return $this->cfAi->generateRecommendation($major, $lessonTitle, null, $score);
+        });
     }
 
     private function detectWeakTopics(User $user): array

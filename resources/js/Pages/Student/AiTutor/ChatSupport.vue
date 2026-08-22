@@ -34,8 +34,8 @@ const quickSuggestions = [
   'What is the difference between SQL JOIN and UNION?'
 ]
 
-const sendMessage = () => {
-  if (!messageInput.value.trim()) return
+const sendMessage = async () => {
+  if (!messageInput.value.trim() || isSending.value) return
   const text = messageInput.value.trim()
   chatMessages.value.push({
     id: Date.now(),
@@ -46,15 +46,35 @@ const sendMessage = () => {
   messageInput.value = ''
   isSending.value = true
 
-  setTimeout(() => {
+  try {
+    const res = await fetch('/api/ai/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        message: text,
+        history: chatMessages.value.slice(-6)
+      })
+    })
+    const data = await res.json()
     chatMessages.value.push({
       id: Date.now() + 1,
       sender: 'ai',
-      text: '🤖 ចម្លើយពី AI Assistant: បានទទួលសំណួររបស់អ្នក! នេះជាការពន្យល់លម្អិត និងគំរូកូដសម្រាប់អនុវត្តជាក់ស្តែង...',
+      text: data.reply || '🤖 បានទទួលសំណួររបស់អ្នក! សូមពិនិត្យមើលខ្លឹមសារមេរៀន និងអនុវត្តលំហាត់ជាក់ស្តែងបន្ថែម។',
+      time: data.time || 'Just now'
+    })
+  } catch (e) {
+    chatMessages.value.push({
+      id: Date.now() + 1,
+      sender: 'ai',
+      text: '🤖 ខ្ញុំជា AI Tutor នៅ Saint Paul Institute។ សំណួររបស់អ្នកបានកត់ត្រាជោគជ័យ! សូមសាកល្បងសាកសួរម្ដងទៀត ឬចូលទៅកាន់ Practice Lab ដើម្បីអនុវត្តជាក់ស្ដែង។',
       time: 'Just now'
     })
+  } finally {
     isSending.value = false
-  }, 800)
+  }
 }
 
 const sendQuick = (text: string) => {

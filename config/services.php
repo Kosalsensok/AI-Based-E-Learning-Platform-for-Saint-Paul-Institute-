@@ -64,5 +64,13 @@ return [
         'secret' => env('TURNSTILE_SECRET_KEY', '0x4AAAAAAEXbfkIFYCt1IyL5NESxUocpEvo'),
     ],
 
+    'cloudflare' => [
+        'account_id'    => env('CLOUDFLARE_ACCOUNT_ID'),
+        'ai_token'      => env('CLOUDFLARE_AI_TOKEN'),
+        'ai_gateway'    => env('CLOUDFLARE_AI_GATEWAY', 'spilms-ai-gateway'),
+        'default_model' => env('CLOUDFLARE_AI_DEFAULT_MODEL', '@cf/meta/llama-3.1-8b-instruct'),
+    ],
+
 ];
+
 
