@@ -1429,8 +1429,7 @@ onUnmounted(() => {
   min-width: 100% !important;
   max-width: 100% !important;
   display: block !important;
-  border-radius: 0.75rem !important;
-  overflow: hidden !important;
+  margin: 0 auto !important;
 }
 </style>
 
