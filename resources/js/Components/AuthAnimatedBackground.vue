@@ -10,18 +10,16 @@ let width = 0
 let height = 0
 let dpr = 1
 
-// Mouse Tracking for Interactive Ripple & Distortion
+// Mouse Tracking for Smooth Soft Proximity Interaction
 const mouse = {
   x: -1000,
   y: -1000,
   targetX: -1000,
   targetY: -1000,
-  vx: 0,
-  vy: 0,
   active: false,
 }
 
-// Click Shockwave System
+// Gentle Click Shockwave System
 interface Shockwave {
   x: number
   y: number
@@ -32,7 +30,7 @@ interface Shockwave {
 }
 const shockwaves: Shockwave[] = []
 
-// Dark Mode State
+// Dark Mode Detection
 let isDark = true
 let themeObserver: MutationObserver | null = null
 
@@ -42,7 +40,7 @@ const updateTheme = () => {
   }
 }
 
-// Fast Permutation-based Simplex Noise for 60FPS Fluid Vector Field
+// Optimized 2D Simplex Noise for Ultra-Smooth 60FPS Fluid Vector Field
 const F2 = 0.5 * (Math.sqrt(3.0) - 1.0)
 const G2 = (3.0 - Math.sqrt(3.0)) / 6.0
 
@@ -154,9 +152,9 @@ const handleClick = (e: MouseEvent) => {
     x: e.clientX - rect.left,
     y: e.clientY - rect.top,
     radius: 0,
-    maxRadius: 360,
-    intensity: 1.0,
-    speed: 5.5,
+    maxRadius: 280,
+    intensity: 0.6,
+    speed: 3.5,
   })
 }
 
@@ -172,7 +170,7 @@ const resize = () => {
   canvasRef.value.style.height = `${height}px`
 }
 
-// 60FPS Manus Continuous Generative Wave & Interactive Engine
+// 60FPS Subtle & Calm Manus AI Motion Engine
 const render = (time: number) => {
   if (!isAnimating || !canvasRef.value) return
   animationFrameId = requestAnimationFrame(render)
@@ -185,59 +183,55 @@ const render = (time: number) => {
   ctx.clearRect(0, 0, width, height)
 
   // Smooth mouse lerping
-  const prevMx = mouse.x
-  const prevMy = mouse.y
-  mouse.x += (mouse.targetX - mouse.x) * 0.1
-  mouse.y += (mouse.targetY - mouse.y) * 0.1
-  mouse.vx = mouse.x - prevMx
-  mouse.vy = mouse.y - prevMy
+  mouse.x += (mouse.targetX - mouse.x) * 0.08
+  mouse.y += (mouse.targetY - mouse.y) * 0.08
 
   // Update Shockwaves
   for (let i = shockwaves.length - 1; i >= 0; i--) {
     const sw = shockwaves[i]
     sw.radius += sw.speed
-    sw.intensity *= 0.965
+    sw.intensity *= 0.97
     if (sw.radius > sw.maxRadius || sw.intensity < 0.02) {
       shockwaves.splice(i, 1)
     }
   }
 
-  // Manus Grid Configuration
-  const spacing = 24
+  // Manus Ultra-Fine Grid Configuration (22px Spacing)
+  const spacing = 22
   const cols = Math.ceil(width / spacing) + 1
   const rows = Math.ceil(height / spacing) + 1
   const offsetX = (width % spacing) / 2
   const offsetY = (height % spacing) / 2
 
+  // Ultra-gentle slow time drift (ចលនាយឺតៗ ស្រទន់)
   const timeSec = time * 0.001
-  const flowTime1 = timeSec * 0.18
-  const flowTime2 = timeSec * 0.28
+  const flowTime1 = timeSec * 0.045
+  const flowTime2 = timeSec * 0.065
 
-  const mouseRadius = 240
+  const mouseRadius = 200
   const mouseRadiusSq = mouseRadius * mouseRadius
 
-  // Render Every Dot with Continuous Flow Noise Shading
+  // Render Every Dot with Subtle Organic Waves
   for (let r = 0; r < rows; r++) {
     const origY = r * spacing + offsetY
-    const normY = origY / height
 
     for (let c = 0; c < cols; c++) {
       const origX = c * spacing + offsetX
       const normX = origX / width
 
-      // 1. Dual-Frequency Simplex Noise for Continuous Organic Fluid Motion
-      const nVal1 = noise2D(origX * 0.0028 + flowTime1, origY * 0.0028 - flowTime1 * 0.5)
-      const nVal2 = noise2D(origX * 0.006 - flowTime2 * 0.7, origY * 0.006 + flowTime2)
+      // 1. Dual-Frequency Simplex Noise for Subtle Gentle Drift
+      const nVal1 = noise2D(origX * 0.0022 + flowTime1, origY * 0.0022 - flowTime1 * 0.4)
+      const nVal2 = noise2D(origX * 0.0045 - flowTime2 * 0.5, origY * 0.0045 + flowTime2 * 0.6)
       const combinedNoise = (nVal1 * 0.65 + nVal2 * 0.35 + 1) * 0.5 // 0.0 -> 1.0
 
-      // Calculate dynamic particle brightness & radius
-      let alpha = isDark ? 0.10 + Math.pow(combinedNoise, 2.2) * 0.55 : 0.08 + Math.pow(combinedNoise, 2.0) * 0.4
-      let radius = isDark ? 0.95 + combinedNoise * 0.85 : 0.9 + combinedNoise * 0.6
+      // Delicate Base Alpha & Radius
+      let alpha = isDark ? 0.06 + Math.pow(combinedNoise, 2.5) * 0.42 : 0.05 + Math.pow(combinedNoise, 2.2) * 0.32
+      let radius = isDark ? 0.75 + combinedNoise * 0.55 : 0.7 + combinedNoise * 0.45
 
       let currentX = origX
       let currentY = origY
 
-      // 2. Cursor Proximity & Fluid Force
+      // 2. Gentle Cursor Proximity Illumination
       if (mouse.active) {
         const dx = origX - mouse.x
         const dy = origY - mouse.y
@@ -247,98 +241,94 @@ const render = (time: number) => {
           const dist = Math.sqrt(distSq)
           const factor = Math.pow(1 - dist / mouseRadius, 2)
           
-          // Illumination boost
-          alpha += factor * (isDark ? 0.75 : 0.5)
-          radius += factor * 1.5
+          // Soft Illumination Boost
+          alpha += factor * (isDark ? 0.55 : 0.4)
+          radius += factor * 0.85
 
-          // Subtle gentle displacement force away from cursor
-          const push = factor * 4.0
+          // Very subtle smooth displacement
+          const push = factor * 2.0
           currentX += (dx / dist) * push
           currentY += (dy / dist) * push
         }
       }
 
-      // 3. Shockwave Wavefront Interaction
+      // 3. Gentle Shockwave Interaction
       for (const sw of shockwaves) {
         const swDx = origX - sw.x
         const swDy = origY - sw.y
         const swDist = Math.sqrt(swDx * swDx + swDy * swDy)
         const waveDiff = Math.abs(swDist - sw.radius)
 
-        if (waveDiff < 45) {
-          const waveFactor = (1 - waveDiff / 45) * sw.intensity
-          alpha += waveFactor * 0.8
-          radius += waveFactor * 1.6
+        if (waveDiff < 35) {
+          const waveFactor = (1 - waveDiff / 35) * sw.intensity
+          alpha += waveFactor * 0.45
+          radius += waveFactor * 0.7
           if (swDist > 0) {
-            currentX += (swDx / swDist) * (waveFactor * 7)
-            currentY += (swDy / swDist) * (waveFactor * 7)
+            currentX += (swDx / swDist) * (waveFactor * 3.5)
+            currentY += (swDy / swDist) * (waveFactor * 3.5)
           }
         }
       }
 
-      alpha = Math.min(Math.max(alpha, 0.04), 0.95)
+      alpha = Math.min(Math.max(alpha, 0.03), 0.85)
 
-      // 4. Manus Exact Organic Color Mapping
+      // 4. Manus Exact Organic Palette Mapping
       if (isDark) {
-        // Color zones based on X coordinate + noise modulation
-        // Left: Emerald (#10b981) & Cyber Aqua (#06b6d4)
-        // Right: Warm Amber (#f59e0b), Coral Pink (#f43f5e) & Purple (#a855f7)
-        const colorBias = normX + (combinedNoise - 0.5) * 0.35
+        const colorBias = normX + (combinedNoise - 0.5) * 0.3
 
-        if (alpha > 0.45 && mouse.active && Math.hypot(origX - mouse.x, origY - mouse.y) < 80) {
-          // Pure bright Diamond White under the cursor center
+        if (alpha > 0.4 && mouse.active && Math.hypot(origX - mouse.x, origY - mouse.y) < 70) {
+          // Pure Crisp White under Cursor
           ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`
         } else if (colorBias < 0.35) {
-          // Cyber Emerald / Mint / Cyan (Left Wing)
-          const greenRatio = Math.sin(timeSec * 0.8 + origY * 0.01) * 0.5 + 0.5
-          const rCol = Math.round(16 + greenRatio * 20)
-          const gCol = Math.round(185 + greenRatio * 45)
-          const bCol = Math.round(160 + (1 - greenRatio) * 60)
+          // Subtle Cyber Emerald / Mint / Aqua (Left Wing)
+          const greenRatio = Math.sin(timeSec * 0.3 + origY * 0.008) * 0.5 + 0.5
+          const rCol = Math.round(16 + greenRatio * 15)
+          const gCol = Math.round(180 + greenRatio * 35)
+          const bCol = Math.round(150 + (1 - greenRatio) * 50)
           ctx.fillStyle = `rgba(${rCol}, ${gCol}, ${bCol}, ${alpha})`
         } else if (colorBias > 0.65) {
-          // Warm Amber / Coral / Orange-Gold (Right Wing)
-          const warmRatio = Math.cos(timeSec * 0.7 + origX * 0.01) * 0.5 + 0.5
+          // Subtle Warm Amber / Gold / Coral (Right Wing)
+          const warmRatio = Math.cos(timeSec * 0.25 + origX * 0.008) * 0.5 + 0.5
           const rCol = Math.round(245 + warmRatio * 10)
-          const gCol = Math.round(130 + warmRatio * 50)
-          const bCol = Math.round(20 + warmRatio * 80)
+          const gCol = Math.round(140 + warmRatio * 40)
+          const bCol = Math.round(30 + warmRatio * 60)
           ctx.fillStyle = `rgba(${rCol}, ${gCol}, ${bCol}, ${alpha})`
         } else {
-          // Center: Sleek Crisp Crystal White / Soft Sky Blue
-          const centerGlow = Math.sin(timeSec + origX * 0.02) * 0.5 + 0.5
-          ctx.fillStyle = `rgba(${Math.round(220 + centerGlow * 35)}, ${Math.round(230 + centerGlow * 25)}, 255, ${alpha})`
+          // Center: Sleek Subtle Crystal Mist
+          ctx.fillStyle = `rgba(225, 235, 255, ${alpha})`
         }
       } else {
-        // Light Mode: Clean high-tech Slate & Cyan/Amber accent dots
-        const colorBias = normX + (combinedNoise - 0.5) * 0.35
+        // Light Mode: Subtle High-Precision Slate
+        const colorBias = normX + (combinedNoise - 0.5) * 0.3
         if (colorBias < 0.35) {
-          ctx.fillStyle = `rgba(13, 148, 136, ${Math.min(alpha * 1.1, 0.75)})` // Soft Teal
+          ctx.fillStyle = `rgba(13, 148, 136, ${alpha * 0.9})`
         } else if (colorBias > 0.65) {
-          ctx.fillStyle = `rgba(217, 119, 6, ${Math.min(alpha * 1.1, 0.75)})` // Soft Amber
+          ctx.fillStyle = `rgba(217, 119, 6, ${alpha * 0.9})`
         } else {
-          ctx.fillStyle = `rgba(71, 85, 105, ${Math.min(alpha * 1.1, 0.85)})` // Crisp Slate
+          ctx.fillStyle = `rgba(71, 85, 105, ${alpha})`
         }
       }
 
-      // Draw Smooth Circular Dot
+      // Draw Smooth Tiny Circular Dot
       ctx.beginPath()
       ctx.arc(currentX, currentY, radius, 0, Math.PI * 2)
       ctx.fill()
     }
   }
 
-  // 5. Manus Ambient Edge Vignette
+  // 5. Manus Ambient Edge Soft Vignette
   if (isDark) {
     const vignette = ctx.createRadialGradient(
       width / 2,
       height / 2,
-      Math.min(width, height) * 0.28,
+      Math.min(width, height) * 0.3,
       width / 2,
       height / 2,
-      Math.max(width, height) * 0.78
+      Math.max(width, height) * 0.8
     )
     vignette.addColorStop(0, 'rgba(7, 7, 9, 0)')
-    vignette.addColorStop(0.65, 'rgba(7, 7, 9, 0.35)')
-    vignette.addColorStop(1, 'rgba(7, 7, 9, 0.94)')
+    vignette.addColorStop(0.7, 'rgba(7, 7, 9, 0.3)')
+    vignette.addColorStop(1, 'rgba(7, 7, 9, 0.92)')
     ctx.fillStyle = vignette
     ctx.fillRect(0, 0, width, height)
   }
