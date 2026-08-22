@@ -294,7 +294,7 @@ Output MUST be strictly valid JSON array matching this format without any markdo
     /**
      * Generate Structured Summary from Lesson / Transcript.
      */
-    public function generateSummary(string $lessonContent, string $topic): array
+    public function generateSummary(string $lessonContent, string $topic = 'Lesson Overview'): array
     {
         $prompt = "
 Summarize the following lesson topic: '{$topic}'.
