@@ -401,96 +401,31 @@ const submit = async () => {
     }
   }
 
-  try {
-    const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || ''
-
-    const response = await fetch('/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'text/html, application/xhtml+xml, application/json',
-        'X-Inertia': 'true',
-        'X-Inertia-Version': page.version || '',
-        'X-Requested-With': 'XMLHttpRequest',
-        'X-CSRF-TOKEN': csrfToken,
-      },
-      body: JSON.stringify({
-        email: form.email,
-        password: form.password,
-        role: form.role,
-        remember: form.remember,
-        turnstile_token: form.turnstile_token,
-      }),
-    })
-
-    const data = await response.json().catch(() => ({}))
-
-    let errText = ''
-    let isTurnstileError = false
-
-    if (data?.props?.errors?.turnstile_token) {
-      errText = String(data.props.errors.turnstile_token)
-      isTurnstileError = true
-    } else if (data?.errors?.turnstile_token) {
-      errText = Array.isArray(data.errors.turnstile_token) ? String(data.errors.turnstile_token[0]) : String(data.errors.turnstile_token)
-      isTurnstileError = true
-    } else if (data?.props?.errors?.email) {
-      errText = String(data.props.errors.email)
-    } else if (data?.props?.errors?.password) {
-      errText = String(data.props.errors.password)
-    } else if (data?.errors?.email) {
-      errText = Array.isArray(data.errors.email) ? String(data.errors.email[0]) : String(data.errors.email)
-    } else if (data?.errors?.password) {
-      errText = Array.isArray(data.errors.password) ? String(data.errors.password[0]) : String(data.errors.password)
-    } else if (response.status === 422) {
-      errText = String(data?.message || t('login_modal_error_msg', 'អាសយដ្ឋានអ៊ីមែល ឬពាក្យសម្ងាត់របស់អ្នកមិនត្រឹមត្រូវទេ។ សូមពិនិត្យមើលឡើងវិញ!'))
-    }
-
-    if (errText || data?.component === 'Auth/Login') {
+  // 2. Submit via native Inertia form.post
+  form.post('/login', {
+    preserveScroll: true,
+    onSuccess: () => {
+      showSuccessModal.value = true
+      isSubmitting.value = false
+    },
+    onError: (errors: any) => {
       showSuccessModal.value = false
       showErrorModal.value = true
       isSubmitting.value = false
-      errorMessage.value = errText || t('login_modal_error_msg', 'អាសយដ្ឋានអ៊ីមែល ឬពាក្យសម្ងាត់របស់អ្នកមិនត្រឹមត្រូវទេ។ សូមពិនិត្យមើលឡើងវិញ!')
-      if (errText) {
-        if (isTurnstileError) {
-          form.setError('turnstile_token', errText)
-        } else {
-          form.setError('email', errText)
-        }
-      }
 
+      const firstError = Object.values(errors)[0]
+      errorMessage.value = typeof firstError === 'string' ? firstError : t('login_modal_error_msg', 'អាសយដ្ឋានអ៊ីមែល ឬពាក្យសម្ងាត់របស់អ្នកមិនត្រឹមត្រូវទេ។ សូមពិនិត្យមើលឡើងវិញ!')
+
+      resetTurnstile()
       setTimeout(() => {
         showErrorModal.value = false
       }, 4500)
-    } else {
-      showSuccessModal.value = true
+    },
+    onFinish: () => {
       isSubmitting.value = false
-
-      setTimeout(() => {
-        const targetRole = form.role || 'student'
-        let redirectUrl = data?.url || (targetRole === 'admin' ? '/admin/dashboard' : targetRole === 'teacher' ? '/teacher/dashboard' : '/student/dashboard')
-
-        const inertiaLoc = response.headers.get('X-Inertia-Location')
-        if (inertiaLoc) {
-          redirectUrl = inertiaLoc
-        }
-
-        router.visit(redirectUrl)
-      }, 1500)
-    }
-  } catch (err: any) {
-    showSuccessModal.value = false
-    showErrorModal.value = true
-    isSubmitting.value = false
-    errorMessage.value = t('login_modal_error_msg', 'អាសយដ្ឋានអ៊ីមែល ឬពាក្យសម្ងាត់របស់អ្នកមិនត្រឹមត្រូវទេ។ សូមពិនិត្យមើលឡើងវិញ!')
-
-    setTimeout(() => {
-      showErrorModal.value = false
-    }, 4500)
-  } finally {
-    form.reset('password')
-    resetTurnstile()
-  }
+      form.reset('password')
+    },
+  })
 }
 
 const telegramBotUsername = computed(() => {
