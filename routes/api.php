@@ -8,10 +8,15 @@ Route::match(['get', 'post'], '/telegram/webhook', [\App\Http\Controllers\Auth\T
 Route::match(['get', 'post'], '/telegram-webhook', [\App\Http\Controllers\Auth\TelegramAuthController::class, 'handleWebhook']);
 Route::match(['get', 'post'], '/webhook/telegram', [\App\Http\Controllers\Auth\TelegramAuthController::class, 'handleWebhook']);
 
-Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
+Route::middleware(['web', 'auth'])->prefix('v1')->group(function () {
     // Download package សម្រាប់ offline
     Route::get('/offline/course/{course}', [Api\OfflineController::class, 'package']);
     // Sync ពី offline → server
+    Route::post('/sync/progress', [Api\SyncController::class, 'progress']);
+    Route::post('/sync/quiz-attempt', [Api\SyncController::class, 'quizAttempt']);
+});
+
+Route::middleware('auth:sanctum')->prefix('v1/token')->group(function () {
     Route::post('/sync/progress', [Api\SyncController::class, 'progress']);
     Route::post('/sync/quiz-attempt', [Api\SyncController::class, 'quizAttempt']);
 });
