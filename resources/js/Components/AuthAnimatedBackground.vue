@@ -10,7 +10,7 @@ let width = 0
 let height = 0
 let dpr = 1
 
-// Mouse Tracking for Smooth Soft Proximity Interaction
+// Mouse Tracking for Smooth Interactive Flare
 const mouse = {
   x: -1000,
   y: -1000,
@@ -19,7 +19,7 @@ const mouse = {
   active: false,
 }
 
-// Gentle Click Shockwave System
+// Click Shockwave System
 interface Shockwave {
   x: number
   y: number
@@ -40,7 +40,7 @@ const updateTheme = () => {
   }
 }
 
-// Optimized 2D Simplex Noise for Ultra-Smooth 60FPS Fluid Vector Field
+// Optimized 2D Simplex Noise for 60FPS Fluid Wave Motion
 const F2 = 0.5 * (Math.sqrt(3.0) - 1.0)
 const G2 = (3.0 - Math.sqrt(3.0)) / 6.0
 
@@ -152,9 +152,9 @@ const handleClick = (e: MouseEvent) => {
     x: e.clientX - rect.left,
     y: e.clientY - rect.top,
     radius: 0,
-    maxRadius: 280,
-    intensity: 0.6,
-    speed: 3.5,
+    maxRadius: 360,
+    intensity: 1.0,
+    speed: 5.0,
   })
 }
 
@@ -170,7 +170,7 @@ const resize = () => {
   canvasRef.value.style.height = `${height}px`
 }
 
-// 60FPS Subtle & Calm Manus AI Motion Engine
+// Active Living 60FPS Manus AI Motion Engine
 const render = (time: number) => {
   if (!isAnimating || !canvasRef.value) return
   animationFrameId = requestAnimationFrame(render)
@@ -182,56 +182,95 @@ const render = (time: number) => {
   ctx.scale(dpr, dpr)
   ctx.clearRect(0, 0, width, height)
 
+  const timeSec = time * 0.001
+
+  // 1. Render Ambient Living Nebula Glowing Clouds in Dark Mode
+  if (isDark) {
+    // Left Nebula Flare: Cyber Emerald / Teal
+    const leftX = width * 0.12 + Math.sin(timeSec * 0.45) * 90
+    const leftY = height * 0.65 + Math.cos(timeSec * 0.35) * 70
+    const leftGrad = ctx.createRadialGradient(leftX, leftY, 0, leftX, leftY, Math.max(width, height) * 0.42)
+    leftGrad.addColorStop(0, 'rgba(16, 185, 129, 0.13)')
+    leftGrad.addColorStop(0.5, 'rgba(6, 182, 212, 0.06)')
+    leftGrad.addColorStop(1, 'rgba(16, 185, 129, 0)')
+    ctx.fillStyle = leftGrad
+    ctx.fillRect(0, 0, width, height)
+
+    // Right Nebula Flare: Warm Amber / Sunset Gold
+    const rightX = width * 0.88 + Math.cos(timeSec * 0.4) * 90
+    const rightY = height * 0.30 + Math.sin(timeSec * 0.45) * 70
+    const rightGrad = ctx.createRadialGradient(rightX, rightY, 0, rightX, rightY, Math.max(width, height) * 0.42)
+    rightGrad.addColorStop(0, 'rgba(245, 158, 11, 0.12)')
+    rightGrad.addColorStop(0.5, 'rgba(244, 63, 94, 0.05)')
+    rightGrad.addColorStop(1, 'rgba(245, 158, 11, 0)')
+    ctx.fillStyle = rightGrad
+    ctx.fillRect(0, 0, width, height)
+
+    // Top Center Indigo Pulse
+    const topX = width * 0.5 + Math.sin(timeSec * 0.3) * 60
+    const topY = height * 0.1
+    const topGrad = ctx.createRadialGradient(topX, topY, 0, topX, topY, Math.max(width, height) * 0.35)
+    topGrad.addColorStop(0, 'rgba(99, 102, 241, 0.09)')
+    topGrad.addColorStop(1, 'rgba(99, 102, 241, 0)')
+    ctx.fillStyle = topGrad
+    ctx.fillRect(0, 0, width, height)
+  }
+
   // Smooth mouse lerping
-  mouse.x += (mouse.targetX - mouse.x) * 0.08
-  mouse.y += (mouse.targetY - mouse.y) * 0.08
+  mouse.x += (mouse.targetX - mouse.x) * 0.1
+  mouse.y += (mouse.targetY - mouse.y) * 0.1
 
   // Update Shockwaves
   for (let i = shockwaves.length - 1; i >= 0; i--) {
     const sw = shockwaves[i]
     sw.radius += sw.speed
-    sw.intensity *= 0.97
+    sw.intensity *= 0.965
     if (sw.radius > sw.maxRadius || sw.intensity < 0.02) {
       shockwaves.splice(i, 1)
     }
   }
 
-  // Manus Ultra-Fine Grid Configuration (22px Spacing)
-  const spacing = 22
+  // Manus Dot-Matrix Grid Configuration (24px Spacing)
+  const spacing = 24
   const cols = Math.ceil(width / spacing) + 1
   const rows = Math.ceil(height / spacing) + 1
   const offsetX = (width % spacing) / 2
   const offsetY = (height % spacing) / 2
 
-  // Ultra-gentle slow time drift (ចលនាយឺតៗ ស្រទន់)
-  const timeSec = time * 0.001
-  const flowTime1 = timeSec * 0.045
-  const flowTime2 = timeSec * 0.065
+  // Visible, organic flowing wave speed
+  const flowTime1 = timeSec * 0.22
+  const flowTime2 = timeSec * 0.35
 
-  const mouseRadius = 200
+  const mouseRadius = 240
   const mouseRadiusSq = mouseRadius * mouseRadius
 
-  // Render Every Dot with Subtle Organic Waves
+  // 2. Render Every Dot with Continuous Fluid Waves
   for (let r = 0; r < rows; r++) {
     const origY = r * spacing + offsetY
+    const normY = origY / height
 
     for (let c = 0; c < cols; c++) {
       const origX = c * spacing + offsetX
       const normX = origX / width
 
-      // 1. Dual-Frequency Simplex Noise for Subtle Gentle Drift
-      const nVal1 = noise2D(origX * 0.0022 + flowTime1, origY * 0.0022 - flowTime1 * 0.4)
-      const nVal2 = noise2D(origX * 0.0045 - flowTime2 * 0.5, origY * 0.0045 + flowTime2 * 0.6)
+      // Dual-Frequency Simplex Noise for Continuous Waves
+      const nVal1 = noise2D(origX * 0.0028 + flowTime1, origY * 0.0028 - flowTime1 * 0.5)
+      const nVal2 = noise2D(origX * 0.0055 - flowTime2 * 0.6, origY * 0.0055 + flowTime2 * 0.7)
       const combinedNoise = (nVal1 * 0.65 + nVal2 * 0.35 + 1) * 0.5 // 0.0 -> 1.0
 
-      // Delicate Base Alpha & Radius
-      let alpha = isDark ? 0.06 + Math.pow(combinedNoise, 2.5) * 0.42 : 0.05 + Math.pow(combinedNoise, 2.2) * 0.32
-      let radius = isDark ? 0.75 + combinedNoise * 0.55 : 0.7 + combinedNoise * 0.45
+      // Dynamic Particle Brightness & Radius (Visibly Active Shimmer)
+      let alpha = isDark 
+        ? 0.12 + Math.pow(combinedNoise, 2.0) * 0.65 
+        : 0.09 + Math.pow(combinedNoise, 1.8) * 0.45
+
+      let radius = isDark 
+        ? 0.9 + combinedNoise * 0.95 
+        : 0.85 + combinedNoise * 0.65
 
       let currentX = origX
       let currentY = origY
 
-      // 2. Gentle Cursor Proximity Illumination
+      // Cursor Proximity Force & Radiant Glow
       if (mouse.active) {
         const dx = origX - mouse.x
         const dy = origY - mouse.y
@@ -241,94 +280,92 @@ const render = (time: number) => {
           const dist = Math.sqrt(distSq)
           const factor = Math.pow(1 - dist / mouseRadius, 2)
           
-          // Soft Illumination Boost
-          alpha += factor * (isDark ? 0.55 : 0.4)
-          radius += factor * 0.85
+          alpha += factor * (isDark ? 0.75 : 0.5)
+          radius += factor * 1.4
 
-          // Very subtle smooth displacement
-          const push = factor * 2.0
+          const push = factor * 3.5
           currentX += (dx / dist) * push
           currentY += (dy / dist) * push
         }
       }
 
-      // 3. Gentle Shockwave Interaction
+      // Shockwave Wavefront Interaction
       for (const sw of shockwaves) {
         const swDx = origX - sw.x
         const swDy = origY - sw.y
         const swDist = Math.sqrt(swDx * swDx + swDy * swDy)
         const waveDiff = Math.abs(swDist - sw.radius)
 
-        if (waveDiff < 35) {
-          const waveFactor = (1 - waveDiff / 35) * sw.intensity
-          alpha += waveFactor * 0.45
-          radius += waveFactor * 0.7
+        if (waveDiff < 45) {
+          const waveFactor = (1 - waveDiff / 45) * sw.intensity
+          alpha += waveFactor * 0.85
+          radius += waveFactor * 1.6
           if (swDist > 0) {
-            currentX += (swDx / swDist) * (waveFactor * 3.5)
-            currentY += (swDy / swDist) * (waveFactor * 3.5)
+            currentX += (swDx / swDist) * (waveFactor * 6.0)
+            currentY += (swDy / swDist) * (waveFactor * 6.0)
           }
         }
       }
 
-      alpha = Math.min(Math.max(alpha, 0.03), 0.85)
+      alpha = Math.min(Math.max(alpha, 0.05), 0.95)
 
-      // 4. Manus Exact Organic Palette Mapping
+      // Manus Multi-Zone Organic Color Mapping
       if (isDark) {
-        const colorBias = normX + (combinedNoise - 0.5) * 0.3
+        const colorBias = normX + (combinedNoise - 0.5) * 0.4
 
-        if (alpha > 0.4 && mouse.active && Math.hypot(origX - mouse.x, origY - mouse.y) < 70) {
-          // Pure Crisp White under Cursor
+        if (alpha > 0.45 && mouse.active && Math.hypot(origX - mouse.x, origY - mouse.y) < 75) {
+          // Pure Crisp Diamond White Spotlight
           ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`
         } else if (colorBias < 0.35) {
-          // Subtle Cyber Emerald / Mint / Aqua (Left Wing)
-          const greenRatio = Math.sin(timeSec * 0.3 + origY * 0.008) * 0.5 + 0.5
-          const rCol = Math.round(16 + greenRatio * 15)
-          const gCol = Math.round(180 + greenRatio * 35)
-          const bCol = Math.round(150 + (1 - greenRatio) * 50)
+          // Glowing Cyber Emerald / Mint / Neon Aqua (Left Wing)
+          const greenRatio = Math.sin(timeSec * 0.7 + origY * 0.01) * 0.5 + 0.5
+          const rCol = Math.round(16 + greenRatio * 20)
+          const gCol = Math.round(185 + greenRatio * 45)
+          const bCol = Math.round(160 + (1 - greenRatio) * 60)
           ctx.fillStyle = `rgba(${rCol}, ${gCol}, ${bCol}, ${alpha})`
         } else if (colorBias > 0.65) {
-          // Subtle Warm Amber / Gold / Coral (Right Wing)
-          const warmRatio = Math.cos(timeSec * 0.25 + origX * 0.008) * 0.5 + 0.5
+          // Glowing Warm Amber / Gold / Sunset Coral (Right Wing)
+          const warmRatio = Math.cos(timeSec * 0.65 + origX * 0.01) * 0.5 + 0.5
           const rCol = Math.round(245 + warmRatio * 10)
-          const gCol = Math.round(140 + warmRatio * 40)
-          const bCol = Math.round(30 + warmRatio * 60)
+          const gCol = Math.round(135 + warmRatio * 45)
+          const bCol = Math.round(20 + warmRatio * 75)
           ctx.fillStyle = `rgba(${rCol}, ${gCol}, ${bCol}, ${alpha})`
         } else {
-          // Center: Sleek Subtle Crystal Mist
+          // Center: Crystal Ice Blue & Soft Pearl
           ctx.fillStyle = `rgba(225, 235, 255, ${alpha})`
         }
       } else {
-        // Light Mode: Subtle High-Precision Slate
-        const colorBias = normX + (combinedNoise - 0.5) * 0.3
+        // Light Mode: High-precision Slate & Accent Colors
+        const colorBias = normX + (combinedNoise - 0.5) * 0.35
         if (colorBias < 0.35) {
-          ctx.fillStyle = `rgba(13, 148, 136, ${alpha * 0.9})`
+          ctx.fillStyle = `rgba(13, 148, 136, ${Math.min(alpha * 1.1, 0.75)})`
         } else if (colorBias > 0.65) {
-          ctx.fillStyle = `rgba(217, 119, 6, ${alpha * 0.9})`
+          ctx.fillStyle = `rgba(217, 119, 6, ${Math.min(alpha * 1.1, 0.75)})`
         } else {
-          ctx.fillStyle = `rgba(71, 85, 105, ${alpha})`
+          ctx.fillStyle = `rgba(71, 85, 105, ${Math.min(alpha * 1.1, 0.85)})`
         }
       }
 
-      // Draw Smooth Tiny Circular Dot
+      // Draw Circular Dot
       ctx.beginPath()
       ctx.arc(currentX, currentY, radius, 0, Math.PI * 2)
       ctx.fill()
     }
   }
 
-  // 5. Manus Ambient Edge Soft Vignette
+  // 3. Ambient Edge Vignette
   if (isDark) {
     const vignette = ctx.createRadialGradient(
       width / 2,
       height / 2,
-      Math.min(width, height) * 0.3,
+      Math.min(width, height) * 0.28,
       width / 2,
       height / 2,
-      Math.max(width, height) * 0.8
+      Math.max(width, height) * 0.78
     )
     vignette.addColorStop(0, 'rgba(7, 7, 9, 0)')
-    vignette.addColorStop(0.7, 'rgba(7, 7, 9, 0.3)')
-    vignette.addColorStop(1, 'rgba(7, 7, 9, 0.92)')
+    vignette.addColorStop(0.65, 'rgba(7, 7, 9, 0.35)')
+    vignette.addColorStop(1, 'rgba(7, 7, 9, 0.94)')
     ctx.fillStyle = vignette
     ctx.fillRect(0, 0, width, height)
   }
