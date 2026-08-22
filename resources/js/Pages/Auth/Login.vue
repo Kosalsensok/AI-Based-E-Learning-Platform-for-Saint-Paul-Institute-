@@ -26,23 +26,31 @@ const form = useForm({
 // Cloudflare Turnstile CAPTCHA State
 const turnstileWidget = ref<HTMLElement | null>(null)
 let widgetId: string | number | null = null
+const isTurnstileLoading = ref(true)
 
 const initTurnstile = () => {
   if (typeof window === 'undefined') return
 
-  const initWidget = () => {
+  const renderWidget = () => {
     if (typeof window === 'undefined' || !(window as any).turnstile || !turnstileWidget.value) return
-    if (widgetId !== null) return
 
     try {
+      if (widgetId !== null) {
+        try {
+          (window as any).turnstile.remove(widgetId)
+        } catch (_) {}
+        widgetId = null
+      }
+
       turnstileWidget.value.innerHTML = ''
       widgetId = (window as any).turnstile.render(turnstileWidget.value, {
         sitekey: '0x4AAAAAAEXbfl90rlcdniVI',
         theme: isDark.value ? 'dark' : 'light',
-        size: 'flexible',
+        size: 'normal',
         callback: (token: string) => {
           form.turnstile_token = token
           form.clearErrors('turnstile_token')
+          isTurnstileLoading.value = false
         },
         'expired-callback': () => {
           form.turnstile_token = ''
@@ -53,31 +61,38 @@ const initTurnstile = () => {
           }
         },
         'error-callback': (code: any) => {
-          console.error('Turnstile Error Code:', code)
+          console.warn('Turnstile Error Code:', code)
           form.turnstile_token = ''
+          isTurnstileLoading.value = false
         },
       })
+      isTurnstileLoading.value = false
     } catch (e) {
-      console.error('Turnstile init exception:', e)
+      console.warn('Turnstile init exception:', e)
+      isTurnstileLoading.value = false
     }
   }
 
+  ;(window as any).onloadTurnstileCallback = () => {
+    setTimeout(renderWidget, 50)
+  }
+
   if (typeof window !== 'undefined' && (window as any).turnstile) {
-    initWidget()
+    setTimeout(renderWidget, 50)
   } else {
     const scriptId = 'cf-turnstile-script'
     if (!document.getElementById(scriptId)) {
       const script = document.createElement('script')
       script.id = scriptId
-      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
+      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback&render=explicit'
       script.async = true
       script.defer = true
       script.onload = () => {
-        setTimeout(initWidget, 100)
+        setTimeout(renderWidget, 100)
       }
       document.head.appendChild(script)
     } else {
-      setTimeout(initWidget, 150)
+      setTimeout(renderWidget, 150)
     }
   }
 }
@@ -1115,9 +1130,9 @@ onUnmounted(() => {
                   <Link href="/forgot-password" class="text-xs font-bold text-blue-600 dark:text-sky-400 hover:text-blue-700 dark:hover:text-sky-300 no-underline transition-colors">{{ t('login_forgot_password', 'Forgot Password?') }}</Link>
                 </div>
 
-                <!-- Cloudflare Turnstile CAPTCHA Widget (Full Width Flexible Mode) -->
-                <div class="my-2 w-full flex flex-col items-center justify-center min-h-[65px] [&>div]:w-full [&>div>iframe]:w-full [&>div>iframe]:rounded-xl">
-                  <div ref="turnstileWidget" class="w-full flex justify-center"></div>
+                <!-- Cloudflare Turnstile CAPTCHA Widget -->
+                <div class="my-2 w-full flex flex-col items-center justify-center min-h-[65px]">
+                  <div ref="turnstileWidget" class="min-h-[65px] flex items-center justify-center"></div>
                 </div>
 
                 <button type="submit" :disabled="isSubmitting || form.processing" class="h-11 group w-full py-2.5 px-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm hover:shadow-md transition-all duration-200 inline-flex items-center justify-center gap-2.5 disabled:opacity-50 text-xs sm:text-sm tracking-wide cursor-pointer select-none">
