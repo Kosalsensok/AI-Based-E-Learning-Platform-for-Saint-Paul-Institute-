@@ -1065,9 +1065,9 @@ onUnmounted(() => {
                   <Link href="/forgot-password" class="text-xs font-bold text-blue-600 dark:text-sky-400 hover:text-blue-700 dark:hover:text-sky-300 no-underline transition-colors">{{ t('login_forgot_password', 'Forgot Password?') }}</Link>
                 </div>
 
-                <!-- Cloudflare Turnstile CAPTCHA Widget (Clean Full-Width Container) -->
-                <div class="my-3 w-full flex items-center justify-center min-h-[65px]">
-                  <div ref="turnstileWidget" class="w-full min-h-[65px] flex items-center justify-center turnstile-wrapper"></div>
+                <!-- Cloudflare Turnstile CAPTCHA Widget (100% Full-Width Matching Input Fields & Button) -->
+                <div class="w-full my-2.5">
+                  <div ref="turnstileWidget" class="w-full block min-h-[65px] turnstile-wrapper"></div>
                 </div>
 
                 <button type="submit" :disabled="isSubmitting || form.processing" class="h-11 group w-full py-2.5 px-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm hover:shadow-md transition-all duration-200 inline-flex items-center justify-center gap-2.5 disabled:opacity-50 text-xs sm:text-sm tracking-wide cursor-pointer select-none">
@@ -1422,19 +1422,15 @@ onUnmounted(() => {
   animation: fadeIn 0.35s ease-out forwards;
 }
 
-.turnstile-wrapper {
-  width: 100% !important;
-  display: flex !important;
-  justify-content: center !important;
-  align-items: center !important;
-}
-
+.turnstile-wrapper,
 .turnstile-wrapper > div,
 .turnstile-wrapper iframe {
   width: 100% !important;
+  min-width: 100% !important;
   max-width: 100% !important;
-  min-height: 65px !important;
+  display: block !important;
   border-radius: 0.75rem !important;
+  overflow: hidden !important;
 }
 </style>
 
