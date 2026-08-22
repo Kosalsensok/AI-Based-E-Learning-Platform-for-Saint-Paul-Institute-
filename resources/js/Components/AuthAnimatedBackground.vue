@@ -10,26 +10,29 @@ let width = 0
 let height = 0
 let dpr = 1
 
-// Mouse Tracking for Interactive Illumination
+// Mouse Tracking for Interactive Ripple & Distortion
 const mouse = {
   x: -1000,
   y: -1000,
   targetX: -1000,
   targetY: -1000,
+  vx: 0,
+  vy: 0,
   active: false,
 }
 
-// Click Ripple Waves
-interface Ripple {
+// Click Shockwave System
+interface Shockwave {
   x: number
   y: number
   radius: number
   maxRadius: number
-  opacity: number
+  intensity: number
+  speed: number
 }
-const ripples: Ripple[] = []
+const shockwaves: Shockwave[] = []
 
-// Dark Mode State Observer
+// Dark Mode State
 let isDark = true
 let themeObserver: MutationObserver | null = null
 
@@ -37,6 +40,85 @@ const updateTheme = () => {
   if (typeof document !== 'undefined') {
     isDark = document.documentElement.classList.contains('dark')
   }
+}
+
+// Fast Permutation-based Simplex Noise for 60FPS Fluid Vector Field
+const F2 = 0.5 * (Math.sqrt(3.0) - 1.0)
+const G2 = (3.0 - Math.sqrt(3.0)) / 6.0
+
+const perm = new Uint8Array(512)
+const gradP = new Float32Array(512 * 2)
+
+const initNoise = () => {
+  const p = new Uint8Array(256)
+  for (let i = 0; i < 256; i++) p[i] = i
+  for (let i = 255; i > 0; i--) {
+    const r = Math.floor(Math.random() * (i + 1))
+    const t = p[i]
+    p[i] = p[r]
+    p[r] = t
+  }
+  for (let i = 0; i < 512; i++) {
+    perm[i] = p[i & 255]
+    const angle = (perm[i] / 256) * Math.PI * 2
+    gradP[i * 2] = Math.cos(angle)
+    gradP[i * 2 + 1] = Math.sin(angle)
+  }
+}
+
+const noise2D = (xin: number, yin: number): number => {
+  let n0 = 0
+  let n1 = 0
+  let n2 = 0
+  const s = (xin + yin) * F2
+  const i = Math.floor(xin + s)
+  const j = Math.floor(yin + s)
+  const t = (i + j) * G2
+  const X0 = i - t
+  const Y0 = j - t
+  const x0 = xin - X0
+  const y0 = yin - Y0
+
+  let i1 = 0
+  let j1 = 0
+  if (x0 > y0) {
+    i1 = 1
+    j1 = 0
+  } else {
+    i1 = 0
+    j1 = 1
+  }
+
+  const x1 = x0 - i1 + G2
+  const y1 = y0 - j1 + G2
+  const x2 = x0 - 1.0 + 2.0 * G2
+  const y2 = y0 - 1.0 + 2.0 * G2
+
+  const ii = i & 255
+  const jj = j & 255
+
+  let t0 = 0.5 - x0 * x0 - y0 * y0
+  if (t0 >= 0) {
+    const gi0 = perm[ii + perm[jj]]
+    t0 *= t0
+    n0 = t0 * t0 * (gradP[gi0 * 2] * x0 + gradP[gi0 * 2 + 1] * y0)
+  }
+
+  let t1 = 0.5 - x1 * x1 - y1 * y1
+  if (t1 >= 0) {
+    const gi1 = perm[ii + i1 + perm[jj + j1]]
+    t1 *= t1
+    n1 = t1 * t1 * (gradP[gi1 * 2] * x1 + gradP[gi1 * 2 + 1] * y1)
+  }
+
+  let t2 = 0.5 - x2 * x2 - y2 * y2
+  if (t2 >= 0) {
+    const gi2 = perm[ii + 1 + perm[jj + 1]]
+    t2 *= t2
+    n2 = t2 * t2 * (gradP[gi2 * 2] * x2 + gradP[gi2 * 2 + 1] * y2)
+  }
+
+  return 70.0 * (n0 + n1 + n2)
 }
 
 const handleMouseMove = (e: MouseEvent) => {
@@ -68,16 +150,16 @@ const handleTouchEnd = () => {
 const handleClick = (e: MouseEvent) => {
   if (!containerRef.value) return
   const rect = containerRef.value.getBoundingClientRect()
-  ripples.push({
+  shockwaves.push({
     x: e.clientX - rect.left,
     y: e.clientY - rect.top,
     radius: 0,
-    maxRadius: 280,
-    opacity: 0.8,
+    maxRadius: 360,
+    intensity: 1.0,
+    speed: 5.5,
   })
 }
 
-// Resize & High-DPI Canvas Buffer
 const resize = () => {
   if (!containerRef.value || !canvasRef.value) return
   width = containerRef.value.clientWidth || window.innerWidth
@@ -90,7 +172,7 @@ const resize = () => {
   canvasRef.value.style.height = `${height}px`
 }
 
-// Animation Loop (60 FPS Interactive Dot Matrix Engine)
+// 60FPS Manus Continuous Generative Wave & Interactive Engine
 const render = (time: number) => {
   if (!isAnimating || !canvasRef.value) return
   animationFrameId = requestAnimationFrame(render)
@@ -102,161 +184,154 @@ const render = (time: number) => {
   ctx.scale(dpr, dpr)
   ctx.clearRect(0, 0, width, height)
 
-  // Smooth mouse lerp
-  if (mouse.active) {
-    mouse.x += (mouse.targetX - mouse.x) * 0.12
-    mouse.y += (mouse.targetY - mouse.y) * 0.12
-  } else {
-    mouse.x += (mouse.targetX - mouse.x) * 0.05
-    mouse.y += (mouse.targetY - mouse.y) * 0.05
-  }
+  // Smooth mouse lerping
+  const prevMx = mouse.x
+  const prevMy = mouse.y
+  mouse.x += (mouse.targetX - mouse.x) * 0.1
+  mouse.y += (mouse.targetY - mouse.y) * 0.1
+  mouse.vx = mouse.x - prevMx
+  mouse.vy = mouse.y - prevMy
 
-  // 1. Ambient Moving Flares (Manus Signature Lighting)
-  const t = time * 0.0008
-  const amberX = width * 0.85 + Math.sin(t * 0.7) * 80
-  const amberY = height * 0.15 + Math.cos(t * 0.6) * 60
-  const tealX = width * 0.15 + Math.cos(t * 0.8) * 80
-  const tealY = height * 0.85 + Math.sin(t * 0.5) * 60
-  const violetX = width * 0.2 + Math.sin(t * 0.5) * 60
-  const violetY = height * 0.35 + Math.cos(t * 0.7) * 50
-
-  // Draw Subtle Ambient Glows
-  if (isDark) {
-    // Top-Right Warm Amber / Orange Flare
-    const gradAmber = ctx.createRadialGradient(amberX, amberY, 0, amberX, amberY, 480)
-    gradAmber.addColorStop(0, 'rgba(245, 158, 11, 0.13)')
-    gradAmber.addColorStop(0.5, 'rgba(234, 88, 12, 0.06)')
-    gradAmber.addColorStop(1, 'rgba(0, 0, 0, 0)')
-    ctx.fillStyle = gradAmber
-    ctx.fillRect(0, 0, width, height)
-
-    // Bottom-Left Cyber Emerald / Teal Flare
-    const gradTeal = ctx.createRadialGradient(tealX, tealY, 0, tealX, tealY, 520)
-    gradTeal.addColorStop(0, 'rgba(20, 184, 166, 0.11)')
-    gradTeal.addColorStop(0.5, 'rgba(16, 185, 129, 0.05)')
-    gradTeal.addColorStop(1, 'rgba(0, 0, 0, 0)')
-    ctx.fillStyle = gradTeal
-    ctx.fillRect(0, 0, width, height)
-
-    // Deep Indigo / Violet center flare
-    const gradViolet = ctx.createRadialGradient(violetX, violetY, 0, violetX, violetY, 400)
-    gradViolet.addColorStop(0, 'rgba(99, 102, 241, 0.10)')
-    gradViolet.addColorStop(1, 'rgba(0, 0, 0, 0)')
-    ctx.fillStyle = gradViolet
-    ctx.fillRect(0, 0, width, height)
-  } else {
-    // Light Mode Soft Blue / Indigo Glows
-    const gradLight = ctx.createRadialGradient(width * 0.75, height * 0.25, 0, width * 0.75, height * 0.25, 500)
-    gradLight.addColorStop(0, 'rgba(59, 130, 246, 0.08)')
-    gradLight.addColorStop(1, 'rgba(255, 255, 255, 0)')
-    ctx.fillStyle = gradLight
-    ctx.fillRect(0, 0, width, height)
-  }
-
-  // 2. Update Ripple Waves
-  for (let i = ripples.length - 1; i >= 0; i--) {
-    const r = ripples[i]
-    r.radius += 4.5
-    r.opacity *= 0.96
-    if (r.radius > r.maxRadius || r.opacity < 0.02) {
-      ripples.splice(i, 1)
+  // Update Shockwaves
+  for (let i = shockwaves.length - 1; i >= 0; i--) {
+    const sw = shockwaves[i]
+    sw.radius += sw.speed
+    sw.intensity *= 0.965
+    if (sw.radius > sw.maxRadius || sw.intensity < 0.02) {
+      shockwaves.splice(i, 1)
     }
   }
 
-  // 3. Grid Settings
-  const spacing = 26
+  // Manus Grid Configuration
+  const spacing = 24
   const cols = Math.ceil(width / spacing) + 1
   const rows = Math.ceil(height / spacing) + 1
   const offsetX = (width % spacing) / 2
   const offsetY = (height % spacing) / 2
 
-  const mouseRadius = 220
+  const timeSec = time * 0.001
+  const flowTime1 = timeSec * 0.18
+  const flowTime2 = timeSec * 0.28
+
+  const mouseRadius = 240
   const mouseRadiusSq = mouseRadius * mouseRadius
 
-  // 4. Render Interactive Dot Matrix
+  // Render Every Dot with Continuous Flow Noise Shading
   for (let r = 0; r < rows; r++) {
-    const y = r * spacing + offsetY
+    const origY = r * spacing + offsetY
+    const normY = origY / height
+
     for (let c = 0; c < cols; c++) {
-      const x = c * spacing + offsetX
+      const origX = c * spacing + offsetX
+      const normX = origX / width
 
-      // Organic subtle shimmer wave
-      const wave = Math.sin(t * 1.5 + x * 0.012 + y * 0.012) * 0.03
-      let alpha = isDark ? 0.16 + wave : 0.12 + wave
-      let radius = isDark ? 1.05 : 1.0
+      // 1. Dual-Frequency Simplex Noise for Continuous Organic Fluid Motion
+      const nVal1 = noise2D(origX * 0.0028 + flowTime1, origY * 0.0028 - flowTime1 * 0.5)
+      const nVal2 = noise2D(origX * 0.006 - flowTime2 * 0.7, origY * 0.006 + flowTime2)
+      const combinedNoise = (nVal1 * 0.65 + nVal2 * 0.35 + 1) * 0.5 // 0.0 -> 1.0
 
-      // Interactive Cursor Proximity Boost
-      const dx = x - mouse.x
-      const dy = y - mouse.y
-      const distSq = dx * dx + dy * dy
+      // Calculate dynamic particle brightness & radius
+      let alpha = isDark ? 0.10 + Math.pow(combinedNoise, 2.2) * 0.55 : 0.08 + Math.pow(combinedNoise, 2.0) * 0.4
+      let radius = isDark ? 0.95 + combinedNoise * 0.85 : 0.9 + combinedNoise * 0.6
 
-      if (distSq < mouseRadiusSq) {
-        const dist = Math.sqrt(distSq)
-        const factor = Math.pow(1 - dist / mouseRadius, 2)
-        alpha += factor * (isDark ? 0.65 : 0.45)
-        radius += factor * 1.4
-      }
+      let currentX = origX
+      let currentY = origY
 
-      // Ripple Wave Interaction
-      for (const rip of ripples) {
-        const rdx = x - rip.x
-        const rdy = y - rip.y
-        const rDist = Math.sqrt(rdx * rdx + rdy * rdy)
-        const diff = Math.abs(rDist - rip.radius)
-        if (diff < 35) {
-          const ripFactor = (1 - diff / 35) * rip.opacity
-          alpha += ripFactor * 0.6
-          radius += ripFactor * 1.2
+      // 2. Cursor Proximity & Fluid Force
+      if (mouse.active) {
+        const dx = origX - mouse.x
+        const dy = origY - mouse.y
+        const distSq = dx * dx + dy * dy
+
+        if (distSq < mouseRadiusSq && distSq > 0) {
+          const dist = Math.sqrt(distSq)
+          const factor = Math.pow(1 - dist / mouseRadius, 2)
+          
+          // Illumination boost
+          alpha += factor * (isDark ? 0.75 : 0.5)
+          radius += factor * 1.5
+
+          // Subtle gentle displacement force away from cursor
+          const push = factor * 4.0
+          currentX += (dx / dist) * push
+          currentY += (dy / dist) * push
         }
       }
 
-      // Clamp Alpha
+      // 3. Shockwave Wavefront Interaction
+      for (const sw of shockwaves) {
+        const swDx = origX - sw.x
+        const swDy = origY - sw.y
+        const swDist = Math.sqrt(swDx * swDx + swDy * swDy)
+        const waveDiff = Math.abs(swDist - sw.radius)
+
+        if (waveDiff < 45) {
+          const waveFactor = (1 - waveDiff / 45) * sw.intensity
+          alpha += waveFactor * 0.8
+          radius += waveFactor * 1.6
+          if (swDist > 0) {
+            currentX += (swDx / swDist) * (waveFactor * 7)
+            currentY += (swDy / swDist) * (waveFactor * 7)
+          }
+        }
+      }
+
       alpha = Math.min(Math.max(alpha, 0.04), 0.95)
 
-      // Dynamic Color Shading based on Screen Position (Manus Multi-Tone Dot Grid)
+      // 4. Manus Exact Organic Color Mapping
       if (isDark) {
-        // Color influence calculation
-        const amberWeight = Math.max(0, 1 - Math.hypot(x - amberX, y - amberY) / 550)
-        const tealWeight = Math.max(0, 1 - Math.hypot(x - tealX, y - tealY) / 550)
-        const mouseWeight = distSq < mouseRadiusSq ? Math.pow(1 - Math.sqrt(distSq) / mouseRadius, 2) : 0
+        // Color zones based on X coordinate + noise modulation
+        // Left: Emerald (#10b981) & Cyber Aqua (#06b6d4)
+        // Right: Warm Amber (#f59e0b), Coral Pink (#f43f5e) & Purple (#a855f7)
+        const colorBias = normX + (combinedNoise - 0.5) * 0.35
 
-        if (mouseWeight > 0.3) {
-          // Bright Diamond White/Cyan when near cursor
+        if (alpha > 0.45 && mouse.active && Math.hypot(origX - mouse.x, origY - mouse.y) < 80) {
+          // Pure bright Diamond White under the cursor center
           ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`
-        } else if (amberWeight > 0.25) {
-          // Warm Amber Tone
-          ctx.fillStyle = `rgba(251, 191, 36, ${alpha})`
-        } else if (tealWeight > 0.25) {
-          // Cyber Emerald Tone
-          ctx.fillStyle = `rgba(45, 212, 191, ${alpha})`
+        } else if (colorBias < 0.35) {
+          // Cyber Emerald / Mint / Cyan (Left Wing)
+          const greenRatio = Math.sin(timeSec * 0.8 + origY * 0.01) * 0.5 + 0.5
+          const rCol = Math.round(16 + greenRatio * 20)
+          const gCol = Math.round(185 + greenRatio * 45)
+          const bCol = Math.round(160 + (1 - greenRatio) * 60)
+          ctx.fillStyle = `rgba(${rCol}, ${gCol}, ${bCol}, ${alpha})`
+        } else if (colorBias > 0.65) {
+          // Warm Amber / Coral / Orange-Gold (Right Wing)
+          const warmRatio = Math.cos(timeSec * 0.7 + origX * 0.01) * 0.5 + 0.5
+          const rCol = Math.round(245 + warmRatio * 10)
+          const gCol = Math.round(130 + warmRatio * 50)
+          const bCol = Math.round(20 + warmRatio * 80)
+          ctx.fillStyle = `rgba(${rCol}, ${gCol}, ${bCol}, ${alpha})`
         } else {
-          // Pure Crisp Slate/White Tone
-          ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`
+          // Center: Sleek Crisp Crystal White / Soft Sky Blue
+          const centerGlow = Math.sin(timeSec + origX * 0.02) * 0.5 + 0.5
+          ctx.fillStyle = `rgba(${Math.round(220 + centerGlow * 35)}, ${Math.round(230 + centerGlow * 25)}, 255, ${alpha})`
         }
       } else {
-        // Light Mode: Slate / Indigo Tone
-        ctx.fillStyle = `rgba(51, 65, 85, ${alpha})`
+        // Light Mode: High-contrast Dark Indigo / Slate
+        ctx.fillStyle = `rgba(30, 41, 59, ${alpha})`
       }
 
-      // Draw Crisp Round Dot
+      // Draw Smooth Circular Dot
       ctx.beginPath()
-      ctx.arc(x, y, radius, 0, Math.PI * 2)
+      ctx.arc(currentX, currentY, radius, 0, Math.PI * 2)
       ctx.fill()
     }
   }
 
-  // 5. Soft Vignette Edge Falloff (Dark Mode Luxury Edge Shadow)
+  // 5. Manus Ambient Edge Vignette
   if (isDark) {
     const vignette = ctx.createRadialGradient(
       width / 2,
       height / 2,
-      Math.min(width, height) * 0.3,
+      Math.min(width, height) * 0.28,
       width / 2,
       height / 2,
-      Math.max(width, height) * 0.75
+      Math.max(width, height) * 0.78
     )
     vignette.addColorStop(0, 'rgba(7, 7, 9, 0)')
-    vignette.addColorStop(0.7, 'rgba(7, 7, 9, 0.4)')
-    vignette.addColorStop(1, 'rgba(7, 7, 9, 0.92)')
+    vignette.addColorStop(0.65, 'rgba(7, 7, 9, 0.35)')
+    vignette.addColorStop(1, 'rgba(7, 7, 9, 0.94)')
     ctx.fillStyle = vignette
     ctx.fillRect(0, 0, width, height)
   }
@@ -287,16 +362,15 @@ const handleVisibilityChange = () => {
 }
 
 onMounted(() => {
+  initNoise()
   updateTheme()
   resize()
 
-  // Track Theme Changes (Dark/Light Switcher)
   themeObserver = new MutationObserver(() => {
     updateTheme()
   })
   themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
 
-  // Listeners for Interactive Motion & Canvas Resize
   window.addEventListener('mousemove', handleMouseMove, { passive: true })
   window.addEventListener('mouseleave', handleMouseLeave)
   window.addEventListener('touchmove', handleTouchMove, { passive: true })
@@ -325,7 +399,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="containerRef" class="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-hidden select-none">
+  <div ref="containerRef" class="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-hidden select-none bg-[#070709]">
     <canvas ref="canvasRef" class="w-full h-full block"></canvas>
   </div>
 </template>
