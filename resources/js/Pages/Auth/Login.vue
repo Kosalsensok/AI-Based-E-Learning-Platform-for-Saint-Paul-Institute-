@@ -801,7 +801,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-slate-100/90 dark:bg-[#070D1E] text-slate-900 dark:text-slate-100 p-4 sm:p-6 lg:p-8 relative font-sans overflow-x-hidden transition-colors duration-500">
+  <div class="min-h-screen flex items-center justify-center bg-[#f8fafc] dark:bg-[#070709] text-slate-900 dark:text-slate-100 p-4 sm:p-6 lg:p-8 relative font-sans overflow-x-hidden transition-colors duration-500">
     
     <!-- Top-Right Fixed Floating Language & Theme Switchers (Generous 24px-32px Edge Spacing) -->
     <div class="fixed top-6 right-6 sm:top-7 sm:right-7 lg:top-8 lg:right-8 z-50 flex items-center gap-3">
@@ -811,7 +811,7 @@ onUnmounted(() => {
         <button
           type="button"
           @click.stop="isLangOpen = !isLangOpen"
-          class="group px-3.5 py-2 rounded-full bg-white/95 dark:bg-slate-800/90 backdrop-blur-md hover:bg-white dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition-all duration-200 border border-slate-300/90 dark:border-slate-700/60 shadow-md shadow-slate-900/5 dark:shadow-black/20 flex items-center gap-2 text-xs font-semibold cursor-pointer select-none hover:scale-105 active:scale-95 focus:outline-none"
+          class="group px-3.5 py-2 rounded-full bg-white/95 dark:bg-[#11131a]/90 backdrop-blur-md hover:bg-white dark:hover:bg-[#181a24] text-slate-800 dark:text-slate-200 transition-all duration-200 border border-slate-300/90 dark:border-white/10 shadow-md shadow-slate-900/5 dark:shadow-black/40 flex items-center gap-2 text-xs font-semibold cursor-pointer select-none hover:scale-105 active:scale-95 focus:outline-none"
           :title="currentLang === 'km' ? 'ប្តូរភាសា / Change Language' : 'Change Language / ប្តូរភាសា'"
         >
           <img
@@ -821,7 +821,7 @@ onUnmounted(() => {
             height="16"
             loading="eager"
             decoding="async"
-            class="w-4 h-4 rounded-full object-cover shrink-0 ring-1 ring-slate-300 dark:ring-slate-600"
+            class="w-4 h-4 rounded-full object-cover shrink-0 ring-1 ring-slate-300 dark:ring-slate-700"
           />
           <span class="text-[11px] font-bold tracking-wide">
             {{ currentLang === 'km' ? 'KH' : 'EN' }}
@@ -840,7 +840,7 @@ onUnmounted(() => {
         >
           <div
             v-if="isLangOpen"
-            class="absolute right-0 mt-2 w-44 rounded-2xl bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-700/80 shadow-xl shadow-black/10 dark:shadow-black/40 py-1.5 z-50 overflow-hidden"
+            class="absolute right-0 mt-2 w-44 rounded-2xl bg-white/95 dark:bg-[#11131a]/95 backdrop-blur-xl border border-slate-200/90 dark:border-white/10 shadow-xl shadow-black/10 dark:shadow-black/60 py-1.5 z-50 overflow-hidden"
           >
             <button
               v-for="lang in languages"
@@ -850,8 +850,8 @@ onUnmounted(() => {
               :class="[
                 'w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-semibold transition-colors cursor-pointer select-none',
                 currentLang === lang.code
-                  ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400'
-                  : 'text-slate-800 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60 hover:text-slate-950 dark:hover:text-white'
+                  ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400'
+                  : 'text-slate-800 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-950 dark:hover:text-white'
               ]"
             >
               <span class="flex items-center gap-2.5">
@@ -868,34 +868,42 @@ onUnmounted(() => {
       <button
         type="button"
         @click="toggleTheme"
-        class="group px-3.5 py-2 rounded-full bg-white/95 dark:bg-slate-800/90 backdrop-blur-md hover:bg-white dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition-all duration-200 border border-slate-300/90 dark:border-slate-700/60 shadow-md shadow-slate-900/5 dark:shadow-black/20 flex items-center gap-2 text-xs font-semibold cursor-pointer select-none hover:scale-105 active:scale-95"
+        class="group px-3.5 py-2 rounded-full bg-white/95 dark:bg-[#11131a]/90 backdrop-blur-md hover:bg-white dark:hover:bg-[#181a24] text-slate-800 dark:text-slate-200 transition-all duration-200 border border-slate-300/90 dark:border-white/10 shadow-md shadow-slate-900/5 dark:shadow-black/40 flex items-center gap-2 text-xs font-semibold cursor-pointer select-none hover:scale-105 active:scale-95"
         :title="isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
       >
         <div class="relative w-4 h-4 flex items-center justify-center">
-          <i :class="['pi text-xs transition-transform duration-300 group-hover:rotate-45', isDark ? 'pi-sun text-amber-500' : 'pi-moon text-indigo-500']"></i>
+          <i :class="['pi text-xs transition-transform duration-300 group-hover:rotate-45', isDark ? 'pi-sun text-amber-400' : 'pi-moon text-indigo-500']"></i>
         </div>
         <span class="text-[11px] font-bold">{{ isDark ? t('theme_light', 'Light Mode') : t('theme_dark', 'Dark Mode') }}</span>
       </button>
     </div>
 
-    <!-- Interactive 3D Three.js Animated AI Background & Ambient Glow -->
+    <!-- Manus AI Style Deep Obsidian Micro-Dot Matrix & Ambient Flares -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none z-0 select-none">
+      
+      <!-- 3D Three.js Animated Interactive Nodes -->
       <AuthAnimatedBackground />
 
-      <!-- Animated Aurora Gradient Wave -->
-      <div class="absolute -inset-[100%] opacity-40 dark:opacity-30 animate-aurora bg-gradient-to-r from-blue-600/30 via-indigo-500/30 via-purple-500/30 via-sky-400/30 to-blue-600/30 blur-3xl"></div>
+      <!-- Manus Deep Pitch-Black Crisp Dot Grid (24px Matrix) -->
+      <div class="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] dark:bg-[radial-gradient(rgba(255,255,255,0.18)_1.1px,transparent_1.1px)] [background-size:24px_24px] opacity-35 dark:opacity-30"></div>
 
-      <!-- Tech Dot Grid Matrix Overlay -->
-      <div class="absolute inset-0 bg-[radial-gradient(#3b82f6_1.2px,transparent_1.2px)] dark:bg-[radial-gradient(#38bdf8_1.2px,transparent_1.2px)] [background-size:32px_32px] opacity-30 dark:opacity-20"></div>
+      <!-- Multi-Color Ambient Lighting Flares (Manus Signature Glows) -->
+      <!-- Warm Amber/Gold Flare on top-right -->
+      <div class="absolute -top-36 -right-36 w-[550px] h-[550px] bg-amber-500/10 dark:bg-amber-500/12 rounded-full blur-[130px] animate-float-slow"></div>
+      
+      <!-- Cyber Emerald / Cyan Flare on bottom-left -->
+      <div class="absolute -bottom-36 -left-36 w-[600px] h-[600px] bg-cyan-500/10 dark:bg-emerald-500/10 rounded-full blur-[140px] animate-float-reverse"></div>
+      
+      <!-- Deep Indigo / Violet center glow -->
+      <div class="absolute top-1/4 -left-20 w-[450px] h-[450px] bg-indigo-500/10 dark:bg-indigo-600/12 rounded-full blur-[120px]"></div>
 
-      <!-- Glowing Animated Orbs -->
-      <div class="absolute -top-32 -left-32 w-[550px] h-[550px] bg-blue-500/25 dark:bg-blue-600/30 rounded-full blur-[130px] animate-float-slow"></div>
-      <div class="absolute -bottom-32 -right-32 w-[600px] h-[600px] bg-indigo-500/25 dark:bg-indigo-600/30 rounded-full blur-[140px] animate-float-reverse"></div>
+      <!-- Soft Edge Vignette Overlay -->
+      <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(248,250,252,0.92)_100%)] dark:bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(7,7,9,0.95)_100%)]"></div>
     </div>
 
-    <!-- Master Centered Login Card (Clean & Balanced Width) -->
-    <div :class="['w-full p-[1px] rounded-3xl bg-gradient-to-b from-blue-500/40 via-indigo-500/20 to-purple-500/30 dark:from-blue-500/30 dark:via-slate-800/40 dark:to-indigo-500/20 shadow-2xl shadow-slate-900/10 dark:shadow-black/60 relative z-10 my-auto transition-all duration-300', isAuthenticating ? 'max-w-sm' : 'max-w-[490px]']">
-      <div :class="['w-full bg-white/95 dark:bg-[#0E172E]/95 backdrop-blur-2xl rounded-[23px] flex flex-col justify-center relative z-20 transition-all duration-300 font-[\'Kantumruy_Pro\',sans-serif]', isAuthenticating ? 'p-8 items-center text-center' : 'p-6 sm:p-8 space-y-3.5']">
+    <!-- Master Centered Login Card (Clean Obsidian Glassmorphism) -->
+    <div :class="['w-full p-[1px] rounded-3xl bg-gradient-to-b from-blue-500/40 via-indigo-500/20 to-purple-500/30 dark:from-white/20 dark:via-white/5 dark:to-white/10 shadow-2xl shadow-slate-900/10 dark:shadow-[0_0_60px_-15px_rgba(0,0,0,0.9)] relative z-10 my-auto transition-all duration-300', isAuthenticating ? 'max-w-sm' : 'max-w-[490px]']">
+      <div :class="['w-full bg-white/95 dark:bg-[#0c0d12]/95 backdrop-blur-2xl rounded-[23px] flex flex-col justify-center relative z-20 transition-all duration-300 font-[\'Kantumruy_Pro\',sans-serif]', isAuthenticating ? 'p-8 items-center text-center' : 'p-6 sm:p-8 space-y-3.5']">
         
         <!-- Header with Logo & Brand Name -->
         <div v-if="!isAuthenticating" class="w-full space-y-3">
@@ -910,7 +918,7 @@ onUnmounted(() => {
                   height="56"
                   fetchpriority="high"
                   decoding="async"
-                  class="relative w-13 h-13 rounded-full shadow-lg object-contain ring-2 ring-blue-500/40 ring-offset-2 ring-offset-white dark:ring-offset-[#0E172E] bg-white p-0.5 transition-transform duration-300 group-hover:scale-105"
+                  class="relative w-13 h-13 rounded-full shadow-lg object-contain ring-2 ring-blue-500/40 ring-offset-2 ring-offset-white dark:ring-offset-[#0c0d12] bg-white p-0.5 transition-transform duration-300 group-hover:scale-105"
                 />
               </div>
               <div>
@@ -991,7 +999,7 @@ onUnmounted(() => {
             <!-- 1. Main Password Form or 2. Email OTP Flow -->
             <div v-if="authMode === 'password'">
               <!-- Role Selection Segmented Tabs -->
-              <div class="p-1 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 grid grid-cols-3 gap-1.5 mb-3">
+              <div class="p-1 rounded-xl bg-slate-100 dark:bg-[#13151f] border border-slate-200 dark:border-white/10 grid grid-cols-3 gap-1.5 mb-3">
                 <button
                   v-for="role in ['student', 'teacher', 'admin']"
                   :key="role"
@@ -1000,8 +1008,8 @@ onUnmounted(() => {
                   :class="[
                     'flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer select-none',
                     form.role === role
-                      ? 'bg-blue-500/80 text-white shadow-xs shadow-blue-500/20 border border-blue-400/30'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60'
+                      ? 'bg-blue-600 dark:bg-blue-600 text-white shadow-xs shadow-blue-500/20 border border-blue-400/30'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-white/5'
                   ]"
                 >
                   <i :class="['pi', role === 'student' ? 'pi-graduation-cap' : role === 'teacher' ? 'pi-book' : 'pi-shield']"></i>
@@ -1013,7 +1021,7 @@ onUnmounted(() => {
                 <div class="space-y-1">
                   <label class="block text-xs font-bold text-slate-800 dark:text-slate-100">{{ identityLabel }}</label>
                   <div class="relative group">
-                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-300 group-focus-within:text-blue-600 transition-colors">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-400 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 transition-colors">
                       <i class="pi pi-id-card text-sm"></i>
                     </div>
                     <input
@@ -1022,9 +1030,9 @@ onUnmounted(() => {
                       required
                       autocomplete="username"
                       :placeholder="identityPlaceholder"
-                      class="h-11 w-full pl-10 pr-9 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-800/80 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-300 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 text-xs sm:text-sm font-medium shadow-2xs"
+                      class="h-11 w-full pl-10 pr-9 py-2 rounded-xl border border-slate-300 dark:border-white/10 bg-slate-50/70 dark:bg-[#13151f] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:bg-white dark:focus:bg-[#161925] focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 text-xs sm:text-sm font-medium shadow-2xs"
                     />
-                    <button v-if="form.email" type="button" @click="clearEmail" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-700 transition-colors cursor-pointer" title="Clear">
+                    <button v-if="form.email" type="button" @click="clearEmail" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer" title="Clear">
                       <i class="pi pi-times-circle text-xs"></i>
                     </button>
                   </div>
@@ -1033,7 +1041,7 @@ onUnmounted(() => {
                 <div class="space-y-1">
                   <label class="block text-xs font-bold text-slate-800 dark:text-slate-100">{{ t('login_input_password_label', 'Password') }}</label>
                   <div class="relative group">
-                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-300 group-focus-within:text-blue-600 transition-colors">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-400 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 transition-colors">
                       <i class="pi pi-lock text-sm"></i>
                     </div>
                     <input
@@ -1042,10 +1050,10 @@ onUnmounted(() => {
                       required
                       autocomplete="current-password"
                       :placeholder="t('login_input_password_placeholder', '••••••••••••••••')"
-                      class="h-11 w-full pl-10 pr-10 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-800/80 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-300 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 text-xs sm:text-sm font-medium shadow-2xs"
+                      class="h-11 w-full pl-10 pr-10 py-2 rounded-xl border border-slate-300 dark:border-white/10 bg-slate-50/70 dark:bg-[#13151f] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:bg-white dark:focus:bg-[#161925] focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 text-xs sm:text-sm font-medium shadow-2xs"
                     />
-                    <button type="button" @click="showPassword = !showPassword" class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-700 transition-colors p-1.5 rounded-lg cursor-pointer">
-                      <i :class="['pi text-sm transition-transform duration-200 hover:scale-110', showPassword ? 'pi-eye-slash text-blue-600' : 'pi-eye']"></i>
+                    <button type="button" @click="showPassword = !showPassword" class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg cursor-pointer">
+                      <i :class="['pi text-sm transition-transform duration-200 hover:scale-110', showPassword ? 'pi-eye-slash text-blue-600 dark:text-blue-400' : 'pi-eye']"></i>
                     </button>
                   </div>
                 </div>
@@ -1054,13 +1062,13 @@ onUnmounted(() => {
                   <label class="inline-flex items-center gap-2 cursor-pointer select-none group">
                     <div class="relative flex items-center justify-center">
                       <input v-model="form.remember" type="checkbox" class="sr-only" />
-                      <div :class="['w-4 h-4 rounded-[4px] border-2 transition-all duration-200 flex items-center justify-center shadow-xs', form.remember ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white dark:bg-slate-900/90 border-slate-400 dark:border-slate-500']">
+                      <div :class="['w-4 h-4 rounded-[4px] border-2 transition-all duration-200 flex items-center justify-center shadow-xs', form.remember ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white dark:bg-[#13151f] border-slate-400 dark:border-white/20']">
                         <svg :class="['w-3 h-3 text-white', form.remember ? 'scale-100' : 'scale-0']" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3.5">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
                         </svg>
                       </div>
                     </div>
-                    <span class="text-slate-800 dark:text-slate-100 font-bold text-[11px] sm:text-xs">{{ t('login_remember_me', 'Remember me') }}</span>
+                    <span class="text-slate-800 dark:text-slate-200 font-bold text-[11px] sm:text-xs">{{ t('login_remember_me', 'Remember me') }}</span>
                   </label>
                   <Link href="/forgot-password" class="text-xs font-bold text-blue-600 dark:text-sky-400 hover:text-blue-700 dark:hover:text-sky-300 no-underline transition-colors">{{ t('login_forgot_password', 'Forgot Password?') }}</Link>
                 </div>
@@ -1082,7 +1090,7 @@ onUnmounted(() => {
 
             <!-- Email OTP Flow -->
             <div v-else class="space-y-3.5">
-              <div class="flex items-center justify-between pb-1 border-b border-slate-200/80 dark:border-slate-700/80">
+              <div class="flex items-center justify-between pb-1 border-b border-slate-200/80 dark:border-white/10">
                 <button type="button" @click="authMode = 'password'" class="text-xs font-semibold text-blue-600 dark:text-sky-400 hover:text-blue-700 dark:hover:text-sky-300 no-underline flex items-center gap-1.5 cursor-pointer py-1 transition-colors select-none">
                   <i class="pi pi-arrow-left text-[10px]"></i>
                   <span>{{ currentLang === 'km' ? 'ត្រឡប់ទៅ Password' : 'Back to Password' }}</span>
@@ -1099,7 +1107,7 @@ onUnmounted(() => {
                     <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-300">
                       <i class="pi pi-envelope text-sm"></i>
                     </div>
-                    <input v-model="otpEmail" type="email" required placeholder="student@gmail.com" class="h-11 w-full pl-10 pr-4 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-800/80 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 transition-all text-xs sm:text-sm font-medium shadow-2xs" @keydown.enter.prevent="sendEmailOtp" />
+                    <input v-model="otpEmail" type="email" required placeholder="student@gmail.com" class="h-11 w-full pl-10 pr-4 py-2 rounded-xl border border-slate-300 dark:border-white/10 bg-slate-50/70 dark:bg-[#13151f] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-blue-500 transition-all text-xs sm:text-sm font-medium shadow-2xs" @keydown.enter.prevent="sendEmailOtp" />
                   </div>
                   <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">{{ currentLang === 'km' ? 'ប្រព័ន្ធនឹងផ្ញើលេខកូដសម្ងាត់ ៦ ខ្ទង់ពី info@spilms.tech ចូល Gmail របស់អ្នក។' : 'We will send a 6-digit verification code from info@spilms.tech to your Gmail.' }}</p>
                 </div>
@@ -1117,7 +1125,7 @@ onUnmounted(() => {
                   </div>
                   <p class="text-[11px] text-slate-500 dark:text-slate-400">{{ currentLang === 'km' ? 'ផ្ញើទៅកាន់:' : 'Sent to:' }} <strong class="text-blue-600 dark:text-sky-300">{{ otpEmail }}</strong></p>
                   <div class="relative">
-                    <input v-model="otpCode" type="text" maxlength="6" required placeholder="••••••" class="h-12 w-full text-center tracking-[12px] text-xl font-mono font-bold rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 transition-all shadow-2xs" @keydown.enter.prevent="verifyEmailOtp" />
+                    <input v-model="otpCode" type="text" maxlength="6" required placeholder="••••••" class="h-12 w-full text-center tracking-[12px] text-xl font-mono font-bold rounded-xl border border-slate-300 dark:border-white/10 bg-slate-50/70 dark:bg-[#13151f] text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 transition-all shadow-2xs" @keydown.enter.prevent="verifyEmailOtp" />
                   </div>
                   <div class="flex items-center justify-between text-[11px] pt-1">
                     <span v-if="otpCountdown > 0" class="text-slate-500 dark:text-slate-400">{{ currentLang === 'km' ? 'ផុតកំណត់ក្នុងរយៈពេល:' : 'Expires in:' }} <span class="font-bold text-amber-500">{{ formattedOtpTime }}</span></span>
@@ -1134,12 +1142,12 @@ onUnmounted(() => {
 
             <!-- Social Logins Section (Google, Telegram, Email OTP under OR) -->
             <div v-if="authMode === 'password'" class="space-y-1.5 pt-0.5">
-              <div class="flex items-center my-3 text-slate-400 dark:text-slate-500">
-                <div class="flex-grow border-t border-slate-300 dark:border-slate-600"></div>
-                <span class="px-4 text-xs font-bold text-slate-500 dark:text-slate-300 select-none tracking-wider">
+              <div class="flex items-center my-3 text-slate-400 dark:text-slate-600">
+                <div class="flex-grow border-t border-slate-300 dark:border-white/10"></div>
+                <span class="px-4 text-xs font-bold text-slate-500 dark:text-slate-400 select-none tracking-wider">
                   {{ t('login_or', 'OR') }}
                 </span>
-                <div class="flex-grow border-t border-slate-300 dark:border-slate-600"></div>
+                <div class="flex-grow border-t border-slate-300 dark:border-white/10"></div>
               </div>
 
               <div class="grid grid-cols-3 gap-2.5">
@@ -1148,7 +1156,7 @@ onUnmounted(() => {
                   type="button"
                   :disabled="isAuthenticating"
                   @click="redirectToGoogleOAuth"
-                  class="h-10.5 py-2 px-2.5 bg-white dark:bg-slate-800/80 hover:bg-slate-50/90 dark:hover:bg-slate-700/60 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white transition-all duration-150 flex items-center justify-center gap-1.5 hover:shadow-xs active:scale-98 shadow-2xs cursor-pointer focus:outline-none select-none disabled:opacity-60 disabled:cursor-not-allowed"
+                  class="h-10.5 py-2 px-2.5 bg-white dark:bg-[#13151f] hover:bg-slate-50/90 dark:hover:bg-[#181b28] border border-slate-300 dark:border-white/10 hover:border-slate-400 dark:hover:border-white/20 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white transition-all duration-150 flex items-center justify-center gap-1.5 hover:shadow-xs active:scale-98 shadow-2xs cursor-pointer focus:outline-none select-none disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <template v-if="isGoogleLoading">
                     <i class="pi pi-spin pi-spinner text-rose-500 text-sm"></i>
@@ -1164,7 +1172,7 @@ onUnmounted(() => {
                   type="button"
                   :disabled="isAuthenticating"
                   @click="redirectToTelegramOAuth"
-                  class="h-10.5 py-2 px-2.5 bg-white dark:bg-slate-800/80 hover:bg-slate-50/90 dark:hover:bg-slate-700/60 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white transition-all duration-150 flex items-center justify-center gap-1.5 hover:shadow-xs active:scale-98 shadow-2xs cursor-pointer focus:outline-none select-none disabled:opacity-60 disabled:cursor-not-allowed"
+                  class="h-10.5 py-2 px-2.5 bg-white dark:bg-[#13151f] hover:bg-slate-50/90 dark:hover:bg-[#181b28] border border-slate-300 dark:border-white/10 hover:border-slate-400 dark:hover:border-white/20 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white transition-all duration-150 flex items-center justify-center gap-1.5 hover:shadow-xs active:scale-98 shadow-2xs cursor-pointer focus:outline-none select-none disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <template v-if="isTelegramLoading">
                     <i class="pi pi-spin pi-spinner text-sky-500 text-sm"></i>
@@ -1180,7 +1188,7 @@ onUnmounted(() => {
                   type="button"
                   :disabled="isAuthenticating"
                   @click="authMode = 'otp'; otpStep = 1"
-                  class="h-10.5 py-2 px-2.5 bg-white dark:bg-slate-800/80 hover:bg-blue-50/90 dark:hover:bg-slate-700/60 border border-slate-300 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-150 flex items-center justify-center gap-1.5 hover:shadow-xs active:scale-98 shadow-2xs cursor-pointer focus:outline-none select-none disabled:opacity-60 disabled:cursor-not-allowed"
+                  class="h-10.5 py-2 px-2.5 bg-white dark:bg-[#13151f] hover:bg-blue-50/90 dark:hover:bg-[#181b28] border border-slate-300 dark:border-white/10 hover:border-blue-400 dark:hover:border-blue-500/40 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-150 flex items-center justify-center gap-1.5 hover:shadow-xs active:scale-98 shadow-2xs cursor-pointer focus:outline-none select-none disabled:opacity-60 disabled:cursor-not-allowed"
                   title="Gmail / Email OTP Login"
                 >
                   <i class="pi pi-envelope text-blue-500 text-sm"></i>

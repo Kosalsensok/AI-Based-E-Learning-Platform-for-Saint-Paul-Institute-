@@ -333,34 +333,37 @@ const onResetPassword = () => {
       <button
         type="button"
         @click="toggleTheme"
-        class="group px-3.5 py-2 rounded-full bg-white/95 dark:bg-slate-800/90 backdrop-blur-md hover:bg-white dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition-all duration-200 border border-slate-300/90 dark:border-slate-700/60 shadow-md shadow-slate-900/5 dark:shadow-black/20 flex items-center gap-2 text-xs font-semibold cursor-pointer select-none hover:scale-105 active:scale-95"
+        class="group px-3.5 py-2 rounded-full bg-white/95 dark:bg-[#11131a]/90 backdrop-blur-md hover:bg-white dark:hover:bg-[#181a24] text-slate-800 dark:text-slate-200 transition-all duration-200 border border-slate-300/90 dark:border-white/10 shadow-md shadow-slate-900/5 dark:shadow-black/40 flex items-center gap-2 text-xs font-semibold cursor-pointer select-none hover:scale-105 active:scale-95"
         :title="isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
       >
         <div class="relative w-4 h-4 flex items-center justify-center">
-          <i :class="['pi text-xs transition-transform duration-300 group-hover:rotate-45', isDark ? 'pi-sun text-amber-500' : 'pi-moon text-indigo-500']"></i>
+          <i :class="['pi text-xs transition-transform duration-300 group-hover:rotate-45', isDark ? 'pi-sun text-amber-400' : 'pi-moon text-indigo-500']"></i>
         </div>
         <span class="text-[11px] font-bold">{{ isDark ? t('theme_light', 'Light Mode') : t('theme_dark', 'Dark Mode') }}</span>
       </button>
     </div>
 
-    <!-- Interactive 3D Three.js Animated AI Background & Ambient Glow -->
+    <!-- Manus AI Style Deep Obsidian Micro-Dot Matrix & Ambient Flares -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none z-0 select-none">
+      
+      <!-- 3D Three.js Animated Nodes -->
       <AuthAnimatedBackground />
 
-      <!-- Animated Aurora Gradient Wave -->
-      <div class="absolute -inset-[100%] opacity-40 dark:opacity-30 animate-aurora bg-gradient-to-r from-blue-600/30 via-indigo-500/30 via-purple-500/30 via-sky-400/30 to-blue-600/30 blur-3xl"></div>
+      <!-- Manus Deep Pitch-Black Crisp Dot Grid (24px Matrix) -->
+      <div class="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] dark:bg-[radial-gradient(rgba(255,255,255,0.18)_1.1px,transparent_1.1px)] [background-size:24px_24px] opacity-35 dark:opacity-30"></div>
 
-      <!-- Tech Dot Grid Matrix Overlay -->
-      <div class="absolute inset-0 bg-[radial-gradient(#3b82f6_1.2px,transparent_1.2px)] dark:bg-[radial-gradient(#38bdf8_1.2px,transparent_1.2px)] [background-size:32px_32px] opacity-30 dark:opacity-20"></div>
+      <!-- Multi-Color Ambient Lighting Flares -->
+      <div class="absolute -top-36 -right-36 w-[550px] h-[550px] bg-amber-500/10 dark:bg-amber-500/12 rounded-full blur-[130px] animate-float-slow"></div>
+      <div class="absolute -bottom-36 -left-36 w-[600px] h-[600px] bg-cyan-500/10 dark:bg-emerald-500/10 rounded-full blur-[140px] animate-float-reverse"></div>
+      <div class="absolute top-1/4 -left-20 w-[450px] h-[450px] bg-indigo-500/10 dark:bg-indigo-600/12 rounded-full blur-[120px]"></div>
 
-      <!-- Glowing Animated Orbs -->
-      <div class="absolute -top-32 -left-32 w-[550px] h-[550px] bg-blue-500/25 dark:bg-blue-600/30 rounded-full blur-[130px] animate-float-slow"></div>
-      <div class="absolute -bottom-32 -right-32 w-[600px] h-[600px] bg-indigo-500/25 dark:bg-indigo-600/30 rounded-full blur-[140px] animate-float-reverse"></div>
+      <!-- Soft Edge Vignette Overlay -->
+      <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(248,250,252,0.92)_100%)] dark:bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(7,7,9,0.95)_100%)]"></div>
     </div>
 
-    <!-- Master Centered Forgot Password Card (Clean & 100% Production Ready Layout) -->
-    <div class="max-w-md w-full p-[1px] rounded-3xl bg-gradient-to-b from-blue-500/40 via-indigo-500/20 to-purple-500/30 dark:from-blue-500/30 dark:via-slate-800/40 dark:to-indigo-500/20 shadow-2xl shadow-slate-900/10 dark:shadow-black/60 relative z-10 my-auto transition-all">
-      <div class="w-full bg-white/95 dark:bg-[#0E172E]/95 backdrop-blur-2xl rounded-[23px] p-6 sm:p-8 flex flex-col justify-center relative z-20 space-y-5 transition-colors">
+    <!-- Master Centered Forgot Password Card (Clean Obsidian Glassmorphism) -->
+    <div class="max-w-md w-full p-[1px] rounded-3xl bg-gradient-to-b from-blue-500/40 via-indigo-500/20 to-purple-500/30 dark:from-white/20 dark:via-white/5 dark:to-white/10 shadow-2xl shadow-slate-900/10 dark:shadow-[0_0_60px_-15px_rgba(0,0,0,0.9)] relative z-10 my-auto transition-all">
+      <div class="w-full bg-white/95 dark:bg-[#0c0d12]/95 backdrop-blur-2xl rounded-[23px] p-6 sm:p-8 flex flex-col justify-center relative z-20 space-y-5 transition-colors">
         
         <!-- Header Logo & Title -->
         <div class="text-center pb-0 relative">
