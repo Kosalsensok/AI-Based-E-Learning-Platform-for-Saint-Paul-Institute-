@@ -46,7 +46,7 @@ const initTurnstile = () => {
       widgetId = (window as any).turnstile.render(turnstileWidget.value, {
         sitekey: '0x4AAAAAAEXbfl90rlcdniVI',
         theme: isDark.value ? 'dark' : 'light',
-        size: 'normal',
+        size: 'flexible',
         callback: (token: string) => {
           form.turnstile_token = token
           form.clearErrors('turnstile_token')
@@ -1065,9 +1065,9 @@ onUnmounted(() => {
                   <Link href="/forgot-password" class="text-xs font-bold text-blue-600 dark:text-sky-400 hover:text-blue-700 dark:hover:text-sky-300 no-underline transition-colors">{{ t('login_forgot_password', 'Forgot Password?') }}</Link>
                 </div>
 
-                <!-- Cloudflare Turnstile CAPTCHA Widget -->
-                <div class="my-2 w-full flex flex-col items-center justify-center min-h-[65px]">
-                  <div ref="turnstileWidget" class="min-h-[65px] flex items-center justify-center"></div>
+                <!-- Cloudflare Turnstile CAPTCHA Widget (100% Full-Width Matching Input Fields & Button) -->
+                <div class="my-2.5 w-full flex flex-col items-center justify-center min-h-[65px] rounded-xl overflow-hidden bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/60 p-0.5">
+                  <div ref="turnstileWidget" class="w-full min-h-[65px] flex items-center justify-center turnstile-fullwidth-wrapper"></div>
                 </div>
 
                 <button type="submit" :disabled="isSubmitting || form.processing" class="h-11 group w-full py-2.5 px-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm hover:shadow-md transition-all duration-200 inline-flex items-center justify-center gap-2.5 disabled:opacity-50 text-xs sm:text-sm tracking-wide cursor-pointer select-none">
@@ -1420,6 +1420,15 @@ onUnmounted(() => {
 
 .animate-fade-in {
   animation: fadeIn 0.35s ease-out forwards;
+}
+
+.turnstile-fullwidth-wrapper,
+.turnstile-fullwidth-wrapper > div,
+.turnstile-fullwidth-wrapper iframe {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-height: 65px !important;
+  border-radius: 0.75rem !important;
 }
 </style>
 
