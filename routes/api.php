@@ -26,16 +26,16 @@ Route::post('/auth/email-otp/send', [\App\Http\Controllers\AuthController::class
 Route::post('/auth/email-otp/verify', [\App\Http\Controllers\AuthController::class, 'verifyEmailOtp']);
 
 // ─── Cloudflare Workers AI & AI Gateway Endpoints ───
-Route::prefix('ai')->group(function () {
-    Route::get('/verify', [Api\CloudflareAIController::class, 'verify']);
-    Route::post('/verify', [Api\CloudflareAIController::class, 'verify']);
-    Route::post('/chat', [Api\CloudflareAIController::class, 'chat']);
-    Route::post('/recommendation', [Api\CloudflareAIController::class, 'recommendation']);
-    Route::post('/generate-quiz', [Api\CloudflareAIController::class, 'generateQuiz']);
-    Route::post('/summarize', [Api\CloudflareAIController::class, 'summarize']);
-    Route::post('/code-review', [Api\CloudflareAIController::class, 'codeReview']);
-    Route::post('/agri-diagnosis', [Api\CloudflareAIController::class, 'agriDiagnosis']);
-    Route::post('/english-review', [Api\CloudflareAIController::class, 'englishReview']);
-    Route::post('/social-work-case', [Api\CloudflareAIController::class, 'socialWorkCase']);
+Route::prefix('ai')->name('api.ai.')->group(function () {
+    Route::get('/verify', [Api\CloudflareAIController::class, 'verify'])->name('verify');
+    Route::post('/verify', [Api\CloudflareAIController::class, 'verify'])->name('verify.post');
+    Route::post('/chat', [Api\CloudflareAIController::class, 'chat'])->name('chat');
+    Route::post('/recommendation', [Api\CloudflareAIController::class, 'recommendation'])->name('recommendation');
+    Route::post('/generate-quiz', [Api\CloudflareAIController::class, 'generateQuiz'])->name('generate-quiz');
+    Route::post('/summarize', [Api\CloudflareAIController::class, 'summarize'])->name('summarize');
+    Route::post('/code-review', [Api\CloudflareAIController::class, 'codeReview'])->name('code-review');
+    Route::post('/agri-diagnosis', [Api\CloudflareAIController::class, 'agriDiagnosis'])->name('agri-diagnosis');
+    Route::post('/english-review', [Api\CloudflareAIController::class, 'englishReview'])->name('english-review');
+    Route::post('/social-work-case', [Api\CloudflareAIController::class, 'socialWorkCase'])->name('social-work-case');
 });
 
