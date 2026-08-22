@@ -4,6 +4,8 @@ vendor
 node_modules
 tests
 brain
+scratch
+subtitles
 .phpunit.cache
 *.log
 .env

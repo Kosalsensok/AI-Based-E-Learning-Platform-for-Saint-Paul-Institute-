@@ -1,26 +1,28 @@
 # Production Dockerfile for Laravel with Pre-built Assets
 FROM php:8.3-fpm-alpine
 
-# Install system dependencies
+# Install system dependencies & build requirements with parallel compilation
 RUN apk add --no-cache \
     nginx \
     supervisor \
     curl \
     git \
+    libpng-dev \
+    libzip-dev \
     zip \
-    unzip
-
-# Install PHP extensions using pre-compiled binary installer (builds in seconds, avoids 15m timeout)
-COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
-RUN install-php-extensions pdo_mysql mbstring gd zip bcmath intl opcache pcntl posix
+    unzip \
+    icu-dev \
+    oniguruma-dev \
+    && docker-php-ext-install -j$(nproc) pdo_mysql mbstring gd zip bcmath intl opcache pcntl posix
 
 # Get Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Configure Composer environment for resilient network downloads & avoid GitHub Rate Limits
+# Configure Composer environment
 ARG GITHUB_TOKEN
 ENV GITHUB_TOKEN=$GITHUB_TOKEN \
     COMPOSER_ALLOW_SUPERUSER=1 \
+    COMPOSER_NO_INTERACTION=1 \
     COMPOSER_PROCESS_TIMEOUT=600 \
     COMPOSER_MEMORY_LIMIT=-1
 
@@ -29,17 +31,14 @@ WORKDIR /var/www/html
 # Copy composer files first for optimal Docker layer caching
 COPY composer.json composer.lock ./
 
-# Configure GitHub OAuth token if provided, and install composer dependencies with fallback to --prefer-source on rate limits
+# Install composer dependencies with parallel dist download
 RUN if [ -n "$GITHUB_TOKEN" ]; then composer config -g github-oauth.github.com "$GITHUB_TOKEN"; fi \
-    && ( \
-        composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs --prefer-dist --no-scripts \
-        || composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs --prefer-source --no-scripts \
-    )
+    && composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs --prefer-dist --no-scripts --no-progress
 
-# Copy remaining application code (including pre-built assets in public/build)
+# Copy remaining application code
 COPY . .
 
-# Generate optimized classmap & autoloader without triggering runtime artisan scripts during build
+# Generate optimized classmap & autoloader
 RUN composer dump-autoload --optimize --no-dev --classmap-authoritative --no-scripts
 
 # Set directory permissions
