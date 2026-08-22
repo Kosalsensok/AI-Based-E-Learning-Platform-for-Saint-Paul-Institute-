@@ -375,9 +375,9 @@ const submit = async () => {
       } catch (_) {}
     }
 
-    // If still in-flight, wait up to 1.2s for completion
+    // If still in-flight, wait up to 3.5s for completion
     if (!form.turnstile_token) {
-      for (let i = 0; i < 12; i++) {
+      for (let i = 0; i < 35; i++) {
         await new Promise((r) => setTimeout(r, 100))
         if (form.turnstile_token) break
         try {
@@ -396,7 +396,7 @@ const submit = async () => {
     if (!form.turnstile_token) {
       isSubmitting.value = false
       resetTurnstile()
-      form.setError('turnstile_token', 'សូមរង់ចាំការផ្ទៀងផ្ទាត់សុវត្ថិភាព Cloudflare (Turnstile) មួយភ្លែត រួចចុចម្តងទៀត។')
+      form.setError('turnstile_token', 'សូមរង់ចាំឱ្យ Cloudflare បង្ហាញសញ្ញាគ្រីសបៃតង (Success) រួចចុចម្តងទៀត។')
       return
     }
   }
