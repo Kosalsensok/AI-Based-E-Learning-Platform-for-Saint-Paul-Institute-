@@ -182,6 +182,16 @@ class CloudflareAIService
     }
 
     /**
+     * Specialized 24/7 AI Tutor Chat with Context.
+     */
+    public function chatWithTutor(string $message, array $history = []): string
+    {
+        $messages = $history;
+        $messages[] = ['role' => 'user', 'content' => $message];
+        return $this->chat($messages);
+    }
+
+    /**
      * Generate MCQ Quiz Questions from Lesson/Topic.
      */
     public function generateQuiz(string $lessonContent, string $topic, int $numQuestions = 4, string $major = 'it'): array
