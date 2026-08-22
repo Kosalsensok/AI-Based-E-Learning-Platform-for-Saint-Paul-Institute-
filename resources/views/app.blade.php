@@ -73,9 +73,42 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192x192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="/favicon-512x512.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="/apple-touch-icon-precomposed.png">
+    <link rel="manifest" href="/manifest.json">
     <link rel="manifest" href="/manifest.webmanifest">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <!-- PWA Service Worker Registration & Offline Network Handler -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js', { scope: '/' })
+                    .then(function(reg) {
+                        console.log('SPI AI-ELMS Service Worker Registered successfully with scope:', reg.scope);
+                    })
+                    .catch(function(err) {
+                        console.warn('Service Worker Registration notice:', err);
+                    });
+            });
+        }
+
+        // Live Network Status Observer
+        function updateOnlineStatus() {
+            var statusEl = document.getElementById('network-status');
+            if (statusEl) {
+                if (navigator.onLine) {
+                    statusEl.innerHTML = '● Online';
+                    statusEl.className = 'px-3 py-1 text-xs font-semibold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+                } else {
+                    statusEl.innerHTML = '● Offline';
+                    statusEl.className = 'px-3 py-1 text-xs font-semibold rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20';
+                }
+            }
+        }
+
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        document.addEventListener('DOMContentLoaded', updateOnlineStatus);
+    </script>
 
     <!-- Primary Meta Tags & SEO Snippet -->
     <title inertia>SPI AI-ELMS | ប្រព័ន្ធគ្រប់គ្រងការសិក្សា Saint Paul Institute</title>

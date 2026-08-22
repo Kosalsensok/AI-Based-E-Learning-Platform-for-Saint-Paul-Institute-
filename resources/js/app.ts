@@ -23,6 +23,10 @@ initTheme()
 
 
 if (typeof window !== 'undefined') {
+  try {
+    registerSW({ immediate: true })
+  } catch (e) {}
+
   window.addEventListener('vite:preloadError', () => {
     window.location.reload()
   })

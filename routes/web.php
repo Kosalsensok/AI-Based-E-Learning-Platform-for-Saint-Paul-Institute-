@@ -605,5 +605,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/profile', [Student\ProfileController::class, 'index'])->name('profile');
         Route::post('/profile', [Student\ProfileController::class, 'update'])->name('profile.update');
         Route::post('/profile/password', [Student\ProfileController::class, 'updatePassword'])->name('profile.password');
+
+        // 14. 24/7 AI Academic Tutor Endpoint
+        Route::post('/api/ai-tutor/chat', [Student\AiTutorController::class, 'askTutor'])->name('ai.tutor.chat');
     });
 });
