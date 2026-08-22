@@ -46,6 +46,11 @@ const initTurnstile = () => {
         },
         'expired-callback': () => {
           form.turnstile_token = ''
+          if (typeof window !== 'undefined' && (window as any).turnstile && widgetId !== null) {
+            try {
+              (window as any).turnstile.reset(widgetId)
+            } catch (_) {}
+          }
         },
         'error-callback': (code: any) => {
           console.error('Turnstile Error Code:', code)
@@ -343,6 +348,43 @@ const submit = async () => {
   showSuccessModal.value = false
   errorMessage.value = null
   form.clearErrors()
+
+  // 1. Ensure Turnstile token is available before posting
+  if (!form.turnstile_token) {
+    if (typeof window !== 'undefined' && (window as any).turnstile && widgetId !== null) {
+      try {
+        const directToken = (window as any).turnstile.getResponse(widgetId)
+        if (directToken) {
+          form.turnstile_token = directToken
+        }
+      } catch (_) {}
+    }
+
+    // If still in-flight, wait up to 1.2s for completion
+    if (!form.turnstile_token) {
+      for (let i = 0; i < 12; i++) {
+        await new Promise((r) => setTimeout(r, 100))
+        if (form.turnstile_token) break
+        try {
+          if ((window as any).turnstile && widgetId !== null) {
+            const t = (window as any).turnstile.getResponse(widgetId)
+            if (t) {
+              form.turnstile_token = t
+              break
+            }
+          }
+        } catch (_) {}
+      }
+    }
+
+    // If still not available after waiting, reset and notify user gently
+    if (!form.turnstile_token) {
+      isSubmitting.value = false
+      resetTurnstile()
+      form.setError('turnstile_token', 'សូមរង់ចាំការផ្ទៀងផ្ទាត់សុវត្ថិភាព Cloudflare (Turnstile) មួយភ្លែត រួចចុចម្តងទៀត។')
+      return
+    }
+  }
 
   try {
     const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || ''
