@@ -1,20 +1,18 @@
 # Production Dockerfile for Laravel with Pre-built Assets
 FROM php:8.3-fpm-alpine
 
-# Install system dependencies & PHP extensions required for Laravel
+# Install system dependencies
 RUN apk add --no-cache \
     nginx \
     supervisor \
     curl \
     git \
-    libpng-dev \
-    libzip-dev \
     zip \
-    unzip \
-    oniguruma-dev \
-    icu-dev
+    unzip
 
-RUN docker-php-ext-install pdo_mysql mbstring gd zip bcmath intl opcache pcntl posix
+# Install PHP extensions using pre-compiled binary installer (builds in seconds, avoids 15m timeout)
+COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
+RUN install-php-extensions pdo_mysql mbstring gd zip bcmath intl opcache pcntl posix
 
 # Get Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
