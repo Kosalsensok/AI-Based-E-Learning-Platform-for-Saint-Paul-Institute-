@@ -202,6 +202,10 @@ class AuthenticatedSessionController extends Controller
                     'user_agent' => $userAgent,
                 ]);
             }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('JWT token creation exception: ' . $e->getMessage());
+        }
+
         // Login and regenerate session
         Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
