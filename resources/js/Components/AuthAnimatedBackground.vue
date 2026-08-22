@@ -308,8 +308,15 @@ const render = (time: number) => {
           ctx.fillStyle = `rgba(${Math.round(220 + centerGlow * 35)}, ${Math.round(230 + centerGlow * 25)}, 255, ${alpha})`
         }
       } else {
-        // Light Mode: High-contrast Dark Indigo / Slate
-        ctx.fillStyle = `rgba(30, 41, 59, ${alpha})`
+        // Light Mode: Clean high-tech Slate & Cyan/Amber accent dots
+        const colorBias = normX + (combinedNoise - 0.5) * 0.35
+        if (colorBias < 0.35) {
+          ctx.fillStyle = `rgba(13, 148, 136, ${Math.min(alpha * 1.1, 0.75)})` // Soft Teal
+        } else if (colorBias > 0.65) {
+          ctx.fillStyle = `rgba(217, 119, 6, ${Math.min(alpha * 1.1, 0.75)})` // Soft Amber
+        } else {
+          ctx.fillStyle = `rgba(71, 85, 105, ${Math.min(alpha * 1.1, 0.85)})` // Crisp Slate
+        }
       }
 
       // Draw Smooth Circular Dot
@@ -399,7 +406,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="containerRef" class="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-hidden select-none bg-[#070709]">
+  <div ref="containerRef" class="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-hidden select-none bg-transparent">
     <canvas ref="canvasRef" class="w-full h-full block"></canvas>
   </div>
 </template>
