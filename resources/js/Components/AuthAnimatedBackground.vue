@@ -10,12 +10,14 @@ let width = 0
 let height = 0
 let dpr = 1
 
-// Mouse Tracking for Interactive Spotlight
+// Mouse Tracking for Interactive Ripple & Distortion
 const mouse = {
   x: -1000,
   y: -1000,
   targetX: -1000,
   targetY: -1000,
+  vx: 0,
+  vy: 0,
   active: false,
 }
 
@@ -30,7 +32,7 @@ interface Shockwave {
 }
 const shockwaves: Shockwave[] = []
 
-// Dark Mode Detection
+// Dark Mode State
 let isDark = true
 let themeObserver: MutationObserver | null = null
 
@@ -38,6 +40,85 @@ const updateTheme = () => {
   if (typeof document !== 'undefined') {
     isDark = document.documentElement.classList.contains('dark')
   }
+}
+
+// Fast Permutation-based Simplex Noise for 60FPS Fluid Vector Field
+const F2 = 0.5 * (Math.sqrt(3.0) - 1.0)
+const G2 = (3.0 - Math.sqrt(3.0)) / 6.0
+
+const perm = new Uint8Array(512)
+const gradP = new Float32Array(512 * 2)
+
+const initNoise = () => {
+  const p = new Uint8Array(256)
+  for (let i = 0; i < 256; i++) p[i] = i
+  for (let i = 255; i > 0; i--) {
+    const r = Math.floor(Math.random() * (i + 1))
+    const t = p[i]
+    p[i] = p[r]
+    p[r] = t
+  }
+  for (let i = 0; i < 512; i++) {
+    perm[i] = p[i & 255]
+    const angle = (perm[i] / 256) * Math.PI * 2
+    gradP[i * 2] = Math.cos(angle)
+    gradP[i * 2 + 1] = Math.sin(angle)
+  }
+}
+
+const noise2D = (xin: number, yin: number): number => {
+  let n0 = 0
+  let n1 = 0
+  let n2 = 0
+  const s = (xin + yin) * F2
+  const i = Math.floor(xin + s)
+  const j = Math.floor(yin + s)
+  const t = (i + j) * G2
+  const X0 = i - t
+  const Y0 = j - t
+  const x0 = xin - X0
+  const y0 = yin - Y0
+
+  let i1 = 0
+  let j1 = 0
+  if (x0 > y0) {
+    i1 = 1
+    j1 = 0
+  } else {
+    i1 = 0
+    j1 = 1
+  }
+
+  const x1 = x0 - i1 + G2
+  const y1 = y0 - j1 + G2
+  const x2 = x0 - 1.0 + 2.0 * G2
+  const y2 = y0 - 1.0 + 2.0 * G2
+
+  const ii = i & 255
+  const jj = j & 255
+
+  let t0 = 0.5 - x0 * x0 - y0 * y0
+  if (t0 >= 0) {
+    const gi0 = perm[ii + perm[jj]]
+    t0 *= t0
+    n0 = t0 * t0 * (gradP[gi0 * 2] * x0 + gradP[gi0 * 2 + 1] * y0)
+  }
+
+  let t1 = 0.5 - x1 * x1 - y1 * y1
+  if (t1 >= 0) {
+    const gi1 = perm[ii + i1 + perm[jj + j1]]
+    t1 *= t1
+    n1 = t1 * t1 * (gradP[gi1 * 2] * x1 + gradP[gi1 * 2 + 1] * y1)
+  }
+
+  let t2 = 0.5 - x2 * x2 - y2 * y2
+  if (t2 >= 0) {
+    const gi2 = perm[ii + 1 + perm[jj + 1]]
+    t2 *= t2
+    n2 = t2 * t2 * (gradP[gi2 * 2] * x2 + gradP[gi2 * 2 + 1] * y2)
+  }
+
+  return 70.0 * (n0 + n1 + n2)
 }
 
 const handleMouseMove = (e: MouseEvent) => {
@@ -73,7 +154,7 @@ const handleClick = (e: MouseEvent) => {
     x: e.clientX - rect.left,
     y: e.clientY - rect.top,
     radius: 0,
-    maxRadius: 380,
+    maxRadius: 360,
     intensity: 1.0,
     speed: 5.5,
   })
@@ -91,7 +172,7 @@ const resize = () => {
   canvasRef.value.style.height = `${height}px`
 }
 
-// 60FPS Manus Liquid Shadow & Floating Particle Engine
+// 60FPS Manus Continuous Generative Wave & Interactive Engine
 const render = (time: number) => {
   if (!isAnimating || !canvasRef.value) return
   animationFrameId = requestAnimationFrame(render)
@@ -103,60 +184,13 @@ const render = (time: number) => {
   ctx.scale(dpr, dpr)
   ctx.clearRect(0, 0, width, height)
 
-  const t = time * 0.001
-
-  // 1. Dynamic Liquid Shadow Blobs (Morphing Organic Light-Shadow Clouds)
-  // Blob 1: Cyber Emerald / Mint (Bottom-Left sweeping upward)
-  const b1x = width * 0.18 + Math.sin(t * 0.5) * width * 0.12
-  const b1y = height * 0.68 + Math.cos(t * 0.4) * height * 0.14
-  const b1r = Math.max(width, height) * 0.42 + Math.sin(t * 0.6) * 40
-
-  // Blob 2: Warm Amber / Sunset Gold (Top-Right sweeping downward)
-  const b2x = width * 0.82 + Math.cos(t * 0.45) * width * 0.12
-  const b2y = height * 0.32 + Math.sin(t * 0.5) * height * 0.14
-  const b2r = Math.max(width, height) * 0.42 + Math.cos(t * 0.55) * 40
-
-  // Blob 3: Neon Aqua / Electric Cyan (Top-Left floating across)
-  const b3x = width * 0.28 + Math.cos(t * 0.35) * width * 0.1
-  const b3y = height * 0.22 + Math.sin(t * 0.45) * height * 0.1
-  const b3r = Math.max(width, height) * 0.32
-
-  // Blob 4: Sunset Coral / Magenta (Bottom-Right floating)
-  const b4x = width * 0.72 + Math.sin(t * 0.4) * width * 0.1
-  const b4y = height * 0.78 + Math.cos(t * 0.5) * height * 0.1
-  const b4r = Math.max(width, height) * 0.32
-
-  // Blob 5: Indigo Core Nebula (Center pulse)
-  const b5x = width * 0.5 + Math.sin(t * 0.25) * 60
-  const b5y = height * 0.45 + Math.cos(t * 0.3) * 50
-  const b5r = Math.max(width, height) * 0.36
-
-  if (isDark) {
-    // Render Soft Ambient Liquid Shadows
-    const g1 = ctx.createRadialGradient(b1x, b1y, 0, b1x, b1y, b1r)
-    g1.addColorStop(0, 'rgba(16, 185, 129, 0.14)')
-    g1.addColorStop(0.5, 'rgba(6, 182, 212, 0.06)')
-    g1.addColorStop(1, 'rgba(16, 185, 129, 0)')
-    ctx.fillStyle = g1
-    ctx.fillRect(0, 0, width, height)
-
-    const g2 = ctx.createRadialGradient(b2x, b2y, 0, b2x, b2y, b2r)
-    g2.addColorStop(0, 'rgba(245, 158, 11, 0.13)')
-    g2.addColorStop(0.5, 'rgba(244, 63, 94, 0.05)')
-    g2.addColorStop(1, 'rgba(245, 158, 11, 0)')
-    ctx.fillStyle = g2
-    ctx.fillRect(0, 0, width, height)
-
-    const g5 = ctx.createRadialGradient(b5x, b5y, 0, b5x, b5y, b5r)
-    g5.addColorStop(0, 'rgba(99, 102, 241, 0.09)')
-    g5.addColorStop(1, 'rgba(99, 102, 241, 0)')
-    ctx.fillStyle = g5
-    ctx.fillRect(0, 0, width, height)
-  }
-
   // Smooth mouse lerping
+  const prevMx = mouse.x
+  const prevMy = mouse.y
   mouse.x += (mouse.targetX - mouse.x) * 0.1
   mouse.y += (mouse.targetY - mouse.y) * 0.1
+  mouse.vx = mouse.x - prevMx
+  mouse.vy = mouse.y - prevMy
 
   // Update Shockwaves
   for (let i = shockwaves.length - 1; i >= 0; i--) {
@@ -168,139 +202,131 @@ const render = (time: number) => {
     }
   }
 
-  // Manus Dot Grid Configuration (24px Spacing)
+  // Manus Grid Configuration
   const spacing = 24
   const cols = Math.ceil(width / spacing) + 1
   const rows = Math.ceil(height / spacing) + 1
   const offsetX = (width % spacing) / 2
   const offsetY = (height % spacing) / 2
 
+  const timeSec = time * 0.001
+  const flowTime1 = timeSec * 0.18
+  const flowTime2 = timeSec * 0.28
+
   const mouseRadius = 240
   const mouseRadiusSq = mouseRadius * mouseRadius
 
-  // 2. Render Living Floating Particle Matrix
+  // Render Every Dot with Continuous Flow Noise Shading
   for (let r = 0; r < rows; r++) {
-    const baseY = r * spacing + offsetY
+    const origY = r * spacing + offsetY
+    const normY = origY / height
 
     for (let c = 0; c < cols; c++) {
-      const baseX = c * spacing + offsetX
+      const origX = c * spacing + offsetX
+      const normX = origX / width
 
-      // Organic Floating Displacement (Physical Wave Motion in 2D Space)
-      const floatAngle = t * 0.85 + c * 0.28 + r * 0.32
-      const floatX = Math.sin(floatAngle) * 2.6
-      const floatY = Math.cos(floatAngle * 0.9) * 2.6
+      // 1. Dual-Frequency Simplex Noise for Continuous Organic Fluid Motion
+      const nVal1 = noise2D(origX * 0.0028 + flowTime1, origY * 0.0028 - flowTime1 * 0.5)
+      const nVal2 = noise2D(origX * 0.006 - flowTime2 * 0.7, origY * 0.006 + flowTime2)
+      const combinedNoise = (nVal1 * 0.65 + nVal2 * 0.35 + 1) * 0.5 // 0.0 -> 1.0
 
-      let currentX = baseX + floatX
-      let currentY = baseY + floatY
+      // Calculate dynamic particle brightness & radius
+      let alpha = isDark ? 0.10 + Math.pow(combinedNoise, 2.2) * 0.55 : 0.08 + Math.pow(combinedNoise, 2.0) * 0.4
+      let radius = isDark ? 0.95 + combinedNoise * 0.85 : 0.9 + combinedNoise * 0.6
 
-      // Distance to Liquid Shadow Blobs
-      const d1 = Math.hypot(currentX - b1x, currentY - b1y) / b1r
-      const d2 = Math.hypot(currentX - b2x, currentY - b2y) / b2r
-      const d3 = Math.hypot(currentX - b3x, currentY - b3y) / b3r
-      const d4 = Math.hypot(currentX - b4x, currentY - b4y) / b4r
-      const d5 = Math.hypot(currentX - b5x, currentY - b5y) / b5r
+      let currentX = origX
+      let currentY = origY
 
-      // Blob Influence Factors (0.0 to 1.0)
-      const w1 = Math.max(0, 1 - d1)
-      const w2 = Math.max(0, 1 - d2)
-      const w3 = Math.max(0, 1 - d3)
-      const w4 = Math.max(0, 1 - d4)
-      const w5 = Math.max(0, 1 - d5)
-
-      // Total Shadow Glow Intensity
-      const totalGlow = Math.min(1.0, w1 * 1.3 + w2 * 1.3 + w3 * 0.9 + w4 * 0.9 + w5 * 0.8)
-
-      // Dynamic Dot Brightness & Size
-      let alpha = isDark ? 0.10 + totalGlow * 0.72 : 0.08 + totalGlow * 0.5
-      let radius = isDark ? 0.85 + totalGlow * 1.1 : 0.8 + totalGlow * 0.8
-
-      // Cursor Proximity Interaction
+      // 2. Cursor Proximity & Fluid Force
       if (mouse.active) {
-        const dx = currentX - mouse.x
-        const dy = currentY - mouse.y
+        const dx = origX - mouse.x
+        const dy = origY - mouse.y
         const distSq = dx * dx + dy * dy
 
         if (distSq < mouseRadiusSq && distSq > 0) {
           const dist = Math.sqrt(distSq)
           const factor = Math.pow(1 - dist / mouseRadius, 2)
           
-          alpha += factor * (isDark ? 0.8 : 0.5)
+          // Illumination boost
+          alpha += factor * (isDark ? 0.75 : 0.5)
           radius += factor * 1.5
 
+          // Subtle gentle displacement force away from cursor
           const push = factor * 4.0
           currentX += (dx / dist) * push
           currentY += (dy / dist) * push
         }
       }
 
-      // Shockwave Ripples
+      // 3. Shockwave Wavefront Interaction
       for (const sw of shockwaves) {
-        const swDx = currentX - sw.x
-        const swDy = currentY - sw.y
-        const swDist = Math.hypot(swDx, swDy)
+        const swDx = origX - sw.x
+        const swDy = origY - sw.y
+        const swDist = Math.sqrt(swDx * swDx + swDy * swDy)
         const waveDiff = Math.abs(swDist - sw.radius)
 
-        if (waveDiff < 40) {
-          const waveFactor = (1 - waveDiff / 40) * sw.intensity
-          alpha += waveFactor * 0.85
+        if (waveDiff < 45) {
+          const waveFactor = (1 - waveDiff / 45) * sw.intensity
+          alpha += waveFactor * 0.8
           radius += waveFactor * 1.6
           if (swDist > 0) {
-            currentX += (swDx / swDist) * (waveFactor * 6.0)
-            currentY += (swDy / swDist) * (waveFactor * 6.0)
+            currentX += (swDx / swDist) * (waveFactor * 7)
+            currentY += (swDy / swDist) * (waveFactor * 7)
           }
         }
       }
 
       alpha = Math.min(Math.max(alpha, 0.04), 0.95)
 
-      // 3. Dynamic Organic Color Blending (Morphing Colors from Shadow Blobs)
+      // 4. Manus Exact Organic Color Mapping
       if (isDark) {
-        if (alpha > 0.45 && mouse.active && Math.hypot(currentX - mouse.x, currentY - mouse.y) < 70) {
-          // Diamond White Core under Cursor
-          ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`
-        } else {
-          // Calculate blended color from blobs
-          const emeraldScore = w1 * 1.4 + w3 * 0.8
-          const amberScore = w2 * 1.4 + w4 * 0.8
+        // Color zones based on X coordinate + noise modulation
+        // Left: Emerald (#10b981) & Cyber Aqua (#06b6d4)
+        // Right: Warm Amber (#f59e0b), Coral Pink (#f43f5e) & Purple (#a855f7)
+        const colorBias = normX + (combinedNoise - 0.5) * 0.35
 
-          if (emeraldScore > amberScore && emeraldScore > 0.15) {
-            // Cyber Emerald / Mint / Neon Teal
-            const rCol = Math.round(16 + (w3 / (emeraldScore + 0.01)) * 20)
-            const gCol = Math.round(185 + (w1 / (emeraldScore + 0.01)) * 45)
-            const bCol = Math.round(160 + (w3 / (emeraldScore + 0.01)) * 60)
-            ctx.fillStyle = `rgba(${rCol}, ${gCol}, ${bCol}, ${alpha})`
-          } else if (amberScore > 0.15) {
-            // Warm Amber / Sunset Gold / Coral
-            const rCol = Math.round(245 + (w4 / (amberScore + 0.01)) * 10)
-            const gCol = Math.round(140 + (w2 / (amberScore + 0.01)) * 40)
-            const bCol = Math.round(25 + (w4 / (amberScore + 0.01)) * 70)
-            ctx.fillStyle = `rgba(${rCol}, ${gCol}, ${bCol}, ${alpha})`
-          } else {
-            // Crystal White / Soft Blue Core
-            ctx.fillStyle = `rgba(225, 235, 255, ${alpha})`
-          }
+        if (alpha > 0.45 && mouse.active && Math.hypot(origX - mouse.x, origY - mouse.y) < 80) {
+          // Pure bright Diamond White under the cursor center
+          ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`
+        } else if (colorBias < 0.35) {
+          // Cyber Emerald / Mint / Cyan (Left Wing)
+          const greenRatio = Math.sin(timeSec * 0.8 + origY * 0.01) * 0.5 + 0.5
+          const rCol = Math.round(16 + greenRatio * 20)
+          const gCol = Math.round(185 + greenRatio * 45)
+          const bCol = Math.round(160 + (1 - greenRatio) * 60)
+          ctx.fillStyle = `rgba(${rCol}, ${gCol}, ${bCol}, ${alpha})`
+        } else if (colorBias > 0.65) {
+          // Warm Amber / Coral / Orange-Gold (Right Wing)
+          const warmRatio = Math.cos(timeSec * 0.7 + origX * 0.01) * 0.5 + 0.5
+          const rCol = Math.round(245 + warmRatio * 10)
+          const gCol = Math.round(130 + warmRatio * 50)
+          const bCol = Math.round(20 + warmRatio * 80)
+          ctx.fillStyle = `rgba(${rCol}, ${gCol}, ${bCol}, ${alpha})`
+        } else {
+          // Center: Sleek Crisp Crystal White / Soft Sky Blue
+          const centerGlow = Math.sin(timeSec + origX * 0.02) * 0.5 + 0.5
+          ctx.fillStyle = `rgba(${Math.round(220 + centerGlow * 35)}, ${Math.round(230 + centerGlow * 25)}, 255, ${alpha})`
         }
       } else {
-        // Light Mode: Precision Slate & Teal/Amber Accents
-        const emeraldScore = w1 + w3
-        const amberScore = w2 + w4
-        if (emeraldScore > amberScore && emeraldScore > 0.2) {
-          ctx.fillStyle = `rgba(13, 148, 136, ${Math.min(alpha * 1.1, 0.75)})`
-        } else if (amberScore > 0.2) {
-          ctx.fillStyle = `rgba(217, 119, 6, ${Math.min(alpha * 1.1, 0.75)})`
+        // Light Mode: Clean high-tech Slate & Cyan/Amber accent dots
+        const colorBias = normX + (combinedNoise - 0.5) * 0.35
+        if (colorBias < 0.35) {
+          ctx.fillStyle = `rgba(13, 148, 136, ${Math.min(alpha * 1.1, 0.75)})` // Soft Teal
+        } else if (colorBias > 0.65) {
+          ctx.fillStyle = `rgba(217, 119, 6, ${Math.min(alpha * 1.1, 0.75)})` // Soft Amber
         } else {
-          ctx.fillStyle = `rgba(71, 85, 105, ${Math.min(alpha * 1.1, 0.85)})`
+          ctx.fillStyle = `rgba(71, 85, 105, ${Math.min(alpha * 1.1, 0.85)})` // Crisp Slate
         }
       }
 
-      // Draw Smooth Circular Particle
+      // Draw Smooth Circular Dot
       ctx.beginPath()
       ctx.arc(currentX, currentY, radius, 0, Math.PI * 2)
       ctx.fill()
     }
   }
 
-  // 4. Ambient Vignette Edge Depth
+  // 5. Manus Ambient Edge Vignette
   if (isDark) {
     const vignette = ctx.createRadialGradient(
       width / 2,
@@ -343,6 +369,7 @@ const handleVisibilityChange = () => {
 }
 
 onMounted(() => {
+  initNoise()
   updateTheme()
   resize()
 
